@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Generated files
+**/*.d.ts
+*.tsbuildinfo
+
+# Config files that should maintain their format
+.env*
+.gitignore
+.eslintignore
+.prettierignore
+
+# Documentation that should maintain specific formatting
+CHANGELOG.md
+LICENSE
+
+# Database files
+*.db
+*.sqlite
+
+# Logs
+*.log
+logs/
+
+# Cache directories
+.cache/
+.parcel-cache/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Runtime files
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
