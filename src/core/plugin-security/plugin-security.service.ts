@@ -4,12 +4,10 @@ import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import {
-  ActivitySummary,
   PluginActivity,
   PluginPackage,
   PluginPermissions,
   PluginRateLimits,
-  PluginSecurityInfo,
   RateLimitOperation,
   ResourceLimits,
   SecurityAction,
@@ -17,22 +15,42 @@ import {
   SecurityReport,
   SecurityResourceType,
 } from '@/types/plugin.types';
+import { PluginAuthService } from './services/plugin-auth.service';
+import { PluginAuditService } from './services/plugin-audit.service';
 
+/**
+ * Enhanced Plugin Security Service
+ *
+ * Provides comprehensive security management for plugins including authentication,
+ * authorization, auditing, signature validation, and resource monitoring.
+ */
 @Injectable()
 export class PluginSecurityService {
   private readonly logger = new Logger(PluginSecurityService.name);
   private readonly securityContexts = new Map<string, SecurityContext>();
   private readonly rateLimits: PluginRateLimits = new Map<string, RateLimitOperation>();
-  private readonly activityLog: PluginActivity[] = [];
 
-  constructor(private readonly eventEmitter: EventEmitter2) {}
+  constructor(
+    private readonly eventEmitter: EventEmitter2,
+    private readonly authService: PluginAuthService,
+    private readonly auditService: PluginAuditService,
+  ) {}
 
+  /**
+   * Validate plugin signature and integrity
+   */
   async validatePluginSignature(plugin: PluginPackage): Promise<boolean> {
     try {
       this.logger.debug('Validating plugin signature...');
 
       if (!plugin.signature) {
         this.logger.warn('Plugin has no signature');
+        this.auditService.auditActivity({
+          pluginId: plugin.name ?? plugin.manifest?.name ?? 'unknown',
+          action: 'signature:validation:failed',
+          timestamp: new Date(),
+          metadata: { reason: 'No signature provided' },
+        });
         return false;
       }
 
@@ -41,22 +59,46 @@ export class PluginSecurityService {
 
       if (calculatedChecksum !== plugin.checksum) {
         this.logger.error('Plugin checksum mismatch');
+        this.auditService.auditActivity({
+          pluginId: plugin.name ?? plugin.manifest?.name ?? 'unknown',
+          action: 'signature:validation:failed',
+          timestamp: new Date(),
+          metadata: { reason: 'Checksum mismatch', expected: plugin.checksum, actual: calculatedChecksum },
+        });
         return false;
       }
 
-      // In a real implementation, this would verify the digital signature
-      // using a public key from a trusted authority
+      // Verify digital signature
       const isValidSignature = await this.verifyDigitalSignature(plugin.checksum, plugin.signature);
 
       if (!isValidSignature) {
         this.logger.error('Invalid plugin signature');
+        this.auditService.auditActivity({
+          pluginId: plugin.name ?? plugin.manifest?.name ?? 'unknown',
+          action: 'signature:validation:failed',
+          timestamp: new Date(),
+          metadata: { reason: 'Invalid digital signature' },
+        });
         return false;
       }
 
       this.logger.debug('Plugin signature validation successful');
+      this.auditService.auditActivity({
+        pluginId: plugin.name ?? plugin.manifest?.name ?? 'unknown',
+        action: 'signature:validation:success',
+        timestamp: new Date(),
+        metadata: { checksum: calculatedChecksum },
+      });
+
       return true;
     } catch (error) {
       this.logger.error('Plugin signature validation failed:', error);
+      this.auditService.auditActivity({
+        pluginId: plugin.name ?? plugin.manifest?.name ?? 'unknown',
+        action: 'signature:validation:error',
+        timestamp: new Date(),
+        metadata: { error: error instanceof Error ? error.message : String(error) },
+      });
       return false;
     }
   }
@@ -99,18 +141,29 @@ export class PluginSecurityService {
     }
   }
 
+  /**
+   * Check plugin permissions for a specific resource and action
+   */
   checkPermissions(pluginId: string, resource: SecurityResourceType | string, action: SecurityAction | string): boolean {
     try {
-      const context = this.securityContexts.get(pluginId);
-      if (!context) {
-        this.logger.warn(`Security context not found for plugin: ${pluginId}`);
+      // First check authentication
+      const session = this.authService.getSession(pluginId);
+      if (!session) {
+        this.logger.warn(`No active session found for plugin: ${pluginId}`);
+        this.auditService.auditActivity({
+          pluginId,
+          action: `permission:${resource}:${action}:denied`,
+          timestamp: new Date(),
+          metadata: { reason: 'No active session', resource, action },
+        });
         return false;
       }
 
-      const hasPermission = this.evaluatePermission(context.permissions, resource, action);
+      // Check authorization
+      const hasPermission = this.authService.hasPermission(pluginId, resource, action);
 
-      // Log permission check
-      this.auditPluginActivity({
+      // Audit the permission check
+      this.auditService.auditActivity({
         pluginId,
         action: `permission:${resource}:${action}`,
         timestamp: new Date(),
@@ -118,6 +171,7 @@ export class PluginSecurityService {
           resource,
           action,
           granted: hasPermission,
+          sessionId: session.id,
         },
       });
 
@@ -127,6 +181,7 @@ export class PluginSecurityService {
           pluginId,
           resource,
           action,
+          sessionId: session.id,
           timestamp: new Date(),
         });
       }
@@ -134,35 +189,19 @@ export class PluginSecurityService {
       return hasPermission;
     } catch (error) {
       this.logger.error(`Permission check failed for ${pluginId}:`, error);
+      this.auditService.auditActivity({
+        pluginId,
+        action: `permission:${resource}:${action}:error`,
+        timestamp: new Date(),
+        metadata: { error: error instanceof Error ? error.message : String(error) },
+      });
       return false;
     }
   }
 
-  private evaluatePermission(permissions: PluginPermissions, resource: SecurityResourceType | string, action: SecurityAction | string): boolean {
-    const resourcePermissions = permissions[resource];
-
-    if (!resourcePermissions || !Array.isArray(resourcePermissions)) {
-      return false;
-    }
-
-    // Check if action is explicitly allowed
-    if (resourcePermissions.includes(action)) {
-      return true;
-    }
-
-    // Check for wildcard permissions
-    if (resourcePermissions.includes(SecurityAction.WILDCARD)) {
-      return true;
-    }
-
-    // Check for read/write hierarchies
-    if (action === 'read' && resourcePermissions.includes(SecurityAction.WRITE)) {
-      return true; // write permission implies read permission
-    }
-
-    return false;
-  }
-
+  /**
+   * Create security context for a plugin
+   */
   createSecurityContext(pluginId: string, permissions: PluginPermissions, resourceLimits?: ResourceLimits): SecurityContext {
     // Input validation
     if (!pluginId?.trim()) {
@@ -192,21 +231,42 @@ export class PluginSecurityService {
 
       this.securityContexts.set(pluginId, context);
 
+      this.auditService.auditActivity({
+        pluginId,
+        action: 'security:context:created',
+        timestamp: new Date(),
+        metadata: {
+          permissions: Object.keys(permissions),
+          isolation: context.isolation,
+          resourceLimits: context.resourceLimits,
+        },
+      });
+
       this.logger.debug(`Security context created for plugin: ${pluginId}`);
 
       this.eventEmitter.emit('plugin.security.context.created', {
         pluginId,
         permissions: Object.keys(permissions),
         isolation: context.isolation,
+        timestamp: new Date(),
       });
 
       return context;
     } catch (error) {
       this.logger.error(`Failed to create security context for ${pluginId}:`, error);
+      this.auditService.auditActivity({
+        pluginId,
+        action: 'security:context:creation:failed',
+        timestamp: new Date(),
+        metadata: { error: error instanceof Error ? error.message : String(error) },
+      });
       throw error;
     }
   }
 
+  /**
+   * Destroy security context for a plugin
+   */
   destroySecurityContext(pluginId: string): void {
     try {
       const context = this.securityContexts.get(pluginId);
@@ -218,42 +278,37 @@ export class PluginSecurityService {
       this.securityContexts.delete(pluginId);
       this.rateLimits.delete(pluginId);
 
+      // Logout from auth service
+      this.authService.logout(pluginId);
+
+      this.auditService.auditActivity({
+        pluginId,
+        action: 'security:context:destroyed',
+        timestamp: new Date(),
+        metadata: { isolation: context.isolation },
+      });
+
       this.logger.debug(`Security context destroyed for plugin: ${pluginId}`);
 
-      this.eventEmitter.emit('plugin.security.context.destroyed', { pluginId });
+      this.eventEmitter.emit('plugin.security.context.destroyed', {
+        pluginId,
+        timestamp: new Date(),
+      });
     } catch (error) {
       this.logger.error(`Failed to destroy security context for ${pluginId}:`, error);
     }
   }
 
+  /**
+   * Audit plugin activity (delegated to audit service)
+   */
   auditPluginActivity(activity: PluginActivity): void {
-    try {
-      // Add to in-memory log (in production, this would go to a persistent store)
-      this.activityLog.push(activity);
-
-      // Keep only last 10000 activities to prevent memory leaks
-      if (this.activityLog.length > 10000) {
-        this.activityLog.splice(0, this.activityLog.length - 10000);
-      }
-
-      // Emit audit event for external monitoring systems
-      this.eventEmitter.emit('plugin.activity.audit', activity);
-
-      // Log security-relevant activities
-      if (this.isSecurityRelevantActivity(activity)) {
-        this.logger.log(`Security activity logged for ${activity.pluginId}: ${activity.action}`);
-      }
-    } catch (error) {
-      this.logger.error('Failed to audit plugin activity:', error);
-    }
+    this.auditService.auditActivity(activity);
   }
 
-  private isSecurityRelevantActivity(activity: PluginActivity): boolean {
-    const securityActions = ['permission:', 'file:write', 'file:delete', 'network:connect', 'process:spawn', 'system:access'];
-
-    return securityActions.some((action) => activity.action.includes(action));
-  }
-
+  /**
+   * Enforce rate limiting for plugin operations
+   */
   enforceRateLimit(pluginId: string, operation: string, limit = 100): boolean {
     try {
       const now = Date.now();
@@ -274,6 +329,18 @@ export class PluginSecurityService {
 
       if (currentCount >= limit) {
         this.logger.warn(`Rate limit exceeded for ${pluginId}: ${operation} (${currentCount}/${limit})`);
+
+        this.auditService.auditActivity({
+          pluginId,
+          action: 'rate_limit:exceeded',
+          timestamp: new Date(),
+          metadata: {
+            operation,
+            currentCount,
+            limit,
+            rateLimitExceeded: true,
+          },
+        });
 
         this.eventEmitter.emit('plugin.rate_limit.exceeded', {
           pluginId,
@@ -307,17 +374,18 @@ export class PluginSecurityService {
     return this.securityContexts.get(pluginId) ?? null;
   }
 
+  /**
+   * Get plugin activity log (delegated to audit service)
+   */
   getPluginActivityLog(pluginId: string, limit = 100, offset = 0): PluginActivity[] {
-    const pluginActivities = this.activityLog
-      .filter((activity) => activity.pluginId === pluginId)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(offset, offset + limit);
-
-    return pluginActivities;
+    return this.auditService.getPluginActivityLog(pluginId, { limit, offset });
   }
 
+  /**
+   * Get all activity logs (delegated to audit service)
+   */
   getAllActivityLog(limit = 100, offset = 0): PluginActivity[] {
-    return this.activityLog.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(offset, offset + limit);
+    return this.auditService.getAllActivityLogs({ limit, offset });
   }
 
   validateResourceAccess(pluginId: string, resource: string, _path: string): boolean {
@@ -384,34 +452,16 @@ export class PluginSecurityService {
     }
   }
 
+  /**
+   * Generate security report (delegated to audit service with additional context)
+   */
   generateSecurityReport(pluginId?: string): SecurityReport {
     try {
-      const report: SecurityReport = {
-        timestamp: new Date(),
-        totalPlugins: this.securityContexts.size,
-        totalActivities: this.activityLog.length,
-        recentActivities: [],
-        securityViolations: [],
-        rateLimitViolations: [],
-        plugins: [],
-      };
+      const report = this.auditService.generateSecurityReport({ pluginId });
 
-      // Get recent activities
-      const activities = pluginId ? this.getPluginActivityLog(pluginId, 50) : this.getAllActivityLog(50);
+      // Add security context information
+      report.totalPlugins = this.securityContexts.size;
 
-      report.recentActivities = activities.map(
-        (activity): ActivitySummary => ({
-          pluginId: activity.pluginId,
-          action: activity.action,
-          timestamp: activity.timestamp,
-          metadata: activity.metadata,
-        }),
-      );
-
-      // Get security violations (failed permission checks)
-      report.securityViolations = activities.filter((activity) => activity.action.includes('permission:') && activity.metadata?.granted === false);
-
-      // Get plugin-specific info if requested
       if (pluginId) {
         const context = this.securityContexts.get(pluginId);
         if (context) {
@@ -425,15 +475,13 @@ export class PluginSecurityService {
           ];
         }
       } else {
-        // Get all plugins
-        report.plugins = Array.from(this.securityContexts.entries()).map(
-          ([id, context]): PluginSecurityInfo => ({
-            pluginId: id,
-            permissions: context.permissions,
-            isolation: context.isolation,
-            resourceLimits: context.resourceLimits,
-          }),
-        );
+        // Get all plugins with security contexts
+        report.plugins = Array.from(this.securityContexts.entries()).map(([id, context]) => ({
+          pluginId: id,
+          permissions: context.permissions,
+          isolation: context.isolation,
+          resourceLimits: context.resourceLimits,
+        }));
       }
 
       return report;

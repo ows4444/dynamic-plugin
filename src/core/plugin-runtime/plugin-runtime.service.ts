@@ -6,7 +6,11 @@ import { PluginSeverity } from '@/types/plugin.types';
 import { type ModuleStatus, PluginInstanceMethods, type PluginLoader, type PluginModule, type RuntimeContext, type ValidationResult } from '@/types/runtime.types';
 import { PluginLoaderService } from './services/plugin-loader.service';
 import { PluginContextService } from './services/plugin-context.service';
+import { PluginExecutionService } from './services/plugin-execution.service';
+import { PluginIsolationService } from './services/plugin-isolation.service';
 import { PluginErrorHandler } from '@/shared/utils/error-handler.util';
+import type { SecurityContext } from '@/types/plugin.types';
+import type { IsolationOptions, IsolationResult, ResourceUsage } from '@/types/runtime.types';
 
 /**
  * Enhanced plugin runtime service with improved architecture and error handling
@@ -20,6 +24,8 @@ export class PluginRuntimeService implements PluginLoader {
     private readonly moduleRef: ModuleRef,
     private readonly pluginLoader: PluginLoaderService,
     private readonly contextService: PluginContextService,
+    private readonly executionService: PluginExecutionService,
+    private readonly isolationService: PluginIsolationService,
   ) {}
 
   /**
@@ -250,5 +256,54 @@ export class PluginRuntimeService implements PluginLoader {
    */
   getLoadedModuleIds(): string[] {
     return this.pluginLoader.getAllLoadedModules().map((m) => m.id);
+  }
+
+  /**
+   * Create isolated environment for a plugin
+   */
+  createIsolatedEnvironment(plugin: PluginInstance, securityContext: SecurityContext, options: IsolationOptions = {}): IsolationResult {
+    return this.isolationService.createIsolatedEnvironment(plugin, securityContext, options);
+  }
+
+  /**
+   * Destroy isolated environment for a plugin
+   */
+  destroyIsolatedEnvironment(pluginId: string): void {
+    return this.isolationService.destroyIsolatedEnvironment(pluginId);
+  }
+
+  /**
+   * Execute plugin method with resource limits
+   */
+  async executeWithLimits(pluginId: string, method: string, args: unknown[], options?: { timeout?: number; memoryLimit?: number; cpuLimit?: number }): Promise<ExecutionResult> {
+    return this.executionService.executeWithLimits(pluginId, method, args, options);
+  }
+
+  /**
+   * Get execution metrics for a plugin
+   */
+  getExecutionMetrics(pluginId: string) {
+    return this.executionService.getExecutionMetrics(pluginId);
+  }
+
+  /**
+   * Get execution metrics for all plugins
+   */
+  getAllExecutionMetrics() {
+    return this.executionService.getAllExecutionMetrics();
+  }
+
+  /**
+   * Get resource usage for a plugin
+   */
+  getResourceUsage(pluginId: string): ResourceUsage | null {
+    return this.isolationService.getResourceUsage(pluginId);
+  }
+
+  /**
+   * Check if operation is allowed for a plugin
+   */
+  isOperationAllowed(pluginId: string, operation: string, resource?: string): boolean {
+    return this.isolationService.isOperationAllowed(pluginId, operation, resource);
   }
 }

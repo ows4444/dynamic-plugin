@@ -221,7 +221,7 @@ export class PluginManagementController {
   })
   @ApiResponse({ status: 404, description: 'Plugin not found' })
   @ApiResponse({ status: 501, description: 'Plugin updates not yet implemented' })
-  async updatePlugin(@Param('pluginId') pluginId: string, @Body() updateDto: UpdatePluginDto): Promise<UpdateResult> {
+  updatePlugin(@Param('pluginId') pluginId: string, @Body() updateDto: UpdatePluginDto): UpdateResult {
     if (!pluginId) {
       throw new BadRequestException('Plugin ID is required');
     }
@@ -230,7 +230,7 @@ export class PluginManagementController {
       throw new BadRequestException('Version is required');
     }
 
-    const result = await this.pluginManager.updatePlugin(pluginId, updateDto.version);
+    const result = this.pluginManager.updatePlugin(pluginId, updateDto.version);
 
     if (!result.success) {
       throw new BadRequestException(result.message ?? 'Plugin update failed');

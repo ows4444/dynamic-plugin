@@ -358,4 +358,27 @@ export interface ResourceLimits {
   };
 }
 
+export interface IsolationOptions {
+  level?: IsolationLevel;
+  resourceLimits?: Partial<ResourceLimits>;
+  networkRestrictions?: NetworkRule[];
+  filesystemRestrictions?: string[];
+  allowedModules?: string[];
+  deniedModules?: string[];
+  timeout?: number;
+  memoryLimit?: number;
+  cpuLimit?: number;
+  enableResourceMonitoring?: boolean;
+}
+
+export interface IsolationResult {
+  success: boolean;
+  pluginId?: string;
+  sandboxId?: string;
+  isolated: boolean;
+  resourceUsage: ResourceUsage;
+  violations: string[];
+  error?: string;
+}
+
 export { ValidationResult } from './plugin.types';

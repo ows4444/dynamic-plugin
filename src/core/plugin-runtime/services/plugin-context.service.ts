@@ -282,7 +282,7 @@ export class PluginContextService {
       const configPath = path.join(process.cwd(), 'src', 'plugins', 'installed', plugin.name, 'config', 'plugin.config.json');
 
       if (await fs.pathExists(configPath)) {
-        const configData = await fs.readJson(configPath);
+        const configData = (await fs.readJson(configPath)) as PluginConfig;
         return PluginErrorHandler.validateConfiguration(configData, plugin.id);
       }
 

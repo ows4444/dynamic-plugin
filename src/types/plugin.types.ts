@@ -157,6 +157,7 @@ export interface PluginCredentials {
 }
 
 export interface PluginPackage {
+  name?: string;
   manifest: PluginManifest;
   files: Map<string, Buffer>;
   signature?: string;
@@ -376,6 +377,7 @@ export interface InstallationResult {
   version: string;
   message?: string;
   errors?: string[];
+  installTime?: Date;
 }
 
 export interface LoadResult {
@@ -492,6 +494,9 @@ export interface PluginActivityMetadata {
   correlationId?: string;
   parameters?: Record<string, unknown>;
   returnValue?: unknown;
+  operation?: string;
+  currentCount?: number;
+  limit?: number;
   [key: string]: unknown;
 }
 

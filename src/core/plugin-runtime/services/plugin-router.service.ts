@@ -374,7 +374,7 @@ export class PluginRouterService {
         methodName,
         method: httpMethod,
         path: routePath,
-        handler: (method as (...args: unknown[]) => unknown).bind(controllerInstance),
+        handler: (method as Function).bind(controllerInstance),
         paramTypes,
         middlewares,
         guards,
@@ -391,13 +391,13 @@ export class PluginRouterService {
     const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'];
 
     for (const method of methods) {
-      if (this.reflector.get(method.toLowerCase(), (prototype as Record<string, unknown>)[methodName] as (...args: unknown[]) => unknown) !== undefined) {
+      if (this.reflector.get(method.toLowerCase(), (prototype as Record<string, unknown>)[methodName] as Function) !== undefined) {
         return method;
       }
     }
 
     // Check for @RequestMapping decorator
-    const requestMapping = this.reflector.get('method', (prototype as Record<string, unknown>)[methodName] as (...args: unknown[]) => unknown);
+    const requestMapping = this.reflector.get('method', (prototype as Record<string, unknown>)[methodName] as Function);
     if (requestMapping !== undefined) {
       return RequestMethod[requestMapping] ?? 'GET';
     }
@@ -407,37 +407,37 @@ export class PluginRouterService {
 
   private getRoutePath(prototype: object, methodName: string): string {
     // Get path from route decorators
-    const path = this.reflector.get('path', (prototype as Record<string, unknown>)[methodName] as (...args: unknown[]) => unknown);
+    const path = this.reflector.get('path', (prototype as Record<string, unknown>)[methodName] as Function);
 
     // Also check for plugin route decorator
-    const pluginRoute = this.reflector.get('plugin:route:config', (prototype as Record<string, unknown>)[methodName] as (...args: unknown[]) => unknown);
+    const pluginRoute = this.reflector.get('plugin:route:config', (prototype as Record<string, unknown>)[methodName] as Function);
 
     return pluginRoute?.path ?? path ?? '';
   }
 
   private getParameterTypes(prototype: object, methodName: string): Type<unknown>[] {
     // Get parameter metadata for proper request handling
-    const paramTypes = this.reflector.get('design:paramtypes', (prototype as Record<string, unknown>)[methodName] as (...args: unknown[]) => unknown);
+    const paramTypes = this.reflector.get('design:paramtypes', (prototype as Record<string, unknown>)[methodName] as Function);
     return paramTypes ?? [];
   }
 
   private getMiddlewares(prototype: object, methodName: string): string[] {
-    const middlewares = this.reflector.get('middlewares', (prototype as Record<string, unknown>)[methodName] as (...args: unknown[]) => unknown);
+    const middlewares = this.reflector.get('middlewares', (prototype as Record<string, unknown>)[methodName] as Function);
     return middlewares ?? [];
   }
 
   private getGuards(prototype: object, methodName: string): string[] {
-    const guards = this.reflector.get('guards', (prototype as Record<string, unknown>)[methodName] as (...args: unknown[]) => unknown);
+    const guards = this.reflector.get('guards', (prototype as Record<string, unknown>)[methodName] as Function);
     return guards ?? [];
   }
 
   private getInterceptors(prototype: object, methodName: string): string[] {
-    const interceptors = this.reflector.get('interceptors', (prototype as Record<string, unknown>)[methodName] as (...args: unknown[]) => unknown);
+    const interceptors = this.reflector.get('interceptors', (prototype as Record<string, unknown>)[methodName] as Function);
     return interceptors ?? [];
   }
 
   private getPermissions(prototype: object, methodName: string): string[] {
-    const permissions = this.reflector.get('plugin:permission:required', (prototype as Record<string, unknown>)[methodName] as (...args: unknown[]) => unknown);
+    const permissions = this.reflector.get('plugin:permission:required', (prototype as Record<string, unknown>)[methodName] as Function);
     return permissions ?? [];
   }
 
