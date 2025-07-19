@@ -1,11 +1,20 @@
-import { Body, Get, Post } from '@nestjs/common';
+import { Body, Get, Logger, Post } from '@nestjs/common';
 import { PluginController, PluginLogger, PluginPermission, PluginRoute } from '@/shared/decorators/plugin.decorator';
 import { SampleService } from './sample.service';
+import type { PluginMetrics } from '@/types/plugin.types';
+
+type CreateDataDto = Record<string, unknown>;
+
+interface CreateDataResponse {
+  id: string;
+  data: unknown;
+  created: string;
+}
 
 @PluginController('/sample')
 export class SampleController {
   @PluginLogger('SampleController')
-  private readonly logger: any;
+  private readonly logger: Logger;
 
   constructor(private readonly sampleService: SampleService) {}
 
@@ -47,7 +56,7 @@ export class SampleController {
     permissions: ['write'],
   })
   @PluginPermission(['write'])
-  async createData(@Body() data: any): Promise<{ id: string; data: any; created: string }> {
+  async createData(@Body() data: CreateDataDto): Promise<CreateDataResponse> {
     this.logger?.log('Creating new data entry');
 
     const result = await this.sampleService.createData(data);
@@ -64,7 +73,7 @@ export class SampleController {
     path: '/metrics',
     method: 'GET',
   })
-  getMetrics(): any {
+  getMetrics(): PluginMetrics {
     this.logger?.log('Getting plugin metrics');
 
     return this.sampleService.getMetrics();

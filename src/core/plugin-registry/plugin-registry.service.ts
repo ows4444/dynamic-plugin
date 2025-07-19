@@ -39,7 +39,7 @@ export class PluginRegistryService {
 
     if (await fs.pathExists(registryFile)) {
       try {
-        const data = await fs.readJson(registryFile);
+        const data = (await fs.readJson(registryFile)) as PluginRegistry;
 
         if (data.plugins) {
           for (const [id, entry] of Object.entries(data.plugins)) {
@@ -93,7 +93,7 @@ export class PluginRegistryService {
       await fs.ensureDir(installedPath);
       const pluginDirs = await fs.readdir(installedPath);
 
-      for (const pluginDir of pluginDirs) {
+      const pluginPromises = pluginDirs.map(async (pluginDir) => {
         const pluginPath = path.join(installedPath, pluginDir);
         const manifestPath = path.join(pluginPath, 'plugin.manifest.json');
 
@@ -101,14 +101,19 @@ export class PluginRegistryService {
           try {
             const manifest = (await fs.readJson(manifestPath)) as PluginManifest;
             const metadata = this.manifestToMetadata(manifest, pluginPath);
-            discovered.push(metadata);
 
             this.logger.debug(`Discovered plugin: ${manifest.name}@${manifest.version}`);
+            return metadata;
           } catch (error) {
             this.logger.warn(`Failed to load plugin manifest: ${pluginDir}`, error);
+            return null;
           }
         }
-      }
+        return null;
+      });
+
+      const results = await Promise.all(pluginPromises);
+      discovered.push(...results.filter((metadata): metadata is PluginMetadata => metadata !== null));
 
       this.logger.log(`Discovered ${discovered.length} plugins`);
       return discovered;

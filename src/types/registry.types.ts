@@ -1,5 +1,4 @@
 import type { PluginDependency, PluginEngines, PluginPermissions } from './plugin.types';
-
 export enum PluginRegistryScope {
   PUBLIC = 'public',
   PRIVATE = 'private',
@@ -246,5 +245,3 @@ export interface PluginRestoreOptions {
   preserveData: boolean;
   force: boolean;
 }
-
-import type { PluginDependency, PluginEngines, PluginPermissions } from './plugin.types';

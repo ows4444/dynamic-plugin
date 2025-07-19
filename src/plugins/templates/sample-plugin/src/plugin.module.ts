@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { Plugin } from '@/shared/decorators/plugin.decorator';
 import { SampleController } from './sample.controller';
 import { SampleService } from './sample.service';
@@ -37,15 +37,17 @@ import { SampleService } from './sample.service';
   exports: [SampleService],
 })
 export class SamplePluginModule {
+  private readonly logger = new Logger(SamplePluginModule.name);
+
   constructor(private readonly sampleService: SampleService) {}
 
   async onModuleInit() {
-    console.log('Sample Plugin Module initialized');
+    this.logger.log('Sample Plugin Module initialized');
     await this.sampleService.initialize();
   }
 
   async onModuleDestroy() {
-    console.log('Sample Plugin Module destroyed');
+    this.logger.log('Sample Plugin Module destroyed');
     await this.sampleService.cleanup();
   }
 }

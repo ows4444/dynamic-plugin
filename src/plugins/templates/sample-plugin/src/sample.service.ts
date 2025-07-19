@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PluginConfig, PluginEventHandler, PluginHook, PluginLogger, PluginService } from '@/shared/decorators/plugin.decorator';
 import { PluginServiceInterface } from '@/shared/interfaces/plugin.interface';
-import { HealthStatus, Logger, PluginContext, PluginMetrics, SamplePluginConfig } from '@/types/plugin.types';
+import { HealthStatus, HealthStatusType, Logger, PluginContext, PluginMetrics, SamplePluginConfig } from '@/types/plugin.types';
 
 @Injectable()
 @PluginService({
@@ -193,7 +193,7 @@ export class SampleService implements PluginServiceInterface {
     const isHealthy = this.errorCount < 10 && metrics.uptime > 0;
 
     return {
-      status: isHealthy ? 'healthy' : 'unhealthy',
+      status: isHealthy ? HealthStatusType.HEALTHY : HealthStatusType.UNHEALTHY,
       timestamp: new Date(),
       details: {
         uptime: metrics.uptime,

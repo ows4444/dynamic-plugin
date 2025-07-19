@@ -1,12 +1,19 @@
-import { Module } from '@nestjs/common';
-import type { PluginConfiguration } from '@/shared/interfaces/plugin.interface';
+import { Controller, Injectable, Module } from '@nestjs/common';
+import type { PluginConfiguration, PluginRouteConfig } from '@/shared/interfaces/plugin.interface';
+import type { Type } from '@nestjs/common';
+import 'reflect-metadata';
+
+// Type definitions for better decorator typing
+type Constructor<TObject = object> = new (...args: unknown[]) => TObject;
+type PluginClassDecorator = <TFunction extends Constructor>(target: TFunction) => TFunction | void;
+type PluginPropertyDecorator = (target: object, propertyKey: string | symbol) => void;
 
 /**
  * Plugin decorator to mark a class as a plugin module
  * Extends the NestJS @Module decorator with plugin-specific metadata
  */
-export function Plugin(config: PluginConfiguration) {
-  return function <T extends new (...args: any[]) => any>(constructor: T) {
+export function Plugin(config: PluginConfiguration): PluginClassDecorator {
+  return function <TConstructor extends Constructor>(constructor: TConstructor): TConstructor {
     // Store plugin configuration in metadata
     Reflect.defineMetadata('plugin:config', config, constructor);
 
@@ -39,20 +46,24 @@ export function Plugin(config: PluginConfiguration) {
       exports: [],
     });
 
-    return moduleDecorator(constructor);
+    moduleDecorator(constructor);
+    return constructor;
   };
 }
 
 /**
  * Plugin service decorator to mark a class as a plugin service
  */
-export function PluginService(config?: { name?: string; singleton?: boolean; lazy?: boolean }) {
-  return function <T extends new (...args: any[]) => any>(constructor: T) {
+export function PluginService(config?: { name?: string; singleton?: boolean; lazy?: boolean }): PluginClassDecorator {
+  return function <TConstructor extends Constructor>(constructor: TConstructor): TConstructor {
     // Store service configuration
     Reflect.defineMetadata('plugin:service:config', config ?? {}, constructor);
 
     // Mark as plugin service
     Reflect.defineMetadata('plugin:service', true, constructor);
+
+    // Apply @Injectable decorator
+    Injectable()(constructor);
 
     return constructor;
   };
@@ -67,8 +78,8 @@ export function PluginController(
     permissions?: string[];
     middleware?: string[];
   },
-) {
-  return function <T extends new (...args: any[]) => any>(constructor: T) {
+): PluginClassDecorator {
+  return function <TConstructor extends Constructor>(constructor: TConstructor): TConstructor {
     // Store controller configuration
     Reflect.defineMetadata('plugin:controller:config', config ?? {}, constructor);
 
@@ -78,6 +89,13 @@ export function PluginController(
     // Mark as plugin controller
     Reflect.defineMetadata('plugin:controller', true, constructor);
 
+    // Apply @Controller decorator if path is provided
+    if (path) {
+      Controller(path)(constructor);
+    } else {
+      Controller()(constructor);
+    }
+
     return constructor;
   };
 }
@@ -86,7 +104,7 @@ export function PluginController(
  * Plugin event handler decorator
  */
 export function PluginEventHandler(eventType: string | string[]) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function <T>(target: object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>): TypedPropertyDescriptor<T> | void {
     const eventTypes = Array.isArray(eventType) ? eventType : [eventType];
 
     // Store event handler metadata
@@ -101,7 +119,7 @@ export function PluginEventHandler(eventType: string | string[]) {
  * Plugin hook handler decorator
  */
 export function PluginHook(hookName: string) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function <T>(target: object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>): TypedPropertyDescriptor<T> | void {
     // Store hook handler metadata
     Reflect.defineMetadata('plugin:hook:name', hookName, target, propertyKey);
     Reflect.defineMetadata('plugin:hook:handler', true, target, propertyKey);
@@ -114,7 +132,7 @@ export function PluginHook(hookName: string) {
  * Plugin permission decorator for methods
  */
 export function PluginPermission(permission: string | string[]) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function <T>(target: object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>): TypedPropertyDescriptor<T> | void {
     const permissions = Array.isArray(permission) ? permission : [permission];
 
     // Store permission metadata
@@ -127,8 +145,8 @@ export function PluginPermission(permission: string | string[]) {
 /**
  * Plugin route decorator
  */
-export function PluginRoute(config: { path?: string; method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'; permissions?: string[]; middleware?: string[] }) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+export function PluginRoute(config: Pick<PluginRouteConfig, 'path' | 'method' | 'permissions' | 'middleware'>) {
+  return function <T>(target: object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>): TypedPropertyDescriptor<T> | void {
     // Store route configuration
     Reflect.defineMetadata('plugin:route:config', config, target, propertyKey);
     Reflect.defineMetadata('plugin:route', true, target, propertyKey);
@@ -140,9 +158,9 @@ export function PluginRoute(config: { path?: string; method?: 'GET' | 'POST' | '
 /**
  * Plugin configuration decorator for properties
  */
-export function PluginConfig(key?: string, defaultValue?: any) {
-  return function (target: any, propertyKey: string) {
-    const configKey = key ?? propertyKey;
+export function PluginConfig(key?: string, defaultValue?: unknown): PluginPropertyDecorator {
+  return function (target: object, propertyKey: string | symbol) {
+    const configKey = key ?? String(propertyKey);
 
     // Store config metadata
     Reflect.defineMetadata('plugin:config:key', configKey, target, propertyKey);
@@ -154,8 +172,8 @@ export function PluginConfig(key?: string, defaultValue?: any) {
 /**
  * Plugin logger decorator
  */
-export function PluginLogger(context?: string) {
-  return function (target: any, propertyKey: string) {
+export function PluginLogger(context?: string): PluginPropertyDecorator {
+  return function (target: object, propertyKey: string | symbol) {
     // Store logger metadata
     Reflect.defineMetadata('plugin:logger:context', context, target, propertyKey);
     Reflect.defineMetadata('plugin:logger', true, target, propertyKey);
@@ -169,91 +187,97 @@ export class PluginMetadataReader {
   /**
    * Get plugin configuration from a class
    */
-  static getPluginConfig(target: any): PluginConfiguration | undefined {
-    return Reflect.getMetadata('plugin:config', target);
+  static getPluginConfig(target: Type<object> | Constructor | object): PluginConfiguration | undefined {
+    return Reflect.getMetadata('plugin:config', target) as PluginConfiguration | undefined;
   }
 
   /**
    * Get plugin ID from a class
    */
-  static getPluginId(target: any): string | undefined {
-    return Reflect.getMetadata('plugin:id', target);
+  static getPluginId(target: Type<object> | Constructor | object): string | undefined {
+    return Reflect.getMetadata('plugin:id', target) as string | undefined;
   }
 
   /**
    * Get plugin name from a class
    */
-  static getPluginName(target: any): string | undefined {
-    return Reflect.getMetadata('plugin:name', target);
+  static getPluginName(target: Type<object> | Constructor | object): string | undefined {
+    return Reflect.getMetadata('plugin:name', target) as string | undefined;
   }
 
   /**
    * Get plugin version from a class
    */
-  static getPluginVersion(target: any): string | undefined {
-    return Reflect.getMetadata('plugin:version', target);
+  static getPluginVersion(target: Type<object> | Constructor | object): string | undefined {
+    return Reflect.getMetadata('plugin:version', target) as string | undefined;
   }
 
   /**
    * Get plugin capabilities from a class
    */
-  static getPluginCapabilities(target: any): string[] {
-    return Reflect.getMetadata('plugin:capabilities', target) ?? [];
+  static getPluginCapabilities(target: Type<object> | Constructor | object): string[] {
+    return (Reflect.getMetadata('plugin:capabilities', target) as string[] | undefined) ?? [];
   }
 
   /**
    * Get plugin permissions from a class
    */
-  static getPluginPermissions(target: any): Record<string, string[]> {
-    return Reflect.getMetadata('plugin:permissions', target) ?? {};
+  static getPluginPermissions(target: Type<object> | Constructor | object): Record<string, string[]> {
+    return (Reflect.getMetadata('plugin:permissions', target) as Record<string, string[]> | undefined) ?? {};
   }
 
   /**
    * Get plugin dependencies from a class
    */
-  static getPluginDependencies(target: any): Record<string, string> {
-    return Reflect.getMetadata('plugin:dependencies', target) ?? {};
+  static getPluginDependencies(target: Type<object> | Constructor | object): Record<string, string> {
+    return (Reflect.getMetadata('plugin:dependencies', target) as Record<string, string> | undefined) ?? {};
   }
 
   /**
    * Get plugin events from a class
    */
-  static getPluginEvents(target: any): string[] {
-    return Reflect.getMetadata('plugin:events', target) ?? [];
+  static getPluginEvents(target: Type<object> | Constructor | object): string[] {
+    return (Reflect.getMetadata('plugin:events', target) as string[] | undefined) ?? [];
   }
 
   /**
    * Check if a class is a plugin
    */
-  static isPlugin(target: any): boolean {
+  static isPlugin(target: Type<object> | Constructor | object): boolean {
     return Boolean(Reflect.getMetadata('plugin:config', target));
   }
 
   /**
    * Check if a class is a plugin service
    */
-  static isPluginService(target: any): boolean {
+  static isPluginService(target: Type<object> | Constructor | object): boolean {
     return Boolean(Reflect.getMetadata('plugin:service', target));
   }
 
   /**
    * Check if a class is a plugin controller
    */
-  static isPluginController(target: any): boolean {
+  static isPluginController(target: Type<object> | Constructor | object): boolean {
     return Boolean(Reflect.getMetadata('plugin:controller', target));
   }
 
   /**
    * Get event handlers from a class
    */
-  static getEventHandlers(target: any): { method: string; eventTypes: string[] }[] {
+  static getEventHandlers(target: Type<object> | Constructor | object): { method: string; eventTypes: string[] }[] {
     const handlers: { method: string; eventTypes: string[] }[] = [];
-    const prototype = target.prototype ?? target;
+    let prototypeTarget: object;
 
-    const methodNames = Object.getOwnPropertyNames(prototype);
+    if ('prototype' in target && target.prototype) {
+      prototypeTarget = target.prototype as object;
+    } else {
+      prototypeTarget = target as object;
+    }
+
+    const methodNames = Object.getOwnPropertyNames(prototypeTarget).filter((name) => name !== 'constructor' && typeof (prototypeTarget as Record<string, unknown>)[name] === 'function');
     for (const methodName of methodNames) {
-      if (Reflect.getMetadata('plugin:event:handler', prototype, methodName)) {
-        const eventTypes = Reflect.getMetadata('plugin:event:types', prototype, methodName) ?? [];
+      if (Reflect.getMetadata('plugin:event:handler', prototypeTarget, methodName) as boolean | undefined) {
+        const eventTypes: string[] = (Reflect.getMetadata('plugin:event:types', prototypeTarget, methodName) as string[] | undefined) ?? [];
         handlers.push({ method: methodName, eventTypes });
       }
     }
@@ -264,14 +288,20 @@ export class PluginMetadataReader {
   /**
    * Get hook handlers from a class
    */
-  static getHookHandlers(target: any): { method: string; hookName: string }[] {
+  static getHookHandlers(target: Type<object> | Constructor | object): { method: string; hookName: string }[] {
     const handlers: { method: string; hookName: string }[] = [];
-    const prototype = target.prototype ?? target;
+    let prototypeTarget: object;
 
-    const methodNames = Object.getOwnPropertyNames(prototype);
+    if ('prototype' in target && target.prototype) {
+      prototypeTarget = target.prototype as object;
+    } else {
+      prototypeTarget = target as object;
+    }
+
+    const methodNames = Object.getOwnPropertyNames(prototypeTarget).filter((name) => name !== 'constructor' && typeof (prototypeTarget as Record<string, unknown>)[name] === 'function');
     for (const methodName of methodNames) {
-      if (Reflect.getMetadata('plugin:hook:handler', prototype, methodName)) {
-        const hookName = Reflect.getMetadata('plugin:hook:name', prototype, methodName);
+      if (Reflect.getMetadata('plugin:hook:handler', prototypeTarget, methodName) as boolean | undefined) {
+        const hookName: string = Reflect.getMetadata('plugin:hook:name', prototypeTarget, methodName) as string;
         if (hookName) {
           handlers.push({ method: methodName, hookName });
         }
@@ -284,14 +314,14 @@ export class PluginMetadataReader {
   /**
    * Get required permissions for a method
    */
-  static getMethodPermissions(target: any, methodName: string): string[] {
-    return Reflect.getMetadata('plugin:permission:required', target, methodName) ?? [];
+  static getMethodPermissions(target: object, methodName: string | symbol): string[] {
+    return (Reflect.getMetadata('plugin:permission:required', target, methodName) as string[] | undefined) ?? [];
   }
 
   /**
    * Get route configuration for a method
    */
-  static getRouteConfig(target: any, methodName: string): any {
-    return Reflect.getMetadata('plugin:route:config', target, methodName);
+  static getRouteConfig(target: object, methodName: string | symbol): Pick<PluginRouteConfig, 'path' | 'method' | 'permissions' | 'middleware'> | undefined {
+    return Reflect.getMetadata('plugin:route:config', target, methodName) as Pick<PluginRouteConfig, 'path' | 'method' | 'permissions' | 'middleware'> | undefined;
   }
 }
