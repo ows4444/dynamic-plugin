@@ -1,6 +1,36 @@
 import type { ModuleMetadata } from '@nestjs/common';
 import type { HealthStatus, PluginContext, PluginMetrics } from '@/types/plugin.types';
 
+/**
+ * Plugin configuration schema definition
+ * Describes the structure and validation rules for plugin configuration
+ */
+export interface PluginConfigSchema {
+  type: 'object';
+  properties: Record<string, PluginConfigProperty>;
+  required?: string[];
+  additionalProperties?: boolean;
+  title?: string;
+  description?: string;
+}
+
+/**
+ * Individual configuration property definition
+ */
+export interface PluginConfigProperty {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  description?: string;
+  default?: unknown;
+  required?: boolean;
+  enum?: unknown[];
+  minimum?: number;
+  maximum?: number;
+  minLength?: number;
+  maxLength?: number;
+  items?: PluginConfigProperty;
+  properties?: Record<string, PluginConfigProperty>;
+}
+
 export interface IPlugin {
   /**
    * Called when the plugin module is initialized
@@ -34,8 +64,9 @@ export interface IPlugin {
 
   /**
    * Returns the plugin's configuration schema
+   * Defines the structure and validation rules for the plugin's configuration
    */
-  getConfigSchema?(): Promise<any>;
+  getConfigSchema?(): Promise<PluginConfigSchema>;
 
   /**
    * Validates the plugin's configuration
