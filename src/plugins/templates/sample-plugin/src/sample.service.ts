@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PluginConfig, PluginEventHandler, PluginHook, PluginLogger, PluginService } from '@/shared/decorators/plugin.decorator';
 import { PluginServiceInterface } from '@/shared/interfaces/plugin.interface';
-import { PluginContext } from '@/types/plugin.types';
+import { HealthStatus, Logger, PluginContext, PluginMetrics, SamplePluginConfig } from '@/types/plugin.types';
 
 @Injectable()
 @PluginService({
@@ -10,7 +10,7 @@ import { PluginContext } from '@/types/plugin.types';
 })
 export class SampleService implements PluginServiceInterface {
   @PluginLogger('SampleService')
-  private readonly logger: any;
+  private readonly logger?: Logger;
 
   @PluginConfig('greeting', 'Hello from Sample Plugin!')
   private readonly greeting: string;
@@ -19,15 +19,14 @@ export class SampleService implements PluginServiceInterface {
   private readonly maxItems: number;
 
   private readonly startTime: Date = new Date();
-  private readonly dataStore = new Map<string, any>();
+  private readonly dataStore = new Map<string, unknown>();
   private requestCount = 0;
   private errorCount = 0;
 
-  readonly context: PluginContext;
+  readonly context: PluginContext<SamplePluginConfig>;
 
   constructor() {
     // Context will be injected by the plugin system
-    this.context = {} as PluginContext;
   }
 
   async initialize(): Promise<void> {
@@ -45,11 +44,14 @@ export class SampleService implements PluginServiceInterface {
     // Clear data store
     this.dataStore.clear();
 
+    // Simulate async cleanup
+    await Promise.resolve();
+
     this.logger?.log('Sample Service cleaned up successfully');
   }
 
   @PluginEventHandler('sample.event')
-  async handleSampleEvent(data: any): Promise<void> {
+  async handleSampleEvent(data: unknown): Promise<void> {
     this.logger?.log('Handling sample event:', data);
 
     // Process the event
@@ -72,39 +74,42 @@ export class SampleService implements PluginServiceInterface {
   }
 
   @PluginEventHandler(['sample.notification', 'system.notification'])
-  async handleNotifications(data: any): Promise<void> {
+  async handleNotifications(data: unknown): Promise<void> {
     this.logger?.log('Handling notification:', data);
 
     // Process notifications
     // This could trigger alerts, logs, or other actions
+    await Promise.resolve();
   }
 
   @PluginHook('onInstall')
-  async onInstallHook(context: PluginContext): Promise<void> {
+  async onInstallHook(_context: PluginContext): Promise<void> {
     this.logger?.log('Running install hook');
 
     // Perform installation-specific tasks
     // e.g., create database tables, set up configurations
+    await Promise.resolve();
   }
 
   @PluginHook('onUninstall')
-  async onUninstallHook(context: PluginContext): Promise<void> {
+  async onUninstallHook(_context: PluginContext): Promise<void> {
     this.logger?.log('Running uninstall hook');
 
     // Perform cleanup tasks
     // e.g., remove database tables, clean up files
+    await Promise.resolve();
   }
 
-  async getHelloMessage(): Promise<string> {
+  getHelloMessage(): string {
     this.requestCount++;
     return this.greeting;
   }
 
-  async getUptime(): Promise<number> {
+  getUptime(): number {
     return Date.now() - this.startTime.getTime();
   }
 
-  async createData(data: any): Promise<{ id: string; data: any }> {
+  async createData(data: unknown): Promise<{ id: string; data: unknown }> {
     try {
       this.requestCount++;
 
@@ -112,7 +117,7 @@ export class SampleService implements PluginServiceInterface {
         throw new Error(`Maximum items limit reached: ${this.maxItems}`);
       }
 
-      const id = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const id = `item-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const item = {
         id,
         data,
@@ -141,12 +146,12 @@ export class SampleService implements PluginServiceInterface {
     }
   }
 
-  async getData(id: string): Promise<any> {
+  getData(id: string): unknown {
     this.requestCount++;
     return this.dataStore.get(id);
   }
 
-  async getAllData(): Promise<any[]> {
+  getAllData(): unknown[] {
     this.requestCount++;
     return Array.from(this.dataStore.values());
   }
@@ -168,25 +173,23 @@ export class SampleService implements PluginServiceInterface {
     return deleted;
   }
 
-  async getMetrics(): Promise<any> {
+  getMetrics(): PluginMetrics {
     const uptime = this.getUptime();
 
     return {
+      cpu: 0, // Placeholder - would be calculated based on actual CPU usage
+      memory: process.memoryUsage().heapUsed,
+      requests: this.requestCount,
+      errors: this.errorCount,
       uptime,
-      requestCount: this.requestCount,
-      errorCount: this.errorCount,
+      // Additional custom metrics
       dataStoreSize: this.dataStore.size,
-      memoryUsage: process.memoryUsage(),
-      timestamp: new Date(),
-      configuration: {
-        greeting: this.greeting,
-        maxItems: this.maxItems,
-      },
+      maxItems: this.maxItems,
     };
   }
 
-  async getHealth(): Promise<any> {
-    const metrics = await this.getMetrics();
+  getHealth(): HealthStatus {
+    const metrics = this.getMetrics();
     const isHealthy = this.errorCount < 10 && metrics.uptime > 0;
 
     return {
@@ -197,6 +200,8 @@ export class SampleService implements PluginServiceInterface {
         requestCount: this.requestCount,
         errorCount: this.errorCount,
         dataStoreSize: this.dataStore.size,
+        memoryUsage: metrics.memory,
+        cpuUsage: metrics.cpu,
       },
     };
   }

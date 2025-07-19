@@ -1,4 +1,49 @@
+import type { Type } from '@nestjs/common';
 import type { PluginPermissions, ValidationResult } from './plugin.types';
+
+export enum EnvironmentType {
+  DEVELOPMENT = 'development',
+  STAGING = 'staging',
+  PRODUCTION = 'production',
+  TEST = 'test',
+}
+
+export enum IsolationLevel {
+  NONE = 'none',
+  BASIC = 'basic',
+  ENHANCED = 'enhanced',
+  STRICT = 'strict',
+}
+
+export enum ModuleState {
+  UNLOADED = 'unloaded',
+  LOADING = 'loading',
+  LOADED = 'loaded',
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  ERROR = 'error',
+  UNLOADING = 'unloading',
+}
+
+export interface ModuleStatus {
+  state: ModuleState;
+  loaded: boolean;
+  initialized: boolean;
+  healthy: boolean;
+  lastHealthCheck?: Date;
+  errorCount: number;
+  lastError?: Error;
+  version?: string;
+}
+
+export enum NetworkProtocol {
+  HTTP = 'http',
+  HTTPS = 'https',
+  TCP = 'tcp',
+  UDP = 'udp',
+  WS = 'ws',
+  WSS = 'wss',
+}
 
 export interface RuntimeContext {
   pluginId: string;
@@ -16,8 +61,10 @@ export interface RuntimeEnvironment {
   nestjsVersion: string;
   platform: string;
   architecture: string;
-  environmentType: 'development' | 'staging' | 'production';
+  environmentType: EnvironmentType;
   variables: Record<string, string>;
+  timezone?: string;
+  locale?: string;
 }
 
 export interface RuntimePermissions {
@@ -85,11 +132,20 @@ export interface PluginLoader {
   getPluginModule(pluginId: string): PluginModule | null;
 }
 
+export interface PluginModuleInstance {
+  onModuleInit?(): Promise<void>;
+  onModuleDestroy?(): Promise<void>;
+  onApplicationBootstrap?(): Promise<void>;
+  onApplicationShutdown?(signal?: string): Promise<void>;
+}
+
+export type PluginModuleInstanceWithMethods = PluginModuleInstance & Record<string, unknown>;
+
 export interface PluginModule {
   id: string;
   name: string;
   version: string;
-  instance: any;
+  instance: PluginModuleInstanceWithMethods | null;
   exports: PluginExports;
   metadata: ModuleMetadata;
   status: ModuleStatus;
@@ -98,12 +154,28 @@ export interface PluginModule {
 }
 
 export interface PluginExports {
-  controllers?: any[];
-  providers?: any[];
-  imports?: any[];
-  exports?: any[];
-  module: any;
+  controllers?: Type<unknown>[];
+  providers?: Type<unknown>[];
+  imports?: (Type<unknown> | DynamicModule)[];
+  exports?: (Type<unknown> | string)[];
+  module: Type<unknown>;
 }
+
+export interface DynamicModule {
+  module: Type<unknown>;
+  imports?: (Type<unknown> | DynamicModule)[];
+  controllers?: Type<unknown>[];
+  providers?: Type<unknown>[];
+  exports?: (Type<unknown> | string)[];
+  global?: boolean;
+}
+
+export interface DynamicModuleImport {
+  default?: unknown;
+  [key: string]: unknown;
+}
+
+export type PluginInstanceMethods = Record<string, (...args: unknown[]) => Promise<unknown>>;
 
 export interface ModuleMetadata {
   decorators: string[];
@@ -112,15 +184,6 @@ export interface ModuleMetadata {
   controllers: string[];
   exports: string[];
   global: boolean;
-}
-
-export interface ModuleStatus {
-  loaded: boolean;
-  initialized: boolean;
-  healthy: boolean;
-  lastHealthCheck: Date;
-  errorCount: number;
-  lastError?: Error;
 }
 
 export interface PluginCompiler {
@@ -171,7 +234,7 @@ export interface CompilationCache {
 export interface PluginSandbox {
   createSandbox(context: RuntimeContext): Promise<SandboxInstance>;
   destroySandbox(sandboxId: string): Promise<void>;
-  executeSandboxed(sandboxId: string, code: string): Promise<any>;
+  executeSandboxed(sandboxId: string, code: string): Promise<unknown>;
   getSandboxStatus(sandboxId: string): SandboxStatus;
   listSandboxes(): SandboxInstance[];
 }
@@ -180,7 +243,7 @@ export interface SandboxInstance {
   id: string;
   pluginId: string;
   context: RuntimeContext;
-  vm: any;
+  vm: unknown;
   status: SandboxStatus;
   createdAt: Date;
   lastActivity: Date;
@@ -280,13 +343,6 @@ export interface FilesystemOperation {
   size: number;
   duration: number;
   timestamp: Date;
-}
-
-export enum IsolationLevel {
-  NONE = 'none',
-  PROCESS = 'process',
-  CONTAINER = 'container',
-  VM = 'vm',
 }
 
 export interface ResourceLimits {

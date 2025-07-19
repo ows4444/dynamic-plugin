@@ -7,9 +7,9 @@ export interface IPlugin {
   getMetrics?(): Promise<PluginMetrics>;
 }
 
-export interface PluginContext {
+export interface PluginContext<T extends BasePluginConfig = BasePluginConfig> {
   pluginId: string;
-  config: PluginConfig;
+  config: PluginConfig<T>;
   logger: Logger;
   database?: DatabaseConnection;
   eventBus: EventBus;
@@ -18,7 +18,48 @@ export interface PluginContext {
   interop: PluginInterop;
 }
 
-export type PluginConfig = Record<string, any>;
+// Base configuration interface that all plugins should extend
+export interface BasePluginConfig {
+  // Core plugin settings
+  enabled?: boolean;
+  debug?: boolean;
+  logLevel?: 'error' | 'warn' | 'info' | 'debug' | 'verbose';
+
+  // Performance settings
+  timeout?: number;
+  retryAttempts?: number;
+  maxConnections?: number;
+
+  // Security settings
+  allowedOrigins?: string[];
+  rateLimitRequests?: number;
+  rateLimitWindow?: number;
+
+  // Feature flags
+  features?: Record<string, boolean>;
+
+  // Custom configuration (extensible)
+  [key: string]: unknown;
+}
+
+// Sample plugin specific configuration
+export interface SamplePluginConfig extends BasePluginConfig {
+  greeting?: string;
+  maxItems?: number;
+  autoCleanup?: boolean;
+  cleanupInterval?: number;
+  notificationSettings?: {
+    enabled: boolean;
+    channels: string[];
+    threshold: number;
+  };
+}
+
+// Generic plugin config type that can be extended by specific plugins
+export type PluginConfig<T extends BasePluginConfig = BasePluginConfig> = T;
+
+// Utility type for strongly typed plugin configurations
+export type TypedPluginConfig<T> = T extends BasePluginConfig ? T : BasePluginConfig;
 
 export interface PluginMetadata {
   id: string;
@@ -101,7 +142,7 @@ export interface PluginDependency {
 export interface PluginInstance {
   id: string;
   metadata: PluginMetadata;
-  module: any;
+  module: unknown;
   context: PluginContext;
   status: PluginStatus;
   startTime: Date;
@@ -142,28 +183,41 @@ export interface ResourceLimits {
   filesystem: number;
 }
 
+export interface PluginEventMetadata {
+  correlationId?: string;
+  userId?: string;
+  sessionId?: string;
+  traceId?: string;
+  priority?: PluginSeverity;
+  retryCount?: number;
+  maxRetries?: number;
+  ttl?: number;
+  encrypted?: boolean;
+  [key: string]: unknown;
+}
+
 export interface PluginEvent {
   id: string;
   type: string;
   source: string;
   target?: string;
-  data: any;
+  data: unknown;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: PluginEventMetadata;
 }
 
 export interface PluginInterop {
-  sendMessage(target: string, message: any): Promise<void>;
+  sendMessage(target: string, message: unknown): Promise<void>;
   broadcastEvent(event: PluginEvent): Promise<void>;
   subscribeToEvents(eventTypes: string[]): Promise<void>;
-  callPluginMethod(pluginId: string, method: string, args: any[]): Promise<any>;
+  callPluginMethod(pluginId: string, method: string, args: unknown[]): Promise<unknown>;
   shareResource(resource: SharedResource): Promise<void>;
 }
 
 export interface SharedResource {
   id: string;
   type: string;
-  data: any;
+  data: unknown;
   permissions: string[];
   ttl?: number;
 }
@@ -175,28 +229,131 @@ export interface EventBus {
 }
 
 export interface DatabaseConnection {
-  query(sql: string, params?: any[]): Promise<any>;
-  transaction<T>(fn: (trx: any) => Promise<T>): Promise<T>;
+  query(sql: string, params?: unknown[]): Promise<unknown>;
+  transaction<T>(fn: (trx: unknown) => Promise<T>): Promise<T>;
 }
 
 export interface CacheService {
   get<T>(key: string): Promise<T | null>;
-  set(key: string, value: any, ttl?: number): Promise<void>;
+  set(key: string, value: unknown, ttl?: number): Promise<void>;
   del(key: string): Promise<void>;
   clear(): Promise<void>;
 }
 
 export interface Logger {
-  log(message: string, ...args: any[]): void;
-  error(message: string, ...args: any[]): void;
-  warn(message: string, ...args: any[]): void;
-  debug(message: string, ...args: any[]): void;
+  log(message: string, ...args: unknown[]): void;
+  error(message: string, ...args: unknown[]): void;
+  warn(message: string, ...args: unknown[]): void;
+  debug(message: string, ...args: unknown[]): void;
+}
+
+export enum HealthStatusType {
+  HEALTHY = 'healthy',
+  UNHEALTHY = 'unhealthy',
+  DEGRADED = 'degraded',
+}
+
+export enum PluginSeverity {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  CRITICAL = 'critical',
+}
+
+export enum PluginEventType {
+  LIFECYCLE = 'plugin.lifecycle',
+  ERROR = 'plugin.error',
+  HEALTH = 'plugin.health',
+  METRICS = 'plugin.metrics',
+  COMMUNICATION = 'plugin.communication',
+  SECURITY = 'plugin.security',
+}
+
+export enum SecurityResourceType {
+  DATABASE = 'database',
+  FILESYSTEM = 'filesystem',
+  NETWORK = 'network',
+  SYSTEM = 'system',
+  PLUGINS = 'plugins',
+  CONFIG = 'config',
+  LOGS = 'logs',
+}
+
+export enum SecurityAction {
+  READ = 'read',
+  WRITE = 'write',
+  CREATE = 'create',
+  DELETE = 'delete',
+  EXECUTE = 'execute',
+  MODIFY = 'modify',
+  ACCESS = 'access',
+  WILDCARD = '*',
+}
+
+export type RateLimitOperation = Map<string, number>;
+
+export type PluginRateLimits = Map<string, RateLimitOperation>;
+
+export interface SecurityReport {
+  timestamp: Date;
+  totalPlugins: number;
+  totalActivities: number;
+  recentActivities: ActivitySummary[];
+  securityViolations: PluginActivity[];
+  rateLimitViolations: RateLimitViolation[];
+  plugins: PluginSecurityInfo[];
+}
+
+export interface ActivitySummary {
+  pluginId: string;
+  action: string;
+  timestamp: Date;
+  metadata?: PluginActivityMetadata;
+}
+
+export interface RateLimitViolation {
+  pluginId: string;
+  operation: string;
+  currentCount: number;
+  limit: number;
+  timestamp: Date;
+}
+
+export interface PluginSecurityInfo {
+  pluginId: string;
+  permissions: PluginPermissions;
+  isolation: boolean;
+  resourceLimits: ResourceLimits;
+}
+
+export interface DependencyHealth {
+  name: string;
+  status: HealthStatusType;
+  latency?: number;
+  version?: string;
+  endpoint?: string;
+}
+
+export interface HealthDetails {
+  uptime?: number;
+  memory?: number;
+  cpu?: number;
+  disk?: number;
+  network?: number;
+  dependencies?: DependencyHealth[];
+  lastError?: string;
+  serviceInfo?: {
+    version: string;
+    environment: string;
+    region?: string;
+  };
+  [key: string]: unknown;
 }
 
 export interface HealthStatus {
-  status: 'healthy' | 'unhealthy' | 'degraded';
+  status: HealthStatusType;
   timestamp: Date;
-  details?: Record<string, any>;
+  details?: HealthDetails;
 }
 
 export interface PluginMetrics {
@@ -273,17 +430,29 @@ export interface CompatibilityResult {
 
 export interface ExecutionResult {
   success: boolean;
-  result?: any;
+  result?: unknown;
   error?: Error;
   executionTime: number;
+}
+
+export interface PluginErrorContext {
+  operation?: string;
+  resource?: string;
+  userId?: string;
+  requestId?: string;
+  stackTrace?: string;
+  additionalInfo?: unknown;
+  [key: string]: unknown;
 }
 
 export interface PluginError extends Error {
   pluginId: string;
   code: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: PluginSeverity;
   recoverable: boolean;
-  context?: Record<string, any>;
+  context?: PluginErrorContext;
+  timestamp: Date;
+  stackTrace?: string;
 }
 
 export interface RecoveryResult {
@@ -292,11 +461,53 @@ export interface RecoveryResult {
   message?: string;
 }
 
+export enum PluginActivityResult {
+  SUCCESS = 'success',
+  FAILURE = 'failure',
+  PARTIAL = 'partial',
+  TIMEOUT = 'timeout',
+  CANCELLED = 'cancelled',
+}
+
+export enum PluginActivityAction {
+  INSTALL = 'install',
+  UNINSTALL = 'uninstall',
+  START = 'start',
+  STOP = 'stop',
+  RELOAD = 'reload',
+  UPDATE = 'update',
+  HEALTH_CHECK = 'health_check',
+  CONFIG_UPDATE = 'config_update',
+  METHOD_CALL = 'method_call',
+}
+
+export interface ResourceUsage {
+  memory?: number;
+  cpu?: number;
+  network?: number;
+  disk?: number;
+  handles?: number;
+}
+
+export interface PluginActivityMetadata {
+  duration?: number;
+  result?: PluginActivityResult;
+  resourcesUsed?: ResourceUsage;
+  userId?: string;
+  sessionId?: string;
+  correlationId?: string;
+  parameters?: Record<string, unknown>;
+  returnValue?: unknown;
+  [key: string]: unknown;
+}
+
 export interface PluginActivity {
   pluginId: string;
-  action: string;
+  action: PluginActivityAction | string;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: PluginActivityMetadata;
+  version?: string;
+  environment?: string;
 }
 
 export interface Subscription {

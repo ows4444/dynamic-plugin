@@ -1,3 +1,35 @@
+import type { PluginDependency, PluginEngines, PluginPermissions } from './plugin.types';
+
+export enum PluginRegistryScope {
+  PUBLIC = 'public',
+  PRIVATE = 'private',
+  ORGANIZATION = 'organization',
+  LOCAL = 'local',
+}
+
+export enum PluginRegistrySortBy {
+  NAME = 'name',
+  DOWNLOADS = 'downloads',
+  RATING = 'rating',
+  UPDATED = 'updated',
+  CREATED = 'created',
+  POPULARITY = 'popularity',
+}
+
+export enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}
+
+export enum PluginLicense {
+  MIT = 'MIT',
+  APACHE_2_0 = 'Apache-2.0',
+  GPL_3_0 = 'GPL-3.0',
+  BSD_3_CLAUSE = 'BSD-3-Clause',
+  ISC = 'ISC',
+  PROPRIETARY = 'proprietary',
+}
+
 export interface PluginRegistry {
   plugins: Map<string, PluginRegistryEntry>;
   categories: Map<string, string[]>;
@@ -48,10 +80,11 @@ export interface PluginSearchQuery {
   tags?: string[];
   capabilities?: string[];
   author?: string;
-  license?: string;
+  license?: PluginLicense | string;
   verified?: boolean;
-  sortBy?: 'name' | 'downloads' | 'rating' | 'updated' | 'created';
-  sortOrder?: 'asc' | 'desc';
+  scope?: PluginRegistryScope;
+  sortBy?: PluginRegistrySortBy;
+  sortOrder?: SortOrder;
   limit?: number;
   offset?: number;
 }
@@ -183,6 +216,20 @@ export interface PluginDependencyUpdate {
   breaking: boolean;
 }
 
+export interface PluginBackupMetadata {
+  backupType: 'full' | 'incremental' | 'differential';
+  compressionFormat: 'gzip' | 'zip' | 'tar' | 'none';
+  encryptionEnabled: boolean;
+  originalSize: number;
+  compressedSize: number;
+  backupPath: string;
+  includedFiles: string[];
+  excludedFiles: string[];
+  createdBy: string;
+  reason: 'manual' | 'scheduled' | 'pre-update' | 'pre-uninstall';
+  [key: string]: unknown;
+}
+
 export interface PluginBackup {
   id: string;
   pluginId: string;
@@ -190,7 +237,7 @@ export interface PluginBackup {
   timestamp: Date;
   size: number;
   checksum: string;
-  metadata: Record<string, any>;
+  metadata: PluginBackupMetadata;
 }
 
 export interface PluginRestoreOptions {

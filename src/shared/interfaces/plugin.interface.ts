@@ -1,5 +1,4 @@
 import type { ModuleMetadata } from '@nestjs/common';
-import { Type } from '@nestjs/common';
 import type { HealthStatus, PluginContext, PluginMetrics } from '@/types/plugin.types';
 
 export interface IPlugin {
@@ -41,7 +40,7 @@ export interface IPlugin {
   /**
    * Validates the plugin's configuration
    */
-  validateConfig?(config: any): Promise<boolean>;
+  validateConfig?(config: unknown): Promise<boolean>;
 }
 
 export interface PluginModuleMetadata extends ModuleMetadata {
@@ -95,7 +94,7 @@ export interface PluginConfiguration {
   /**
    * Plugin configuration schema
    */
-  configSchema?: any;
+  configSchema?: Record<string, unknown>;
 
   /**
    * Plugin routes configuration
@@ -159,7 +158,7 @@ export interface PluginServiceInterface {
   /**
    * Handle plugin events
    */
-  handleEvent?(eventType: string, data: any): Promise<void>;
+  handleEvent?(eventType: string, data: unknown): Promise<void>;
 }
 
 export interface PluginControllerInterface {
@@ -178,7 +177,7 @@ export interface PluginEventHandler {
   /**
    * Event handler function
    */
-  handler: (data: any) => Promise<void>;
+  handler: (data: unknown) => Promise<void>;
 }
 
 export interface PluginHookHandler {
@@ -202,7 +201,7 @@ export interface PluginMiddleware {
   /**
    * Middleware function
    */
-  use: (req: any, res: any, next: any) => void;
+  use: (req: unknown, res: unknown, next: unknown) => void;
 }
 
 export interface PluginGuard {
@@ -214,7 +213,7 @@ export interface PluginGuard {
   /**
    * Can activate function
    */
-  canActivate: (context: any) => boolean | Promise<boolean>;
+  canActivate: (context: unknown) => boolean | Promise<boolean>;
 }
 
 export interface PluginInterceptor {
@@ -226,7 +225,7 @@ export interface PluginInterceptor {
   /**
    * Intercept function
    */
-  intercept: (context: any, next: any) => any;
+  intercept: (context: unknown, next: unknown) => unknown;
 }
 
 export interface PluginPipe {
@@ -238,7 +237,7 @@ export interface PluginPipe {
   /**
    * Transform function
    */
-  transform: (value: any, metadata: any) => any;
+  transform: (value: unknown, metadata: unknown) => unknown;
 }
 
 export interface PluginFilter {
@@ -250,5 +249,5 @@ export interface PluginFilter {
   /**
    * Catch function
    */
-  catch: (exception: any, host: any) => void;
+  catch: (exception: unknown, host: unknown) => void;
 }

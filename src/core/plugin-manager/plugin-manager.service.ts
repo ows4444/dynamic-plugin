@@ -2,8 +2,25 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { InstallationResult, LoadResult, PluginInstance, PluginManifest, PluginMetadata, PluginSource, PluginStatus, ReloadResult, UnloadResult, UpdateResult } from '@/types/plugin.types';
-import { PluginRegistryService } from '@/core/plugin-registry/plugin-registry.service';
+import type {
+  EventBus,
+  InstallationResult,
+  LoadResult,
+  PluginContext,
+  PluginEvent,
+  PluginInstance,
+  PluginInterop,
+  PluginManifest,
+  PluginMetadata,
+  PluginSource,
+  ReloadResult,
+  SecurityContext,
+  SharedResource,
+  UnloadResult,
+  UpdateResult,
+} from '@/types/plugin.types';
+import { PluginStatus } from '@/types/plugin.types';
+import type { PluginRegistryService } from '@/core/plugin-registry/plugin-registry.service';
 
 @Injectable()
 export class PluginManagerService {
@@ -39,7 +56,7 @@ export class PluginManagerService {
       await fs.ensureDir(tempDir);
 
       // Download/copy plugin files based on source type
-      const pluginFiles = await this.downloadPlugin(source, tempDir);
+      await this.downloadPlugin(source, tempDir);
 
       // Load and validate manifest
       const manifestPath = path.join(tempDir, 'plugin.manifest.json');
@@ -47,8 +64,8 @@ export class PluginManagerService {
         throw new Error('Plugin manifest not found');
       }
 
-      const manifest: PluginManifest = await fs.readJson(manifestPath);
-      const validationResult = await this.registryService.validatePlugin(manifest);
+      const manifest = (await fs.readJson(manifestPath)) as PluginManifest;
+      const validationResult = this.registryService.validatePlugin(manifest);
 
       if (!validationResult.valid) {
         throw new Error(`Plugin validation failed: ${validationResult.errors.join(', ')}`);
@@ -56,20 +73,20 @@ export class PluginManagerService {
 
       // Check compatibility
       const pluginId = `${manifest.name}@${manifest.version}`;
-      const compatibilityResult = await this.registryService.checkCompatibility(pluginId);
+      const compatibilityResult = this.registryService.checkCompatibility(pluginId);
 
       if (!compatibilityResult.compatible) {
         this.logger.warn(`Plugin compatibility issues: ${compatibilityResult.reasons.join(', ')}`);
       }
 
       // Check if plugin already exists
-      const existingPlugin = await this.registryService.getPlugin(pluginId);
-      if (existingPlugin && existingPlugin.status.installed) {
+      const existingPlugin = this.registryService.getPlugin(pluginId);
+      if (existingPlugin?.status.installed) {
         throw new Error(`Plugin ${pluginId} is already installed`);
       }
 
       // Install dependencies if needed
-      await this.installDependencies(manifest);
+      this.installDependencies(manifest);
 
       // Move plugin to installed directory
       const installedDir = path.join(this.installedPath, manifest.name);
@@ -127,17 +144,20 @@ export class PluginManagerService {
         message: `Plugin ${manifest.name} installed successfully`,
       };
     } catch (error) {
-      this.logger.error(`Plugin installation failed: ${error.message}`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Plugin installation failed: ${errorMessage}`, error);
 
       // Cleanup temporary directory
-      await fs.remove(tempDir).catch(() => {});
+      await fs.remove(tempDir).catch(() => {
+        // Intentionally empty - cleanup errors are not critical
+      });
 
       return {
         success: false,
         pluginId: '',
         version: '',
-        message: error.message,
-        errors: [error.message],
+        message: errorMessage,
+        errors: [errorMessage],
       };
     }
   }
@@ -194,7 +214,7 @@ export class PluginManagerService {
 
     const walk = async (dir: string): Promise<void> => {
       const items = await fs.readdir(dir);
-      for (const item of items) {
+      const promises = items.map(async (item) => {
         const itemPath = path.join(dir, item);
         const stats = await fs.stat(itemPath);
         if (stats.isDirectory()) {
@@ -202,14 +222,15 @@ export class PluginManagerService {
         } else {
           files.push(path.relative(pluginDir, itemPath));
         }
-      }
+      });
+      await Promise.all(promises);
     };
 
     await walk(pluginDir);
     return files;
   }
 
-  private async installDependencies(manifest: PluginManifest): Promise<void> {
+  private installDependencies(manifest: PluginManifest): void {
     // Install NPM dependencies
     if (manifest.dependencies && Object.keys(manifest.dependencies).length > 0) {
       this.logger.debug('Installing NPM dependencies...');
@@ -219,7 +240,7 @@ export class PluginManagerService {
     // Install plugin dependencies
     if (manifest.pluginDependencies) {
       for (const [depName, depVersion] of Object.entries(manifest.pluginDependencies)) {
-        const depPlugin = await this.registryService.getPlugin(`${depName}@${depVersion}`);
+        const depPlugin = this.registryService.getPlugin(`${depName}@${depVersion}`);
         if (!depPlugin?.status.installed) {
           this.logger.warn(`Plugin dependency not found: ${depName}@${depVersion}`);
           // Could attempt to auto-install dependency here
@@ -237,7 +258,8 @@ export class PluginManagerService {
         // For now, we'll just log it
       }
     } catch (error) {
-      this.logger.warn(`Failed to run ${hookType} hook: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Failed to run ${hookType} hook: ${errorMessage}`);
     }
   }
 
@@ -247,7 +269,7 @@ export class PluginManagerService {
     try {
       this.logger.log(`Loading plugin: ${pluginId}`);
 
-      const registryEntry = await this.registryService.getPlugin(pluginId);
+      const registryEntry = this.registryService.getPlugin(pluginId);
       if (!registryEntry) {
         throw new Error(`Plugin not found in registry: ${pluginId}`);
       }
@@ -262,7 +284,7 @@ export class PluginManagerService {
 
       const pluginDir = path.join(this.installedPath, registryEntry.name);
       const manifestPath = path.join(pluginDir, 'plugin.manifest.json');
-      const manifest: PluginManifest = await fs.readJson(manifestPath);
+      const manifest = (await fs.readJson(manifestPath)) as PluginManifest;
 
       // Update plugin status
       await this.registryService.updatePluginStatus(pluginId, {
@@ -271,7 +293,7 @@ export class PluginManagerService {
       });
 
       // Create plugin context
-      const context = await this.createPluginContext(pluginId, manifest);
+      const context = this.createPluginContext(pluginId, manifest);
 
       // Create plugin instance
       const instance: PluginInstance = {
@@ -335,7 +357,8 @@ export class PluginManagerService {
         message: `Plugin ${registryEntry.name} loaded successfully`,
       };
     } catch (error) {
-      this.logger.error(`Plugin loading failed: ${error.message}`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Plugin loading failed: ${errorMessage}`, error);
 
       // Cleanup if partially loaded
       this.pluginInstances.delete(pluginId);
@@ -344,47 +367,87 @@ export class PluginManagerService {
         success: false,
         pluginId,
         loadTime: Date.now() - startTime,
-        message: error.message,
-        errors: [error.message],
+        message: errorMessage,
+        errors: [errorMessage],
       };
     }
   }
 
-  private async createPluginContext(pluginId: string, manifest: PluginManifest): Promise<any> {
-    // This would create a proper plugin context with injected services
+  private createPluginContext(pluginId: string, manifest: PluginManifest): PluginContext {
+    // Create EventBus adapter for EventEmitter2
+    const eventBus: EventBus = {
+      publish: async (event: PluginEvent): Promise<void> => {
+        this.eventEmitter.emit(event.type, event);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      },
+      subscribe: async (eventPattern: string, handler: (event: PluginEvent) => void): Promise<string> => {
+        const subscriptionId = `${pluginId}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+        this.eventEmitter.on(eventPattern, handler);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        return subscriptionId;
+      },
+      unsubscribe: async (subscriptionId: string): Promise<void> => {
+        // Implementation would track and remove specific subscription
+        // For now, this is a placeholder
+        this.logger.debug(`Unsubscribing ${subscriptionId}`);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      },
+    };
+
+    // Create Security Context
+    const security: SecurityContext = {
+      pluginId,
+      permissions: manifest.permissions ?? {},
+      isolation: false,
+      resourceLimits: {
+        memory: 512 * 1024 * 1024, // 512MB
+        cpu: 100, // 100%
+        network: 100 * 1024 * 1024, // 100MB
+        filesystem: 1024 * 1024 * 1024, // 1GB
+      },
+    };
+
+    // Create Plugin Interop service
+    const interop: PluginInterop = {
+      sendMessage: async (target: string, message: unknown): Promise<void> => {
+        this.eventEmitter.emit('plugin.message', { from: pluginId, to: target, message });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      },
+      broadcastEvent: async (event: PluginEvent): Promise<void> => {
+        this.eventEmitter.emit('plugin.broadcast', { source: pluginId, event });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      },
+      subscribeToEvents: async (eventTypes: string[]): Promise<void> => {
+        eventTypes.forEach((eventType) => {
+          this.eventEmitter.on(eventType, (event: PluginEvent) => {
+            this.logger.debug(`Plugin ${pluginId} received event: ${eventType}`, event);
+          });
+        });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      },
+      callPluginMethod: async (targetPluginId: string, method: string, args: unknown[]): Promise<unknown> => {
+        // Implementation would call method on target plugin
+        // For now, this is a placeholder
+        this.logger.debug(`Plugin ${pluginId} calling method ${method} on ${targetPluginId}`, args);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        return undefined;
+      },
+      shareResource: async (resource: SharedResource): Promise<void> => {
+        // Implementation would share resource with other plugins
+        // For now, this is a placeholder
+        this.logger.debug(`Plugin ${pluginId} sharing resource: ${resource.id}`);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      },
+    };
+
+    // Return properly typed PluginContext
     return {
       pluginId,
       config: {},
       logger: this.logger,
-      eventBus: this.eventEmitter,
-      security: {
-        pluginId,
-        permissions: manifest.permissions ?? {},
-        isolation: false,
-        resourceLimits: {
-          memory: 512 * 1024 * 1024, // 512MB
-          cpu: 100, // 100%
-          network: 100 * 1024 * 1024, // 100MB
-          filesystem: 1024 * 1024 * 1024, // 1GB
-        },
-      },
-      interop: {
-        sendMessage: (target: string, message: any) => {
-          this.eventEmitter.emit('plugin.message', { from: pluginId, to: target, message });
-        },
-        broadcastEvent: (event: any) => {
-          this.eventEmitter.emit('plugin.broadcast', { source: pluginId, event });
-        },
-        subscribeToEvents: async (_eventTypes: string[]) => {
-          // Subscribe to events
-        },
-        callPluginMethod: async (_targetPluginId: string, _method: string, _args: any[]) => {
-          // Call method on another plugin
-        },
-        shareResource: async (_resource: any) => {
-          // Share resource with other plugins
-        },
-      },
+      eventBus,
+      security,
+      interop,
     };
   }
 
@@ -402,7 +465,7 @@ export class PluginManagerService {
       const manifestPath = path.join(pluginDir, 'plugin.manifest.json');
 
       if (await fs.pathExists(manifestPath)) {
-        const manifest: PluginManifest = await fs.readJson(manifestPath);
+        const manifest = (await fs.readJson(manifestPath)) as PluginManifest;
         if (manifest.hooks?.onStop) {
           await this.runPluginHook(pluginDir, manifest.hooks.onStop, 'stop');
         }
@@ -429,13 +492,14 @@ export class PluginManagerService {
         message: `Plugin unloaded successfully`,
       };
     } catch (error) {
-      this.logger.error(`Plugin unloading failed: ${error.message}`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Plugin unloading failed: ${errorMessage}`, error);
 
       return {
         success: false,
         pluginId,
-        message: error.message,
-        errors: [error.message],
+        message: errorMessage,
+        errors: [errorMessage],
       };
     }
   }
@@ -468,14 +532,15 @@ export class PluginManagerService {
         message: `Plugin reloaded successfully`,
       };
     } catch (error) {
-      this.logger.error(`Plugin reloading failed: ${error.message}`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Plugin reloading failed: ${errorMessage}`, error);
 
       return {
         success: false,
         pluginId,
         loadTime: 0,
-        message: error.message,
-        errors: [error.message],
+        message: errorMessage,
+        errors: [errorMessage],
       };
     }
   }
@@ -484,34 +549,32 @@ export class PluginManagerService {
     try {
       this.logger.log(`Updating plugin: ${pluginId} to version ${version}`);
 
-      const instance = this.pluginInstances.get(pluginId);
-      const currentVersion = instance?.metadata.version ?? '0.0.0';
-
       // This would implement plugin update logic
       // For now, we'll just return a placeholder
 
       throw new Error('Plugin updates not yet implemented');
     } catch (error) {
-      this.logger.error(`Plugin update failed: ${error.message}`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Plugin update failed: ${errorMessage}`, error);
 
-      return {
+      return Promise.resolve({
         success: false,
         pluginId,
         fromVersion: '',
         toVersion: version,
-        message: error.message,
-        errors: [error.message],
-      };
+        message: errorMessage,
+        errors: [errorMessage],
+      });
     }
   }
 
-  async getPluginStatus(pluginId: string): Promise<PluginStatus> {
+  getPluginStatus(pluginId: string): PluginStatus {
     const instance = this.pluginInstances.get(pluginId);
     if (instance) {
       return instance.status;
     }
 
-    const registryEntry = await this.registryService.getPlugin(pluginId);
+    const registryEntry = this.registryService.getPlugin(pluginId);
     if (registryEntry?.status.installed) {
       return PluginStatus.INSTALLED;
     }
@@ -519,11 +582,11 @@ export class PluginManagerService {
     return PluginStatus.UNINSTALLED;
   }
 
-  async getLoadedPlugins(): Promise<PluginInstance[]> {
+  getLoadedPlugins(): PluginInstance[] {
     return Array.from(this.pluginInstances.values());
   }
 
-  async getPluginInstance(pluginId: string): Promise<PluginInstance | null> {
+  getPluginInstance(pluginId: string): PluginInstance | null {
     return this.pluginInstances.get(pluginId) ?? null;
   }
 
@@ -539,7 +602,7 @@ export class PluginManagerService {
         }
       }
 
-      const registryEntry = await this.registryService.getPlugin(pluginId);
+      const registryEntry = this.registryService.getPlugin(pluginId);
       if (!registryEntry) {
         throw new Error(`Plugin not found: ${pluginId}`);
       }
@@ -549,7 +612,7 @@ export class PluginManagerService {
       const manifestPath = path.join(pluginDir, 'plugin.manifest.json');
 
       if (await fs.pathExists(manifestPath)) {
-        const manifest: PluginManifest = await fs.readJson(manifestPath);
+        const manifest = (await fs.readJson(manifestPath)) as PluginManifest;
         if (manifest.hooks?.onUninstall) {
           await this.runPluginHook(pluginDir, manifest.hooks.onUninstall, 'uninstall');
         }
@@ -566,7 +629,8 @@ export class PluginManagerService {
       this.logger.log(`Plugin uninstalled successfully: ${pluginId}`);
       return true;
     } catch (error) {
-      this.logger.error(`Plugin uninstallation failed: ${error.message}`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Plugin uninstallation failed: ${errorMessage}`, error);
       return false;
     }
   }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Get, Post } from '@nestjs/common';
 import { PluginController, PluginLogger, PluginPermission, PluginRoute } from '@/shared/decorators/plugin.decorator';
 import { SampleService } from './sample.service';
 
@@ -16,11 +16,11 @@ export class SampleController {
     permissions: ['read'],
   })
   @PluginPermission(['read'])
-  async getHello(): Promise<{ message: string; timestamp: string }> {
+  getHello(): { message: string; timestamp: string } {
     this.logger?.log('Getting hello message');
 
     return {
-      message: await this.sampleService.getHelloMessage(),
+      message: this.sampleService.getHelloMessage(),
       timestamp: new Date().toISOString(),
     };
   }
@@ -30,13 +30,13 @@ export class SampleController {
     path: '/status',
     method: 'GET',
   })
-  async getStatus(): Promise<{ status: string; version: string; uptime: number }> {
+  getStatus(): { status: string; version: string; uptime: number } {
     this.logger?.log('Getting plugin status');
 
     return {
       status: 'running',
       version: '1.0.0',
-      uptime: await this.sampleService.getUptime(),
+      uptime: this.sampleService.getUptime(),
     };
   }
 
@@ -64,9 +64,9 @@ export class SampleController {
     path: '/metrics',
     method: 'GET',
   })
-  async getMetrics(): Promise<any> {
+  getMetrics(): any {
     this.logger?.log('Getting plugin metrics');
 
-    return await this.sampleService.getMetrics();
+    return this.sampleService.getMetrics();
   }
 }

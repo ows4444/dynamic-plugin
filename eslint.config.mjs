@@ -135,8 +135,9 @@ export default tseslint.config(
         },
         {
           selector: 'variable',
-          format: ['camelCase', 'UPPER_CASE', 'PascalCase'], // Allow PascalCase for class references
+          format: ['camelCase', 'UPPER_CASE', 'PascalCase'],
           leadingUnderscore: 'allow',
+          trailingUnderscore: 'forbid',
         },
         {
           selector: 'parameter',
@@ -179,6 +180,17 @@ export default tseslint.config(
         {
           selector: 'typeParameter',
           format: ['PascalCase'],
+          prefix: ['T'],
+        },
+        {
+          selector: 'function',
+          modifiers: ['exported'],
+          format: ['camelCase', 'PascalCase'],
+        },
+        {
+          selector: 'classProperty',
+          modifiers: ['static'],
+          format: ['camelCase', 'UPPER_CASE'],
         },
       ],
 
@@ -215,7 +227,7 @@ export default tseslint.config(
       'prefer-promise-reject-errors': 'error',
 
       // Complexity rules - Relaxed for complex validation logic
-      'complexity': ['warn', 40],
+      complexity: ['warn', 40],
       'max-depth': ['warn', 5],
       'max-lines': ['warn', 800],
       'max-lines-per-function': ['warn', 200],
@@ -238,7 +250,7 @@ export default tseslint.config(
       'max-lines-per-function': 'off',
       'max-lines': 'off',
       'no-console': 'off',
-      'complexity': 'off',
+      complexity: 'off',
     },
   },
 
@@ -283,7 +295,7 @@ export default tseslint.config(
   {
     files: ['**/pipelines/**/*.ts', '**/services/**/*.ts'],
     rules: {
-      'complexity': ['warn', 25],
+      complexity: ['warn', 25],
       'max-lines-per-function': ['warn', 200],
     },
   },

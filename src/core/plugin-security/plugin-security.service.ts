@@ -3,13 +3,26 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { PluginActivity, PluginPackage, PluginPermissions, ResourceLimits, SecurityContext } from '@/types/plugin.types';
+import {
+  ActivitySummary,
+  PluginActivity,
+  PluginPackage,
+  PluginPermissions,
+  PluginRateLimits,
+  PluginSecurityInfo,
+  RateLimitOperation,
+  ResourceLimits,
+  SecurityAction,
+  SecurityContext,
+  SecurityReport,
+  SecurityResourceType,
+} from '@/types/plugin.types';
 
 @Injectable()
 export class PluginSecurityService {
   private readonly logger = new Logger(PluginSecurityService.name);
   private readonly securityContexts = new Map<string, SecurityContext>();
-  private readonly rateLimits = new Map<string, Map<string, number>>();
+  private readonly rateLimits: PluginRateLimits = new Map<string, RateLimitOperation>();
   private readonly activityLog: PluginActivity[] = [];
 
   constructor(private readonly eventEmitter: EventEmitter2) {}
@@ -24,7 +37,7 @@ export class PluginSecurityService {
       }
 
       // Calculate checksum of plugin files
-      const calculatedChecksum = await this.calculatePluginChecksum(plugin);
+      const calculatedChecksum = this.calculatePluginChecksum(plugin);
 
       if (calculatedChecksum !== plugin.checksum) {
         this.logger.error('Plugin checksum mismatch');
@@ -48,7 +61,7 @@ export class PluginSecurityService {
     }
   }
 
-  private async calculatePluginChecksum(plugin: PluginPackage): Promise<string> {
+  private calculatePluginChecksum(plugin: PluginPackage): string {
     const hash = crypto.createHash('sha256');
 
     // Sort files by name for consistent checksum
@@ -86,7 +99,7 @@ export class PluginSecurityService {
     }
   }
 
-  async checkPermissions(pluginId: string, resource: string, action: string): Promise<boolean> {
+  checkPermissions(pluginId: string, resource: SecurityResourceType | string, action: SecurityAction | string): boolean {
     try {
       const context = this.securityContexts.get(pluginId);
       if (!context) {
@@ -94,10 +107,10 @@ export class PluginSecurityService {
         return false;
       }
 
-      const hasPermission = await this.evaluatePermission(context.permissions, resource, action);
+      const hasPermission = this.evaluatePermission(context.permissions, resource, action);
 
       // Log permission check
-      await this.auditPluginActivity({
+      this.auditPluginActivity({
         pluginId,
         action: `permission:${resource}:${action}`,
         timestamp: new Date(),
@@ -125,10 +138,10 @@ export class PluginSecurityService {
     }
   }
 
-  private async evaluatePermission(permissions: PluginPermissions, resource: string, action: string): Promise<boolean> {
+  private evaluatePermission(permissions: PluginPermissions, resource: SecurityResourceType | string, action: SecurityAction | string): boolean {
     const resourcePermissions = permissions[resource];
 
-    if (!resourcePermissions ?? !Array.isArray(resourcePermissions)) {
+    if (!resourcePermissions || !Array.isArray(resourcePermissions)) {
       return false;
     }
 
@@ -138,19 +151,19 @@ export class PluginSecurityService {
     }
 
     // Check for wildcard permissions
-    if (resourcePermissions.includes('*')) {
+    if (resourcePermissions.includes(SecurityAction.WILDCARD)) {
       return true;
     }
 
     // Check for read/write hierarchies
-    if (action === 'read' && resourcePermissions.includes('write')) {
+    if (action === 'read' && resourcePermissions.includes(SecurityAction.WRITE)) {
       return true; // write permission implies read permission
     }
 
     return false;
   }
 
-  async createSecurityContext(pluginId: string, permissions: PluginPermissions, resourceLimits?: ResourceLimits): Promise<SecurityContext> {
+  createSecurityContext(pluginId: string, permissions: PluginPermissions, resourceLimits?: ResourceLimits): SecurityContext {
     try {
       const context: SecurityContext = {
         pluginId,
@@ -181,7 +194,7 @@ export class PluginSecurityService {
     }
   }
 
-  async destroySecurityContext(pluginId: string): Promise<void> {
+  destroySecurityContext(pluginId: string): void {
     try {
       const context = this.securityContexts.get(pluginId);
       if (!context) {
@@ -200,7 +213,7 @@ export class PluginSecurityService {
     }
   }
 
-  async auditPluginActivity(activity: PluginActivity): Promise<void> {
+  auditPluginActivity(activity: PluginActivity): void {
     try {
       // Add to in-memory log (in production, this would go to a persistent store)
       this.activityLog.push(activity);
@@ -228,7 +241,7 @@ export class PluginSecurityService {
     return securityActions.some((action) => activity.action.includes(action));
   }
 
-  async enforceRateLimit(pluginId: string, operation: string, limit = 100): Promise<boolean> {
+  enforceRateLimit(pluginId: string, operation: string, limit = 100): boolean {
     try {
       const now = Date.now();
       const windowMs = 60000; // 1 minute window
@@ -238,8 +251,12 @@ export class PluginSecurityService {
       }
 
       const pluginLimits = this.rateLimits.get(pluginId);
-      const operationKey = `${operation}:${Math.floor(now / windowMs)}`;
+      if (!pluginLimits) {
+        this.logger.error(`Plugin limits not found for: ${pluginId}`);
+        return false;
+      }
 
+      const operationKey = `${operation}:${Math.floor(now / windowMs)}`;
       const currentCount = pluginLimits.get(operationKey) ?? 0;
 
       if (currentCount >= limit) {
@@ -273,11 +290,11 @@ export class PluginSecurityService {
     }
   }
 
-  async getSecurityContext(pluginId: string): Promise<SecurityContext | null> {
+  getSecurityContext(pluginId: string): SecurityContext | null {
     return this.securityContexts.get(pluginId) ?? null;
   }
 
-  async getPluginActivityLog(pluginId: string, limit = 100, offset = 0): Promise<PluginActivity[]> {
+  getPluginActivityLog(pluginId: string, limit = 100, offset = 0): PluginActivity[] {
     const pluginActivities = this.activityLog
       .filter((activity) => activity.pluginId === pluginId)
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
@@ -286,11 +303,11 @@ export class PluginSecurityService {
     return pluginActivities;
   }
 
-  async getAllActivityLog(limit = 100, offset = 0): Promise<PluginActivity[]> {
+  getAllActivityLog(limit = 100, offset = 0): PluginActivity[] {
     return this.activityLog.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(offset, offset + limit);
   }
 
-  async validateResourceAccess(pluginId: string, resource: string, path: string): Promise<boolean> {
+  validateResourceAccess(pluginId: string, resource: string, _path: string): boolean {
     try {
       const context = this.securityContexts.get(pluginId);
       if (!context) {
@@ -299,12 +316,12 @@ export class PluginSecurityService {
 
       // Validate filesystem access
       if (resource === 'filesystem') {
-        return this.validateFilesystemAccess(context, path);
+        return this.validateFilesystemAccess(context, _path);
       }
 
       // Validate network access
       if (resource === 'network') {
-        return this.validateNetworkAccess(context, path);
+        return this.validateNetworkAccess(context, _path);
       }
 
       // Default deny
@@ -317,7 +334,7 @@ export class PluginSecurityService {
 
   private validateFilesystemAccess(context: SecurityContext, filePath: string): boolean {
     const permissions = context.permissions.filesystem;
-    if (!permissions ?? !Array.isArray(permissions)) {
+    if (!permissions || !Array.isArray(permissions)) {
       return false;
     }
 
@@ -335,7 +352,7 @@ export class PluginSecurityService {
 
   private validateNetworkAccess(context: SecurityContext, url: string): boolean {
     const permissions = context.permissions.network;
-    if (!permissions ?? !Array.isArray(permissions)) {
+    if (!permissions || !Array.isArray(permissions)) {
       return false;
     }
 
@@ -354,9 +371,9 @@ export class PluginSecurityService {
     }
   }
 
-  async generateSecurityReport(pluginId?: string): Promise<any> {
+  generateSecurityReport(pluginId?: string): SecurityReport {
     try {
-      const report = {
+      const report: SecurityReport = {
         timestamp: new Date(),
         totalPlugins: this.securityContexts.size,
         totalActivities: this.activityLog.length,
@@ -364,17 +381,19 @@ export class PluginSecurityService {
         securityViolations: [],
         rateLimitViolations: [],
         plugins: [],
-      } as any;
+      };
 
       // Get recent activities
-      const activities = pluginId ? await this.getPluginActivityLog(pluginId, 50) : await this.getAllActivityLog(50);
+      const activities = pluginId ? this.getPluginActivityLog(pluginId, 50) : this.getAllActivityLog(50);
 
-      report.recentActivities = activities.map((activity) => ({
-        pluginId: activity.pluginId,
-        action: activity.action,
-        timestamp: activity.timestamp,
-        metadata: activity.metadata,
-      }));
+      report.recentActivities = activities.map(
+        (activity): ActivitySummary => ({
+          pluginId: activity.pluginId,
+          action: activity.action,
+          timestamp: activity.timestamp,
+          metadata: activity.metadata,
+        }),
+      );
 
       // Get security violations (failed permission checks)
       report.securityViolations = activities.filter((activity) => activity.action.includes('permission:') && activity.metadata?.granted === false);
@@ -394,12 +413,14 @@ export class PluginSecurityService {
         }
       } else {
         // Get all plugins
-        report.plugins = Array.from(this.securityContexts.entries()).map(([id, context]) => ({
-          pluginId: id,
-          permissions: context.permissions,
-          isolation: context.isolation,
-          resourceLimits: context.resourceLimits,
-        }));
+        report.plugins = Array.from(this.securityContexts.entries()).map(
+          ([id, context]): PluginSecurityInfo => ({
+            pluginId: id,
+            permissions: context.permissions,
+            isolation: context.isolation,
+            resourceLimits: context.resourceLimits,
+          }),
+        );
       }
 
       return report;

@@ -3,8 +3,9 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as semver from 'semver';
-import { CompatibilityResult, PluginDependency, PluginManifest, PluginMetadata, PluginStatus, ValidationResult } from '@/types/plugin.types';
-import { PluginRegistry, PluginRegistryEntry, PluginSearchQuery, PluginSearchResult, PluginStats, PluginVersionHistory } from '@/types/registry.types';
+import type { CompatibilityResult, PluginDependency, PluginManifest, PluginMetadata, ValidationResult } from '@/types/plugin.types';
+import { PluginStatus } from '@/types/plugin.types';
+import { type PluginRegistry, type PluginRegistryEntry, PluginRegistrySortBy, type PluginSearchQuery, type PluginSearchResult, type PluginStats, SortOrder } from '@/types/registry.types';
 
 @Injectable()
 export class PluginRegistryService {
@@ -98,8 +99,8 @@ export class PluginRegistryService {
 
         if (await fs.pathExists(manifestPath)) {
           try {
-            const manifest: PluginManifest = await fs.readJson(manifestPath);
-            const metadata = await this.manifestToMetadata(manifest, pluginPath);
+            const manifest = (await fs.readJson(manifestPath)) as PluginManifest;
+            const metadata = this.manifestToMetadata(manifest, pluginPath);
             discovered.push(metadata);
 
             this.logger.debug(`Discovered plugin: ${manifest.name}@${manifest.version}`);
@@ -117,9 +118,7 @@ export class PluginRegistryService {
     }
   }
 
-  private async manifestToMetadata(manifest: PluginManifest, pluginPath: string): Promise<PluginMetadata> {
-    const stats = await fs.stat(pluginPath);
-
+  private manifestToMetadata(manifest: PluginManifest, _pluginPath: string): PluginMetadata {
     return {
       id: `${manifest.name}@${manifest.version}`,
       name: manifest.name,
@@ -193,7 +192,7 @@ export class PluginRegistryService {
       if (!this.registry.categories.has(category)) {
         this.registry.categories.set(category, []);
       }
-      this.registry.categories.get(category).push(plugin.id);
+      this.registry.categories.get(category)?.push(plugin.id);
 
       // Update dependency mapping
       const deps = plugin.dependencies.map((dep) => dep.name);
@@ -240,7 +239,7 @@ export class PluginRegistryService {
     }
   }
 
-  async validatePlugin(manifest: PluginManifest): Promise<ValidationResult> {
+  validatePlugin(manifest: PluginManifest): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -315,7 +314,7 @@ export class PluginRegistryService {
     };
   }
 
-  async getPluginDependencies(pluginId: string): Promise<PluginDependency[]> {
+  getPluginDependencies(pluginId: string): PluginDependency[] {
     const entry = this.registry.plugins.get(pluginId);
     if (!entry) {
       throw new Error(`Plugin not found: ${pluginId}`);
@@ -323,7 +322,7 @@ export class PluginRegistryService {
     return entry.dependencies;
   }
 
-  async checkCompatibility(pluginId: string): Promise<CompatibilityResult> {
+  checkCompatibility(pluginId: string): CompatibilityResult {
     const entry = this.registry.plugins.get(pluginId);
     if (!entry) {
       throw new Error(`Plugin not found: ${pluginId}`);
@@ -348,7 +347,7 @@ export class PluginRegistryService {
     }
 
     // Check plugin dependencies
-    for (const dep of entry.dependencies) {
+    for (const _dep of entry.dependencies) {
       // Check if dependency is installed and compatible
       // This would integrate with package.json or npm registry
     }
@@ -373,13 +372,13 @@ export class PluginRegistryService {
     };
   }
 
-  async searchPlugins(query: PluginSearchQuery): Promise<PluginSearchResult> {
+  searchPlugins(query: PluginSearchQuery): PluginSearchResult {
     let plugins = Array.from(this.registry.plugins.values());
 
     // Apply filters
     if (query.query) {
       const searchTerm = query.query.toLowerCase();
-      plugins = plugins.filter((p) => p.name.toLowerCase().includes(searchTerm) ?? p.description.toLowerCase().includes(searchTerm) ?? p.tags.some((tag) => tag.toLowerCase().includes(searchTerm)));
+      plugins = plugins.filter((p) => p.name.toLowerCase().includes(searchTerm) || p.description.toLowerCase().includes(searchTerm) || p.tags.some((tag) => tag.toLowerCase().includes(searchTerm)));
     }
 
     if (query.category) {
@@ -387,11 +386,11 @@ export class PluginRegistryService {
     }
 
     if (query.tags && query.tags.length > 0) {
-      plugins = plugins.filter((p) => query.tags.some((tag) => p.tags.includes(tag)));
+      plugins = plugins.filter((p) => query.tags!.some((tag) => p.tags.includes(tag)));
     }
 
     if (query.capabilities && query.capabilities.length > 0) {
-      plugins = plugins.filter((p) => query.capabilities.some((cap) => p.capabilities.includes(cap)));
+      plugins = plugins.filter((p) => query.capabilities!.some((cap) => p.capabilities.includes(cap)));
     }
 
     if (query.author) {
@@ -407,31 +406,37 @@ export class PluginRegistryService {
     const sortOrder = query.sortOrder ?? 'asc';
 
     plugins.sort((a, b) => {
-      let aValue, bValue;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortBy) {
-        case 'downloads':
+        case PluginRegistrySortBy.DOWNLOADS:
           aValue = a.downloadCount;
           bValue = b.downloadCount;
           break;
-        case 'rating':
+        case PluginRegistrySortBy.RATING:
           aValue = a.rating;
           bValue = b.rating;
           break;
-        case 'updated':
+        case PluginRegistrySortBy.UPDATED:
           aValue = a.lastUpdated.getTime();
           bValue = b.lastUpdated.getTime();
           break;
-        case 'created':
+        case PluginRegistrySortBy.CREATED:
           aValue = a.createdAt.getTime();
           bValue = b.createdAt.getTime();
           break;
+        case PluginRegistrySortBy.POPULARITY:
+          aValue = a.downloadCount + a.rating * 10; // Example popularity metric
+          bValue = b.downloadCount + b.rating * 10;
+          break;
+        case PluginRegistrySortBy.NAME:
         default:
           aValue = a.name.toLowerCase();
           bValue = b.name.toLowerCase();
       }
 
-      if (sortOrder === 'desc') {
+      if (sortOrder === SortOrder.DESC) {
         return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
       } else {
         return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
@@ -455,7 +460,7 @@ export class PluginRegistryService {
     };
   }
 
-  async getPluginStats(): Promise<PluginStats> {
+  getPluginStats(): PluginStats {
     const plugins = Array.from(this.registry.plugins.values());
 
     const totalPlugins = plugins.length;
@@ -463,7 +468,7 @@ export class PluginRegistryService {
     const enabledPlugins = plugins.filter((p) => p.status.enabled).length;
     const categoriesCount = this.registry.categories.size;
 
-    const averageRating = plugins.reduce((sum, p) => sum + p.rating, 0) / totalPlugins ?? 0;
+    const averageRating = totalPlugins > 0 ? plugins.reduce((sum, p) => sum + p.rating, 0) / totalPlugins : 0;
     const totalDownloads = plugins.reduce((sum, p) => sum + p.downloadCount, 0);
 
     // Top categories by plugin count
@@ -510,17 +515,17 @@ export class PluginRegistryService {
     };
   }
 
-  async getPlugin(pluginId: string): Promise<PluginRegistryEntry | null> {
+  getPlugin(pluginId: string): PluginRegistryEntry | null {
     return this.registry.plugins.get(pluginId) ?? null;
   }
 
-  async getAllPlugins(): Promise<PluginRegistryEntry[]> {
+  getAllPlugins(): PluginRegistryEntry[] {
     return Array.from(this.registry.plugins.values());
   }
 
-  async getPluginsByCategory(category: string): Promise<PluginRegistryEntry[]> {
+  getPluginsByCategory(category: string): PluginRegistryEntry[] {
     const pluginIds = this.registry.categories.get(category) ?? [];
-    return pluginIds.map((id) => this.registry.plugins.get(id)).filter(Boolean);
+    return pluginIds.map((id) => this.registry.plugins.get(id)).filter((plugin): plugin is PluginRegistryEntry => Boolean(plugin));
   }
 
   async updatePluginStatus(pluginId: string, status: Partial<PluginRegistryEntry['status']>): Promise<void> {
