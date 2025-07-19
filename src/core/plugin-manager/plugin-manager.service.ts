@@ -20,7 +20,7 @@ import type {
   UpdateResult,
 } from '@/types/plugin.types';
 import { PluginStatus } from '@/types/plugin.types';
-import type { PluginRegistryService } from '@/core/plugin-registry/plugin-registry.service';
+import { PluginRegistryService } from '@/core/plugin-registry/plugin-registry.service';
 
 @Injectable()
 export class PluginManagerService {
