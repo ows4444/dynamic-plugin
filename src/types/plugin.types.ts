@@ -1,11 +1,5 @@
-export interface IPlugin {
-  onModuleInit?(): Promise<void>;
-  onModuleDestroy?(): Promise<void>;
-  onPluginInstall?(context: PluginContext): Promise<void>;
-  onPluginUninstall?(context: PluginContext): Promise<void>;
-  getHealth?(): Promise<HealthStatus>;
-  getMetrics?(): Promise<PluginMetrics>;
-}
+// Export the standardized IPlugin interface from shared interfaces
+export type { IPlugin } from '@/shared/interfaces/plugin.interface';
 
 export interface PluginContext<T extends BasePluginConfig = BasePluginConfig> {
   pluginId: string;
@@ -207,11 +201,11 @@ export interface PluginEvent {
 }
 
 export interface PluginInterop {
-  sendMessage(target: string, message: unknown): Promise<void>;
-  broadcastEvent(event: PluginEvent): Promise<void>;
-  subscribeToEvents(eventTypes: string[]): Promise<void>;
-  callPluginMethod(pluginId: string, method: string, args: unknown[]): Promise<unknown>;
-  shareResource(resource: SharedResource): Promise<void>;
+  sendMessage(target: string, message: unknown): void;
+  broadcastEvent(event: PluginEvent): void;
+  subscribeToEvents(eventTypes: string[]): void;
+  callPluginMethod(pluginId: string, method: string, args: unknown[]): unknown;
+  shareResource(resource: SharedResource): void;
 }
 
 export interface SharedResource {
@@ -223,9 +217,9 @@ export interface SharedResource {
 }
 
 export interface EventBus {
-  publish(event: PluginEvent): Promise<void>;
-  subscribe(eventPattern: string, handler: (event: PluginEvent) => void): Promise<string>;
-  unsubscribe(subscriptionId: string): Promise<void>;
+  publish(event: PluginEvent): void;
+  subscribe(eventPattern: string, handler: (event: PluginEvent) => void): string;
+  unsubscribe(subscriptionId: string): void;
 }
 
 export interface DatabaseConnection {

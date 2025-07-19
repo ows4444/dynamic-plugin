@@ -194,6 +194,8 @@ export default tseslint.config(
         },
       ],
 
+      '@typescript-eslint/no-require-imports': 'off',
+
       // General JavaScript/TypeScript rules
       'no-console': 'warn',
       'no-debugger': 'error',

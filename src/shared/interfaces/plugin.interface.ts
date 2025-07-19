@@ -1,5 +1,17 @@
 import type { ModuleMetadata } from '@nestjs/common';
-import type { HealthStatus, PluginContext, PluginMetrics } from '@/types/plugin.types';
+import type { HealthStatus, PluginMetrics } from '@/types/plugin.types';
+
+// Forward declaration to avoid circular dependency
+export interface PluginContext {
+  pluginId: string;
+  config: Record<string, unknown>;
+  logger: {
+    log(message: string, ...args: unknown[]): void;
+    error(message: string, ...args: unknown[]): void;
+    warn(message: string, ...args: unknown[]): void;
+    debug(message: string, ...args: unknown[]): void;
+  };
+}
 
 /**
  * Plugin configuration schema definition
@@ -31,6 +43,10 @@ export interface PluginConfigProperty {
   properties?: Record<string, PluginConfigProperty>;
 }
 
+/**
+ * Core plugin interface that all plugins must implement
+ * Provides lifecycle methods and configuration management
+ */
 export interface IPlugin {
   /**
    * Called when the plugin module is initialized
@@ -72,6 +88,26 @@ export interface IPlugin {
    * Validates the plugin's configuration
    */
   validateConfig?(config: unknown): Promise<boolean>;
+
+  /**
+   * Gets the current plugin configuration
+   */
+  getConfig?(): Promise<Record<string, unknown>>;
+
+  /**
+   * Updates the plugin configuration
+   */
+  updateConfig?(config: Record<string, unknown>): Promise<void>;
+
+  /**
+   * Called when plugin is being reloaded
+   */
+  onReload?(): Promise<void>;
+
+  /**
+   * Called before plugin shutdown for cleanup
+   */
+  onBeforeShutdown?(): Promise<void>;
 }
 
 export interface PluginModuleMetadata extends ModuleMetadata {

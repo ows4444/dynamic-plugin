@@ -6,6 +6,7 @@ import * as semver from 'semver';
 import type { CompatibilityResult, PluginDependency, PluginManifest, PluginMetadata, ValidationResult } from '@/types/plugin.types';
 import { PluginStatus } from '@/types/plugin.types';
 import { type PluginRegistry, type PluginRegistryEntry, PluginRegistrySortBy, type PluginSearchQuery, type PluginSearchResult, type PluginStats, SortOrder } from '@/types/registry.types';
+import { PluginValidationUtil } from '@/shared/utils/validation.util';
 
 @Injectable()
 export class PluginRegistryService {
@@ -156,6 +157,16 @@ export class PluginRegistryService {
   }
 
   async registerPlugin(plugin: PluginMetadata): Promise<void> {
+    // Input validation
+    if (!plugin?.id || !plugin?.name || !plugin?.version) {
+      throw new Error('Plugin metadata is incomplete - id, name, and version are required');
+    }
+
+    // Check for duplicate registration
+    if (this.registry.plugins.has(plugin.id)) {
+      throw new Error(`Plugin already registered: ${plugin.id}`);
+    }
+
     try {
       const entry: PluginRegistryEntry = {
         id: plugin.id,
@@ -245,78 +256,8 @@ export class PluginRegistryService {
   }
 
   validatePlugin(manifest: PluginManifest): ValidationResult {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-
-    // Required fields validation
-    if (!manifest.name) errors.push('Plugin name is required');
-    if (!manifest.version) errors.push('Plugin version is required');
-    if (!manifest.description) errors.push('Plugin description is required');
-    if (!manifest.author) errors.push('Plugin author is required');
-    if (!manifest.license) errors.push('Plugin license is required');
-    if (!manifest.main) errors.push('Plugin main entry point is required');
-
-    // Version validation
-    if (manifest.version && !semver.valid(manifest.version)) {
-      errors.push('Plugin version must be a valid semantic version');
-    }
-
-    // Engine validation
-    if (manifest.engines) {
-      if (manifest.engines.node && !semver.validRange(manifest.engines.node)) {
-        errors.push('Node.js engine version must be a valid range');
-      }
-      if (manifest.engines.nestjs && !semver.validRange(manifest.engines.nestjs)) {
-        errors.push('NestJS engine version must be a valid range');
-      }
-    }
-
-    // Dependency validation
-    if (manifest.dependencies) {
-      for (const [name, version] of Object.entries(manifest.dependencies)) {
-        if (!semver.validRange(version)) {
-          errors.push(`Invalid dependency version range for ${name}: ${version}`);
-        }
-      }
-    }
-
-    // Plugin dependency validation
-    if (manifest.pluginDependencies) {
-      for (const [name, version] of Object.entries(manifest.pluginDependencies)) {
-        if (!semver.validRange(version)) {
-          errors.push(`Invalid plugin dependency version range for ${name}: ${version}`);
-        }
-      }
-    }
-
-    // Permissions validation
-    if (manifest.permissions) {
-      const validPermissionTypes = ['database', 'network', 'filesystem'];
-      for (const [type, permissions] of Object.entries(manifest.permissions)) {
-        if (!validPermissionTypes.includes(type)) {
-          warnings.push(`Unknown permission type: ${type}`);
-        }
-        if (!Array.isArray(permissions)) {
-          errors.push(`Permissions for ${type} must be an array`);
-        }
-      }
-    }
-
-    // Capabilities validation
-    if (manifest.capabilities) {
-      const validCapabilities = ['database', 'rest-api', 'graphql', 'events', 'websocket', 'grpc'];
-      for (const capability of manifest.capabilities) {
-        if (!validCapabilities.includes(capability)) {
-          warnings.push(`Unknown capability: ${capability}`);
-        }
-      }
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors,
-      warnings,
-    };
+    // Use the comprehensive validation utility
+    return PluginValidationUtil.validateManifest(manifest);
   }
 
   getPluginDependencies(pluginId: string): PluginDependency[] {

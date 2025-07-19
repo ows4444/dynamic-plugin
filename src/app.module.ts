@@ -5,6 +5,7 @@ import { PluginRegistryModule } from '@/core/plugin-registry/plugin-registry.mod
 import { PluginManagerModule } from '@/core/plugin-manager/plugin-manager.module';
 import { PluginRuntimeModule } from '@/core/plugin-runtime/plugin-runtime.module';
 import { PluginSecurityModule } from '@/core/plugin-security/plugin-security.module';
+import { PluginsModule } from '@/plugins/plugins.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { PluginSecurityModule } from '@/core/plugin-security/plugin-security.mod
     PluginManagerModule,
     PluginRuntimeModule,
     PluginSecurityModule,
+    PluginsModule,
   ],
 })
 export class AppModule {}

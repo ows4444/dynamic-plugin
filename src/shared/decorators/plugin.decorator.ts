@@ -1,4 +1,4 @@
-import { Controller, Injectable, Module } from '@nestjs/common';
+import { Controller, Injectable } from '@nestjs/common';
 import type { PluginConfiguration, PluginRouteConfig } from '@/shared/interfaces/plugin.interface';
 import type { Type } from '@nestjs/common';
 import 'reflect-metadata';
@@ -38,15 +38,6 @@ export function Plugin(config: PluginConfiguration): PluginClassDecorator {
     // Store plugin events
     Reflect.defineMetadata('plugin:events', config.events ?? [], constructor);
 
-    // Apply the standard NestJS Module decorator
-    const moduleDecorator = Module({
-      imports: [],
-      controllers: [],
-      providers: [],
-      exports: [],
-    });
-
-    moduleDecorator(constructor);
     return constructor;
   };
 }

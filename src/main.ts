@@ -28,7 +28,8 @@ async function bootstrap() {
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
     });
-
+    // Global prefix
+    // app.setGlobalPrefix('api/v1');
     // Swagger API documentation
     const config = new DocumentBuilder()
       .setTitle('Dynamic Plugin System')
@@ -40,21 +41,20 @@ async function bootstrap() {
       .addBearerAuth()
       .build();
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document, {
+    const document = SwaggerModule.createDocument(app, config, { ignoreGlobalPrefix: true });
+
+    // Make Swagger UI consistent with global API prefix
+    SwaggerModule.setup('docs', app, document, {
       swaggerOptions: {
         persistAuthorization: true,
       },
     });
 
-    // Global prefix
-    app.setGlobalPrefix('api/v1');
-
     const port = process.env.PORT ?? 3000;
     await app.listen(port);
 
     logger.log(`🚀 Dynamic Plugin System is running on: http://localhost:${port}`);
-    logger.log(`📚 API Documentation available at: http://localhost:${port}/api`);
+    logger.log(`📚 API Documentation available at: http://localhost:${port}/docs`);
     logger.log(`🔧 Environment: ${process.env.NODE_ENV ?? 'development'}`);
   } catch (error) {
     logger.error('Failed to start application:', error);

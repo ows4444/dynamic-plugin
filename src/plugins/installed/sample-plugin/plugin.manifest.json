@@ -1,0 +1,43 @@
+{
+  "name": "sample-plugin",
+  "version": "1.0.0",
+  "description": "A sample plugin demonstrating the plugin system capabilities",
+  "author": "Plugin System",
+  "license": "MIT",
+  "main": "/Users/mdawais/Desktop/peactice/dynamic-plugin/dist/plugins/installed/sample-plugin/src/plugin.module.js",
+  "types": "/Users/mdawais/Desktop/peactice/dynamic-plugin/dist/plugins/installed/sample-plugin/src/plugin.module.d.ts",
+  "engines": {
+    "node": ">=18.0.0",
+    "nestjs": ">=10.0.0"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0"
+  },
+  "pluginDependencies": {},
+  "capabilities": [
+    "rest-api",
+    "events"
+  ],
+  "permissions": {
+    "database": ["read", "write"],
+    "network": ["outbound"],
+    "filesystem": ["read"]
+  },
+  "hooks": {
+    "onInstall": "hooks/install.js",
+    "onUninstall": "hooks/uninstall.js",
+    "onStart": "hooks/start.js",
+    "onStop": "hooks/stop.js"
+  },
+  "configuration": {
+    "schema": "config/schema.json",
+    "defaults": "config/defaults.json"
+  },
+  "metadata": {
+    "category": "sample",
+    "tags": ["demo", "example", "template"],
+    "documentation": "https://docs.example.com/sample-plugin",
+    "repository": "https://github.com/example/sample-plugin"
+  }
+}

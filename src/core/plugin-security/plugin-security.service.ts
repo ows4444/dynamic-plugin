@@ -164,6 +164,19 @@ export class PluginSecurityService {
   }
 
   createSecurityContext(pluginId: string, permissions: PluginPermissions, resourceLimits?: ResourceLimits): SecurityContext {
+    // Input validation
+    if (!pluginId?.trim()) {
+      throw new Error('Plugin ID is required for security context creation');
+    }
+
+    if (!permissions || typeof permissions !== 'object') {
+      throw new Error('Valid permissions object is required for security context creation');
+    }
+
+    if (this.securityContexts.has(pluginId)) {
+      this.logger.warn(`Security context already exists for plugin: ${pluginId}, replacing...`);
+    }
+
     try {
       const context: SecurityContext = {
         pluginId,

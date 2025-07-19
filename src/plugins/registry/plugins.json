@@ -1,0 +1,80 @@
+{
+  "plugins": {
+    "sample-plugin@1.0.0": {
+      "id": "sample-plugin@1.0.0",
+      "name": "sample-plugin",
+      "version": "1.0.0",
+      "description": "A sample plugin demonstrating the plugin system capabilities",
+      "author": "Plugin System",
+      "license": "MIT",
+      "category": "sample",
+      "tags": [
+        "demo",
+        "example",
+        "template"
+      ],
+      "capabilities": [
+        "rest-api",
+        "events"
+      ],
+      "permissions": {
+        "database": [
+          "read",
+          "write"
+        ],
+        "network": [
+          "outbound"
+        ],
+        "filesystem": [
+          "read"
+        ]
+      },
+      "dependencies": [
+        {
+          "name": "@nestjs/common",
+          "version": "^11.0.0",
+          "required": true
+        },
+        {
+          "name": "@nestjs/core",
+          "version": "^11.0.0",
+          "required": true
+        }
+      ],
+      "pluginDependencies": {},
+      "engines": {
+        "node": ">=18.0.0",
+        "nestjs": ">=10.0.0"
+      },
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "version": "1.0.0",
+        "installDate": "2025-07-19T12:43:18.310Z",
+        "lastUsed": "2025-07-19T18:59:24.412Z"
+      },
+      "downloadCount": 0,
+      "rating": 0,
+      "reviews": 0,
+      "lastUpdated": "2025-07-19T12:43:18.310Z",
+      "createdAt": "2025-07-19T12:43:18.310Z",
+      "repository": "https://github.com/example/sample-plugin",
+      "documentation": "https://docs.example.com/sample-plugin",
+      "size": 0,
+      "checksum": "",
+      "verified": false
+    }
+  },
+  "categories": {
+    "sample": [
+      "sample-plugin@1.0.0"
+    ]
+  },
+  "dependencies": {
+    "sample-plugin@1.0.0": [
+      "@nestjs/common",
+      "@nestjs/core"
+    ]
+  },
+  "lastUpdated": "2025-07-19T18:59:24.412Z"
+}
