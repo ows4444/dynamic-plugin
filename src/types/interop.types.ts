@@ -3,7 +3,6 @@
  */
 
 import type { NetworkProtocol } from './common.types';
-import type { MessageMetadata as BaseMessageMetadata } from './metadata.types';
 
 // Message and Communication Types
 export enum MessageType {
@@ -28,11 +27,30 @@ export enum DeliveryMode {
   REQUEST_RESPONSE = 'request_response',
 }
 
-// MessageMetadata extends BaseMessageMetadata for interop messages
-export interface MessageMetadata extends BaseMessageMetadata {
+// MessageMetadata for interop messages
+export interface MessageMetadata {
+  messageId?: string;
+  correlationId?: string;
+  causationId?: string;
+  traceId?: string;
+  spanId?: string;
+  userId?: string;
+  sessionId?: string;
+  requestId?: string;
+  retryCount?: number;
+  maxRetries?: number;
+  ttl?: number;
+  encrypted?: boolean;
+  compressed?: boolean;
+  schema?: string;
+  contentType?: string;
+  encoding?: string;
   replyTo?: string;
   priority?: MessagePriority;
   deliveryMode?: DeliveryMode;
+  timestamp?: Date;
+  expiresAt?: Date;
+  headers?: Record<string, string>;
 }
 
 export interface Message {

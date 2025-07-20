@@ -47,6 +47,7 @@ export interface BaseEvent {
 }
 
 // EventMetadata extends BaseEventMetadata for events
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface EventMetadata extends BaseEventMetadata {
   // Additional event-specific metadata fields if needed
 }
