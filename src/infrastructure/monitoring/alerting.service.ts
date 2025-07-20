@@ -62,13 +62,14 @@ export class AlertingService {
   /**
    * Initialize alerting service
    */
-  initialize(): void {
+  initialize(): Promise<void> {
     try {
       // Register built-in alert rules
       this.registerBuiltInAlertRules();
 
       this.isInitialized = true;
       this.logger.log('Alerting service initialized');
+      return Promise.resolve();
     } catch (error) {
       this.logger.error('Failed to initialize alerting service:', error);
       throw error;
@@ -581,7 +582,7 @@ export class AlertingService {
   /**
    * Shutdown alerting service
    */
-  shutdown(): void {
+  shutdown(): Promise<void> {
     try {
       this.isInitialized = false;
       this.alertRules.clear();
@@ -590,8 +591,10 @@ export class AlertingService {
       this.totalAlertsGenerated = 0;
 
       this.logger.log('Alerting service shut down');
+      return Promise.resolve();
     } catch (error) {
       this.logger.error('Error during alerting service shutdown:', error);
+      return Promise.reject(error);
     }
   }
 }

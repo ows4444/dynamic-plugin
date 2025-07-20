@@ -50,7 +50,7 @@ export class AuthorizationService {
   }
 
   getUserRoles(userId: string): Promise<string[]> {
-    return this.userRoles.get(userId) ?? [];
+    return Promise.resolve(this.userRoles.get(userId) ?? []);
   }
 
   async getUserPermissions(userId: string): Promise<string[]> {
@@ -74,19 +74,19 @@ export class AuthorizationService {
         currentRoles.push(roleName);
         this.userRoles.set(userId, currentRoles);
       }
-      return true;
+      return Promise.resolve(true);
     } catch (error) {
       this.logger.error('Role assignment error:', error);
-      return false;
+      return Promise.resolve(false);
     }
   }
 
   getStatistics(): Promise<any> {
-    return {
+    return Promise.resolve({
       totalRoles: this.roles.size,
       totalPermissions: this.permissions.size,
       totalUserAssignments: this.userRoles.size,
-    };
+    });
   }
 
   private setupDefaultRolesAndPermissions(): Promise<void> {
@@ -110,14 +110,16 @@ export class AuthorizationService {
     // Assign admin role to admin user
     this.userRoles.set('admin', ['admin']);
     this.userRoles.set('testuser', ['user']);
+    return Promise.resolve();
   }
 
   isHealthy(): Promise<boolean> {
-    return this.isInitialized;
+    return Promise.resolve(this.isInitialized);
   }
 
   shutdown(): Promise<void> {
     this.isInitialized = false;
     this.logger.log('Authorization service shut down');
+    return Promise.resolve();
   }
 }

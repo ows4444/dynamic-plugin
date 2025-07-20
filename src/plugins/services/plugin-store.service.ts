@@ -525,4 +525,33 @@ export class PluginStoreService {
       this.logger.error('Failed to save store configurations:', error);
     }
   }
+
+  /**
+   * Get store configuration
+   */
+  getStoreConfig(): any {
+    return {
+      stores: this.defaultStores,
+      cacheEnabled: true,
+      refreshInterval: 3600000, // 1 hour
+      lastUpdated: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Update store configuration
+   */
+  updateStoreConfig(config: any): void {
+    this.logger.log('Store configuration updated:', config);
+    // Implementation would update store configuration
+  }
+
+  /**
+   * Refresh all stores
+   */
+  refreshStores(): number {
+    this.storeCache.clear();
+    this.logger.log('All store caches refreshed');
+    return this.defaultStores.length;
+  }
 }

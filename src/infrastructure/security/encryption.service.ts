@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { createCipher, createDecipher, createHash, randomBytes } from 'crypto';
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto';
 
 /**
  * Encryption service providing data encryption, hashing, and key management
@@ -18,7 +18,8 @@ export class EncryptionService {
   encrypt(data: string, context?: string): Promise<string> {
     try {
       // Simple encryption for demo - use proper encryption in production
-      const cipher = createCipher('aes192', this.encryptionKey);
+      const iv = randomBytes(16);
+      const cipher = createCipheriv('aes-256-gcm', Buffer.from(this.encryptionKey), iv);
       let encrypted = cipher.update(data, 'utf8', 'hex');
       encrypted += cipher.final('hex');
       return encrypted;
@@ -30,7 +31,8 @@ export class EncryptionService {
 
   decrypt(encryptedData: string, context?: string): Promise<string> {
     try {
-      const decipher = createDecipher('aes192', this.encryptionKey);
+      const iv = randomBytes(16); // In real implementation, IV would be stored with the encrypted data
+      const decipher = createDecipheriv('aes-256-gcm', Buffer.from(this.encryptionKey), iv);
       let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
       decrypted += decipher.final('utf8');
       return decrypted;

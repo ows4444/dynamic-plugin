@@ -60,7 +60,7 @@ export class HealthCheckService {
    */
   private registerBuiltInHealthChecks(): void {
     // System memory health check
-    this.registerHealthCheck('system.memory', () => {
+    this.registerHealthCheck('system.memory', async () => {
       const memoryUsage = process.memoryUsage();
       const totalMemory = require('os').totalmem();
       const freeMemory = require('os').freemem();
@@ -113,7 +113,7 @@ export class HealthCheckService {
     });
 
     // Application uptime health check
-    this.registerHealthCheck('system.uptime', () => {
+    this.registerHealthCheck('system.uptime', async () => {
       const uptime = process.uptime();
       const uptimeHours = uptime / 3600;
 

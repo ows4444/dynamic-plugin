@@ -112,10 +112,10 @@ export class PluginStoreController {
   updateStoreConfig(@Body() config: Partial<PluginStoreConfig>): Promise<{ success: boolean; message: string }> {
     try {
       this.pluginStoreService.updateStoreConfig(config);
-      return {
+      return Promise.resolve({
         success: true,
         message: 'Store configuration updated successfully',
-      };
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to update store configuration: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -129,11 +129,11 @@ export class PluginStoreController {
   refreshStores(): Promise<{ success: boolean; message: string; refreshedStores: number }> {
     try {
       const refreshedStores = this.pluginStoreService.refreshStores();
-      return {
+      return Promise.resolve({
         success: true,
         message: 'Stores refreshed successfully',
         refreshedStores,
-      };
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to refresh stores: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);

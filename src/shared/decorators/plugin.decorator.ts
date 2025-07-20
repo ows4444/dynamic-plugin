@@ -4,7 +4,7 @@ import type { Type } from '@nestjs/common';
 import 'reflect-metadata';
 
 // Type definitions for better decorator typing
-type Constructor<TObject = object> = new (...args: unknown[]) => TObject;
+type Constructor<TObject = object> = new (...args: any[]) => TObject;
 type PluginClassDecorator = <TFunction extends Constructor>(target: TFunction) => TFunction;
 type PluginPropertyDecorator = (target: object, propertyKey: string | symbol) => void;
 

@@ -70,7 +70,7 @@ export class DatabaseService implements OnModuleDestroy {
 
       const results = healthChecks.map((check, index) => ({
         name: connections[index].name,
-        healthy: check.status === 'fulfilled' && typeof check.value === 'object' && 'status' in check.value && check.value.status === true,
+        healthy: check.status === 'fulfilled' && typeof check.value === 'object' && check.value !== null && 'status' in check.value && (check.value.status as unknown as boolean) === true,
         error: check.status === 'rejected' ? check.reason?.message : undefined,
       }));
 

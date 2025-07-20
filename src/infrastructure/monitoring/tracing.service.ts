@@ -48,10 +48,11 @@ export class TracingService {
   /**
    * Initialize tracing service
    */
-  initialize(): void {
+  initialize(): Promise<void> {
     try {
       this.isInitialized = true;
       this.logger.log('Tracing service initialized');
+      return Promise.resolve();
     } catch (error) {
       this.logger.error('Failed to initialize tracing service:', error);
       throw error;
