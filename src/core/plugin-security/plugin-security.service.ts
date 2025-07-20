@@ -3,7 +3,21 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { PluginActivity, PluginPackage, PluginPermissions, PluginRateLimits, RateLimitOperation, ResourceLimits, SecurityAction, SecurityContext, SecurityReport, SecurityResourceType } from '@types';
+import {
+  EventCategory,
+  EventPriority,
+  PluginActivity,
+  PluginPackage,
+  PluginPermissions,
+  PluginRateLimits,
+  RateLimitOperation,
+  ResourceLimits,
+  SecurityAction,
+  SecurityContext,
+  SecurityReport,
+  SecurityResourceType,
+} from '@types';
+
 import { PluginAuthService } from './services/plugin-auth.service';
 import { PluginAuditService } from './services/plugin-audit.service';
 
@@ -35,10 +49,15 @@ export class PluginSecurityService {
       if (!plugin.signature) {
         this.logger.warn('Plugin has no signature');
         this.auditService.auditActivity({
+          id: `audit-${Date.now()}`,
+          type: 'plugin.security.validation',
+          category: EventCategory.SECURITY,
+          source: 'plugin-security-service',
+          priority: EventPriority.HIGH,
+          timestamp: new Date(),
+          data: { reason: 'No signature provided' },
           pluginId: plugin.name ?? plugin.manifest?.name ?? 'unknown',
           action: 'signature:validation:failed',
-          timestamp: new Date(),
-          metadata: { reason: 'No signature provided' },
         });
         return false;
       }
@@ -49,10 +68,15 @@ export class PluginSecurityService {
       if (calculatedChecksum !== plugin.checksum) {
         this.logger.error('Plugin checksum mismatch');
         this.auditService.auditActivity({
+          id: `audit-${Date.now()}`,
+          type: 'plugin.security.validation',
+          category: EventCategory.SECURITY,
+          source: 'plugin-security-service',
+          priority: EventPriority.HIGH,
+          timestamp: new Date(),
+          data: { reason: 'Checksum mismatch', expected: plugin.checksum, actual: calculatedChecksum },
           pluginId: plugin.name ?? plugin.manifest?.name ?? 'unknown',
           action: 'signature:validation:failed',
-          timestamp: new Date(),
-          metadata: { reason: 'Checksum mismatch', expected: plugin.checksum, actual: calculatedChecksum },
         });
         return false;
       }

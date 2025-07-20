@@ -206,10 +206,8 @@ export { isMessage, isPluginEvent, isRpcRequest, isRpcResponse } from './interop
 // EVENT SYSTEM
 // =============================================================================
 
+export { EventCategory, EventPriority } from './events.types';
 export type {
-  // Event categories and priorities
-  EventCategory,
-  EventPriority,
   EventStatus,
 
   // Base event system

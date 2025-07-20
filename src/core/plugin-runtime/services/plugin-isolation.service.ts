@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { IsolationOptions, IsolationResult, PluginInstance, SecurityContext } from '@types';
+import type { IsolationOptions, IsolationResult, PluginInstance, ResourceUsage, SecurityContext } from '@types';
 
 /**
  * Service responsible for plugin isolation and sandboxing
@@ -63,7 +63,7 @@ export class PluginIsolationService {
           memory: 0,
           cpu: 0,
           network: 0,
-          filesystem: 0,
+          disk: 0,
           processes: 0,
         },
         violations: [],
@@ -79,7 +79,7 @@ export class PluginIsolationService {
           memory: 0,
           cpu: 0,
           network: 0,
-          filesystem: 0,
+          disk: 0,
           processes: 0,
         },
         violations: [],
@@ -141,11 +141,11 @@ export class PluginIsolationService {
 
       // Additional checks based on operation and resource
       if (resource === 'filesystem' && operation === 'write') {
-        return securityContext.permissions.filesystem?.includes('write') ?? false;
+        return (securityContext.permissions.filesystem?.write?.length ?? 0) > 0;
       }
 
       if (resource === 'network' && operation === 'request') {
-        return (securityContext.permissions.network?.length ?? 0) > 0;
+        return (securityContext.permissions.network?.outbound?.length ?? 0) > 0;
       }
 
       // Check against denied modules if specified
@@ -229,23 +229,23 @@ export class PluginIsolationService {
   private checkResourceLimits(pluginId: string, usage: ResourceUsage, limits: ResourceUsage): void {
     const violations: string[] = [];
 
-    if (usage.memory > limits.memory) {
+    if ((usage.memory ?? 0) > (limits.memory ?? 0)) {
       violations.push(`Memory usage (${usage.memory}) exceeds limit (${limits.memory})`);
     }
 
-    if (usage.cpu > limits.cpu) {
+    if ((usage.cpu ?? 0) > (limits.cpu ?? 0)) {
       violations.push(`CPU usage (${usage.cpu}) exceeds limit (${limits.cpu})`);
     }
 
-    if (usage.network > limits.network) {
+    if ((usage.network ?? 0) > (limits.network ?? 0)) {
       violations.push(`Network usage (${usage.network}) exceeds limit (${limits.network})`);
     }
 
-    if (usage.filesystem > limits.filesystem) {
-      violations.push(`Filesystem usage (${usage.filesystem}) exceeds limit (${limits.filesystem})`);
+    if ((usage.disk ?? 0) > (limits.disk ?? 0)) {
+      violations.push(`Disk usage (${usage.disk}) exceeds limit (${limits.disk})`);
     }
 
-    if (usage.processes > limits.processes) {
+    if ((usage.processes ?? 0) > (limits.processes ?? 0)) {
       violations.push(`Process count (${usage.processes}) exceeds limit (${limits.processes})`);
     }
 
@@ -291,12 +291,12 @@ interface IsolationContext {
   securityContext: SecurityContext;
   options: IsolationOptions;
   createdAt: Date;
-  resourceUsage: ResourceUsage;
-  limits: ResourceUsage;
+  resourceUsage: LocalResourceUsage;
+  limits: LocalResourceUsage;
   monitoringInterval?: NodeJS.Timeout;
 }
 
-interface ResourceUsage {
+interface LocalResourceUsage {
   memory: number;
   cpu: number;
   network: number;

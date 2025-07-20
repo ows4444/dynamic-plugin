@@ -259,7 +259,10 @@ export class PluginContextService {
       network,
       system,
       database,
-      plugins: plugin.permissions,
+      plugins:
+        typeof plugin.permissions === 'object' && !Array.isArray(plugin.permissions)
+          ? (plugin.permissions as Record<string, string[]>)
+          : { general: Array.isArray(plugin.permissions) ? plugin.permissions : [] },
     };
   }
 
@@ -307,7 +310,7 @@ export class PluginContextService {
 
   private createEventBus(pluginId: string): EventBus {
     return {
-      publish: (event: PluginEvent): void => {
+      publish: async (event: PluginEvent): Promise<void> => {
         // Add plugin source to event
         const enrichedEvent = {
           ...event,
@@ -318,25 +321,45 @@ export class PluginContextService {
         this.eventEmitter.emit('plugin.event', enrichedEvent);
       },
 
-      subscribe: (eventPattern: string, handler: (event: PluginEvent) => void): string => {
-        const subscriptionId = `${pluginId}:${eventPattern}:${Date.now()}`;
+      subscribe: async (pattern: string, handler: any, options?: any): Promise<string> => {
+        const subscriptionId = `${pluginId}:${pattern}:${Date.now()}`;
 
         // Wrap handler to ensure proper error handling
-        const wrappedHandler = (event: PluginEvent) => {
+        const wrappedHandler = async (event: any) => {
           try {
-            handler(event);
+            await handler(event);
+            return { success: true, ack: true };
           } catch (error) {
             this.logger.error(`Error in event handler for ${pluginId}:`, error);
+            return { success: false, error: error as Error, ack: false };
           }
         };
 
-        this.eventEmitter.on(eventPattern, wrappedHandler);
+        this.eventEmitter.on(pattern, wrappedHandler);
         return subscriptionId;
       },
 
-      unsubscribe: (subscriptionId: string): void => {
+      unsubscribe: async (subscriptionId: string): Promise<void> => {
         // Implementation would track and remove specific subscription
         this.logger.debug(`Unsubscribing ${subscriptionId}`);
+      },
+
+      listSubscriptions: async (subscriberId?: string): Promise<any[]> => {
+        // Implementation would return list of subscriptions
+        this.logger.debug(`Listing subscriptions for ${subscriberId || pluginId}`);
+        return [];
+      },
+
+      getMetrics: async (): Promise<any> => {
+        // Implementation would return event bus metrics
+        return {
+          totalEvents: 0,
+          totalSubscriptions: 0,
+          eventRate: 0,
+          averageLatency: 0,
+          errorRate: 0,
+          topicMetrics: {},
+        };
       },
     };
   }
@@ -344,51 +367,110 @@ export class PluginContextService {
   private createSecurityContext(plugin: PluginMetadata, runtimeContext: RuntimeContext): SecurityContext {
     return {
       pluginId: plugin.id,
-      permissions: plugin.permissions,
-      isolation: runtimeContext.isolation !== IsolationLevel.NONE,
+      permissions: this.createRuntimePermissions(plugin),
+      isolation: runtimeContext.isolation,
       resourceLimits: runtimeContext.resourceLimits,
+      principal: {
+        id: plugin.id,
+        type: 'plugin',
+        name: plugin.name,
+        roles: ['plugin'],
+        permissions: [],
+        createdAt: new Date(),
+      },
+      rateLimits: [
+        { operation: 'api_calls', limit: 1000, window: 60000 },
+        { operation: 'data_transfer', limit: 1000000, window: 60000 },
+        { operation: 'events', limit: 100, window: 1000 },
+      ],
+      policies: [],
+      createdAt: new Date(),
+      lastValidated: new Date(),
     };
   }
 
   private createPluginInterop(pluginId: string): PluginInterop {
     return {
-      sendMessage: (target: string, message: unknown): void => {
+      sendMessage: async (target: string, message: unknown, options?: any): Promise<void> => {
         this.eventEmitter.emit('plugin.message', {
           from: pluginId,
           to: target,
           message,
+          options,
           timestamp: new Date(),
         });
       },
 
-      broadcastEvent: (event: PluginEvent): void => {
+      broadcastEvent: async (event: PluginEvent, options?: any): Promise<void> => {
         this.eventEmitter.emit('plugin.broadcast', {
           ...event,
           source: pluginId,
+          options,
           timestamp: new Date(),
         });
       },
 
-      subscribeToEvents: (eventTypes: string[]): void => {
-        for (const eventType of eventTypes) {
-          this.eventEmitter.on(eventType, (data: PluginEvent) => {
-            this.logger.debug(`Plugin ${pluginId} received event: ${eventType}`, data);
-          });
-        }
+      subscribeToEvents: async (pattern: string | any, handler: any, options?: any): Promise<string> => {
+        const subscriptionId = `${pluginId}:${pattern}:${Date.now()}`;
+        this.eventEmitter.on(pattern, handler);
+        return subscriptionId;
       },
 
-      callPluginMethod: (targetPluginId: string, method: string, args: unknown[]): unknown => {
+      unsubscribe: async (subscriptionId: string): Promise<void> => {
+        this.logger.debug(`Unsubscribing ${subscriptionId}`);
+      },
+
+      callMethod: async (target: string, method: string, params: unknown[], options?: any): Promise<unknown> => {
         // Implementation would call method on target plugin through plugin manager
-        this.logger.debug(`Plugin ${pluginId} calling method ${method} on ${targetPluginId}`, args);
+        this.logger.debug(`Plugin ${pluginId} calling method ${method} on ${target}`, params);
         return undefined;
       },
 
-      shareResource: (resource: SharedResource): void => {
+      registerMethod: async (method: string, handler: any): Promise<void> => {
+        this.logger.debug(`Plugin ${pluginId} registering method ${method}`);
+      },
+
+      unregisterMethod: async (method: string): Promise<void> => {
+        this.logger.debug(`Plugin ${pluginId} unregistering method ${method}`);
+      },
+
+      shareResource: async (resource: SharedResource): Promise<void> => {
         this.eventEmitter.emit('plugin.resource.shared', {
           from: pluginId,
           resource,
           timestamp: new Date(),
         });
+      },
+
+      getSharedResource: async (resourceId: string): Promise<SharedResource | null> => {
+        this.logger.debug(`Plugin ${pluginId} getting shared resource ${resourceId}`);
+        return null;
+      },
+
+      removeSharedResource: async (resourceId: string): Promise<void> => {
+        this.logger.debug(`Plugin ${pluginId} removing shared resource ${resourceId}`);
+      },
+
+      listSharedResources: async (filter?: any): Promise<SharedResource[]> => {
+        this.logger.debug(`Plugin ${pluginId} listing shared resources`, filter);
+        return [];
+      },
+
+      createChannel: async (name: string, options: any): Promise<any> => {
+        this.logger.debug(`Plugin ${pluginId} creating channel ${name}`, options);
+        return { id: `${name}-${Date.now()}`, name, ...options };
+      },
+
+      deleteChannel: async (channelId: string): Promise<void> => {
+        this.logger.debug(`Plugin ${pluginId} deleting channel ${channelId}`);
+      },
+
+      joinChannel: async (channelId: string): Promise<void> => {
+        this.logger.debug(`Plugin ${pluginId} joining channel ${channelId}`);
+      },
+
+      leaveChannel: async (channelId: string): Promise<void> => {
+        this.logger.debug(`Plugin ${pluginId} leaving channel ${channelId}`);
       },
     };
   }
