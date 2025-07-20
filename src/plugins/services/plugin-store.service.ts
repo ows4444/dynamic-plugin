@@ -529,7 +529,7 @@ export class PluginStoreService {
   /**
    * Get store configuration
    */
-  getStoreConfig(): any {
+  getStoreConfig(): unknown {
     return {
       stores: this.defaultStores,
       cacheEnabled: true,
@@ -541,7 +541,7 @@ export class PluginStoreService {
   /**
    * Update store configuration
    */
-  updateStoreConfig(config: any): void {
+  updateStoreConfig(config: unknown): void {
     this.logger.log('Store configuration updated:', config);
     // Implementation would update store configuration
   }
@@ -558,7 +558,7 @@ export class PluginStoreService {
   /**
    * Get plugin download information
    */
-  getPluginDownloadInfo(id: string): any {
+  getPluginDownloadInfo(id: string): unknown {
     return {
       downloadUrl: `https://store.example.com/download/${id}`,
       size: '1.2MB',
@@ -570,7 +570,7 @@ export class PluginStoreService {
   /**
    * Get store metrics
    */
-  getStoreMetrics(): any {
+  getStoreMetrics(): unknown {
     return {
       totalPlugins: 150,
       totalDownloads: 5000,

@@ -26,8 +26,8 @@ export class PluginErrorHandler {
   /**
    * Handles plugin errors with appropriate logging and recovery actions
    */
-  static handlePluginError(error: any, pluginId?: string): void {
-    const pluginError = this.normalizeError(error, pluginId);
+  static handlePluginError(error: unknown, pluginId?: string): void {
+    const pluginError = this.normalizeError(error as Error | PluginError, pluginId);
 
     // Log based on severity
     switch (pluginError.severity) {

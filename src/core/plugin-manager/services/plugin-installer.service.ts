@@ -297,9 +297,21 @@ export class PluginInstallerService {
    */
   private createPluginMetadata(manifest: PluginManifest, pluginId: string): PluginMetadata {
     return {
-      // Required properties from PluginMetadata interface
+      ...this.createBaseMetadata(manifest, pluginId),
+      ...this.createRuntimeMetadata(manifest),
+      ...this.createExtendedMetadata(manifest),
+    };
+  }
+
+  /**
+   * Create base metadata properties
+   */
+  private createBaseMetadata(manifest: PluginManifest, pluginId: string) {
+    return {
       id: pluginId,
+      pluginId,
       name: manifest.name,
+      version: manifest.version,
       status: PluginStatus.INSTALLED,
       loadTime: 0,
       memory: 0,
@@ -309,39 +321,56 @@ export class PluginInstallerService {
       engines: manifest.engines,
       hooks: manifest.hooks,
       configuration: manifest.configuration,
-      runtimeMetadata: {
-        category: (manifest.metadata as any)?.category || 'general',
-        tags: (manifest.metadata as any)?.tags || [],
-        documentation: (manifest.metadata as any)?.documentation,
-        repository: (manifest.metadata as any)?.repository,
-      },
-      // Properties from BasePluginMetadata
-      pluginId,
-      version: manifest.version,
-      category: (manifest.metadata as any)?.category || 'general',
-      keywords: (manifest.metadata as any)?.keywords || [],
-      homepage: (manifest.metadata as any)?.homepage,
-      repository: (manifest.metadata as any)?.repository,
-      bugs: (manifest.metadata as any)?.bugs,
       license: manifest.license,
-      capabilities: manifest.capabilities || [],
-      permissions: Array.isArray(manifest.permissions) ? manifest.permissions : Object.keys(manifest.permissions),
-      dependencies: manifest.dependencies || {},
-      peerDependencies: (manifest as any).peerDependencies || {},
-      devDependencies: (manifest as any).devDependencies || {},
-      size: (manifest.metadata as any)?.size,
-      downloadCount: (manifest.metadata as any)?.downloadCount,
-      rating: (manifest.metadata as any)?.rating,
-      verified: (manifest.metadata as any)?.verified || false,
-      featured: (manifest.metadata as any)?.featured || false,
-      deprecated: (manifest.metadata as any)?.deprecated || false,
-      createdBy: (manifest.metadata as any)?.createdBy,
-      updatedBy: (manifest.metadata as any)?.updatedBy,
       author: manifest.author,
-      maintainers: (manifest.metadata as any)?.maintainers || [],
-      previousVersion: (manifest.metadata as any)?.previousVersion,
-      versionChanges: (manifest.metadata as any)?.versionChanges || [],
-      security: (manifest.metadata as any)?.security || {
+    };
+  }
+
+  /**
+   * Create runtime metadata
+   */
+  private createRuntimeMetadata(manifest: PluginManifest) {
+    const metadata = manifest.metadata as any;
+    return {
+      runtimeMetadata: {
+        category: metadata?.category ?? 'general',
+        tags: metadata?.tags ?? [],
+        documentation: metadata?.documentation,
+        repository: metadata?.repository,
+      },
+      category: metadata?.category ?? 'general',
+      keywords: metadata?.keywords ?? [],
+      homepage: metadata?.homepage,
+      repository: metadata?.repository,
+      bugs: metadata?.bugs,
+    };
+  }
+
+  /**
+   * Create extended metadata properties
+   */
+  private createExtendedMetadata(manifest: PluginManifest) {
+    const metadata = manifest.metadata as any;
+    const manifestAny = manifest as any;
+
+    return {
+      capabilities: manifest.capabilities ?? [],
+      permissions: Array.isArray(manifest.permissions) ? manifest.permissions : Object.keys(manifest.permissions),
+      dependencies: manifest.dependencies ?? {},
+      peerDependencies: manifestAny.peerDependencies ?? {},
+      devDependencies: manifestAny.devDependencies ?? {},
+      size: metadata?.size,
+      downloadCount: metadata?.downloadCount,
+      rating: metadata?.rating,
+      verified: metadata?.verified ?? false,
+      featured: metadata?.featured ?? false,
+      deprecated: metadata?.deprecated ?? false,
+      createdBy: metadata?.createdBy,
+      updatedBy: metadata?.updatedBy,
+      maintainers: metadata?.maintainers ?? [],
+      previousVersion: metadata?.previousVersion,
+      versionChanges: metadata?.versionChanges ?? [],
+      security: metadata?.security ?? {
         signed: false,
         verified: false,
       },

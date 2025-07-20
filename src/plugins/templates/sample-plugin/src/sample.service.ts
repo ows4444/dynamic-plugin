@@ -56,7 +56,7 @@ export class SampleService implements PluginServiceInterface {
 
     // Emit a response event
     if (this.context.eventBus) {
-      this.context.eventBus.publish({
+      void this.context.eventBus.publish({
         id: `response-${Date.now()}`,
         type: MessageType.EVENT,
         source: 'sample-plugin',
@@ -132,7 +132,7 @@ export class SampleService implements PluginServiceInterface {
 
       // Emit data created event
       if (this.context.eventBus) {
-        this.context.eventBus.publish({
+        void this.context.eventBus.publish({
           id: `data-created-${Date.now()}`,
           type: MessageType.EVENT,
           source: 'sample-plugin',
@@ -166,7 +166,7 @@ export class SampleService implements PluginServiceInterface {
     const deleted = this.dataStore.delete(id);
 
     if (deleted && this.context.eventBus) {
-      this.context.eventBus.publish({
+      void this.context.eventBus.publish({
         id: `data-deleted-${Date.now()}`,
         type: MessageType.EVENT,
         source: 'sample-plugin',

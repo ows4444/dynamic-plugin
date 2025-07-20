@@ -390,7 +390,7 @@ export class PluginDevelopmentService {
    */
 
   private loadPluginTemplates(): void {
-    const templatesPath = path.join(process.cwd(), 'src', 'plugins', 'templates');
+    const _templatesPath = path.join(process.cwd(), 'src', 'plugins', 'templates');
 
     // Load built-in templates
     this.templates.set('basic', {
@@ -879,7 +879,7 @@ describe('${this.toPascalCase(config.pluginName)}Service', () => {
   /**
    * Package plugin for distribution
    */
-  packagePlugin(pluginId: string, options?: any): { packagePath: string; size: number; checksum: string } {
+  packagePlugin(pluginId: string, _options?: unknown): { packagePath: string; size: number; checksum: string } {
     this.logger.log(`Packaging plugin: ${pluginId}`);
     return {
       packagePath: `/packages/${pluginId}.tar.gz`,
@@ -891,7 +891,7 @@ describe('${this.toPascalCase(config.pluginName)}Service', () => {
   /**
    * Lint plugin code
    */
-  lintPlugin(pluginId: string, options?: any): Promise<any> {
+  lintPlugin(pluginId: string, _options?: unknown): Promise<unknown> {
     this.logger.log(`Linting plugin: ${pluginId}`);
     return Promise.resolve({
       success: true,
@@ -904,7 +904,7 @@ describe('${this.toPascalCase(config.pluginName)}Service', () => {
   /**
    * Get development metrics
    */
-  getDevelopmentMetrics(): Promise<any> {
+  getDevelopmentMetrics(): Promise<unknown> {
     return Promise.resolve({
       totalPlugins: this.devServers.size,
       activeServers: this.devServers.size,
@@ -916,7 +916,7 @@ describe('${this.toPascalCase(config.pluginName)}Service', () => {
   /**
    * Generate component scaffolding
    */
-  generateComponent(pluginId: string, type: string, options?: any): { generatedFiles: string[] } {
+  generateComponent(pluginId: string, type: string, _options?: unknown): { generatedFiles: string[] } {
     this.logger.log(`Generating ${type} component for plugin: ${pluginId}`);
     return {
       generatedFiles: [`src/components/${type}.component.ts`, `src/components/${type}.component.spec.ts`],
