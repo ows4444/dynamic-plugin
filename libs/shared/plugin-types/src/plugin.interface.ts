@@ -1,0 +1,284 @@
+export interface IPlugin {
+  readonly id: string;
+  readonly name: string;
+  readonly version: string;
+  readonly type: string;
+  readonly category: string;
+  readonly status: string;
+  readonly health: string;
+  readonly manifest: IPluginManifest;
+  readonly config: PluginConfig;
+  readonly dependencies: string[];
+  readonly routes: PluginRoute[];
+  readonly permissions: string[];
+  readonly startedAt?: Date;
+  readonly stoppedAt?: Date;
+  readonly errorCount: number;
+  readonly lastError?: Error;
+
+  start(config?: PluginConfig): Promise<void>;
+  stop(): Promise<void>;
+  restart(): Promise<void>;
+  configure(config: PluginConfig): Promise<void>;
+  getStatus(): string;
+  getHealth(): Promise<PluginHealthCheck>;
+  getMetrics(): Promise<PluginMetrics>;
+  validateConfig(config: PluginConfig): Promise<ValidationResult>;
+  onEvent(event: PluginEvent): Promise<void>;
+  cleanup(): Promise<void>;
+}
+
+export interface IPluginManifest {
+  name: string;
+  version: string;
+  description: string;
+  author: string;
+  license: string;
+  type: string;
+  category: string;
+  main: string;
+  dependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  permissions: string[];
+  securityLevel: string;
+  supportedVersions: string[];
+  minHostVersion: string;
+  maxHostVersion?: string;
+  routes?: PluginRoute[];
+  hooks?: PluginHook[];
+  configuration?: PluginConfigSchema;
+  metadata?: Record<string, any>;
+  assets?: string[];
+  tags?: string[];
+  keywords?: string[];
+  repository?: string;
+  homepage?: string;
+  bugs?: string;
+}
+
+export interface PluginConfig {
+  [key: string]: any;
+}
+
+export interface PluginConfigSchema {
+  type: 'object';
+  properties: Record<string, ConfigPropertySchema>;
+  required?: string[];
+  additionalProperties?: boolean;
+}
+
+export interface ConfigPropertySchema {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  description?: string;
+  default?: any;
+  enum?: any[];
+  minimum?: number;
+  maximum?: number;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  items?: ConfigPropertySchema;
+  properties?: Record<string, ConfigPropertySchema>;
+  required?: string[];
+}
+
+export interface PluginRoute {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD';
+  path: string;
+  handler: string;
+  middleware?: string[];
+  guards?: string[];
+  description?: string;
+  tags?: string[];
+  parameters?: RouteParameter[];
+  requestBody?: RouteRequestBody;
+  responses?: Record<string, RouteResponse>;
+}
+
+export interface RouteParameter {
+  name: string;
+  in: 'path' | 'query' | 'header' | 'cookie';
+  required?: boolean;
+  description?: string;
+  schema: ConfigPropertySchema;
+}
+
+export interface RouteRequestBody {
+  description?: string;
+  required?: boolean;
+  content: Record<string, { schema: ConfigPropertySchema }>;
+}
+
+export interface RouteResponse {
+  description: string;
+  content?: Record<string, { schema: ConfigPropertySchema }>;
+  headers?: Record<string, { description?: string; schema: ConfigPropertySchema }>;
+}
+
+export interface PluginHook {
+  name: string;
+  type: 'before' | 'after' | 'around';
+  target: string;
+  handler: string;
+  priority?: number;
+  async?: boolean;
+}
+
+export interface PluginHealthCheck {
+  status: string;
+  timestamp: Date;
+  uptime: number;
+  checks: HealthCheckResult[];
+  details?: Record<string, any>;
+}
+
+export interface HealthCheckResult {
+  name: string;
+  status: 'pass' | 'fail' | 'warn';
+  message?: string;
+  duration?: number;
+  details?: Record<string, any>;
+}
+
+export interface PluginMetrics {
+  requestCount: number;
+  errorCount: number;
+  averageResponseTime: number;
+  uptime: number;
+  memoryUsage: number;
+  cpuUsage: number;
+  lastActivity: Date;
+  customMetrics?: Record<string, number>;
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+  warnings?: ValidationWarning[];
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+  code: string;
+  value?: any;
+}
+
+export interface ValidationWarning {
+  field: string;
+  message: string;
+  code: string;
+  value?: any;
+}
+
+export interface PluginEvent {
+  id: string;
+  type: string;
+  source: string;
+  timestamp: Date;
+  data: Record<string, any>;
+  pluginId?: string;
+  correlationId?: string;
+}
+
+export interface PluginContext {
+  pluginId: string;
+  pluginName: string;
+  version: string;
+  hostVersion: string;
+  environment: string;
+  config: PluginConfig;
+  logger: IPluginLogger;
+  eventBus: IPluginEventBus;
+  storage: IPluginStorage;
+  http: IPluginHttpClient;
+  cache: IPluginCache;
+  scheduler: IPluginScheduler;
+  metrics: IPluginMetrics;
+}
+
+export interface IPluginLogger {
+  debug(message: string, ...args: any[]): void;
+  info(message: string, ...args: any[]): void;
+  warn(message: string, ...args: any[]): void;
+  error(message: string, error?: Error, ...args: any[]): void;
+  setLevel(level: 'debug' | 'info' | 'warn' | 'error'): void;
+  child(context: Record<string, any>): IPluginLogger;
+}
+
+export interface IPluginEventBus {
+  emit(event: string, data: any): Promise<void>;
+  on(event: string, handler: (data: any) => void | Promise<void>): void;
+  off(event: string, handler: (data: any) => void | Promise<void>): void;
+  once(event: string, handler: (data: any) => void | Promise<void>): void;
+}
+
+export interface IPluginStorage {
+  get<T = any>(key: string): Promise<T | null>;
+  set(key: string, value: any, ttl?: number): Promise<void>;
+  delete(key: string): Promise<boolean>;
+  exists(key: string): Promise<boolean>;
+  keys(pattern?: string): Promise<string[]>;
+  clear(): Promise<void>;
+}
+
+export interface IPluginHttpClient {
+  get<T = any>(url: string, config?: RequestConfig): Promise<HttpResponse<T>>;
+  post<T = any>(url: string, data?: any, config?: RequestConfig): Promise<HttpResponse<T>>;
+  put<T = any>(url: string, data?: any, config?: RequestConfig): Promise<HttpResponse<T>>;
+  delete<T = any>(url: string, config?: RequestConfig): Promise<HttpResponse<T>>;
+  patch<T = any>(url: string, data?: any, config?: RequestConfig): Promise<HttpResponse<T>>;
+}
+
+export interface RequestConfig {
+  headers?: Record<string, string>;
+  timeout?: number;
+  params?: Record<string, any>;
+  auth?: { username: string; password: string };
+  retry?: number;
+}
+
+export interface HttpResponse<T = any> {
+  data: T;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  config: RequestConfig;
+}
+
+export interface IPluginCache {
+  get<T = any>(key: string): Promise<T | null>;
+  set(key: string, value: any, ttl?: number): Promise<void>;
+  delete(key: string): Promise<boolean>;
+  clear(): Promise<void>;
+  keys(pattern?: string): Promise<string[]>;
+  ttl(key: string): Promise<number>;
+}
+
+export interface IPluginScheduler {
+  schedule(name: string, cron: string, handler: () => void | Promise<void>): Promise<void>;
+  unschedule(name: string): Promise<boolean>;
+  listJobs(): Promise<ScheduledJob[]>;
+  isScheduled(name: string): Promise<boolean>;
+}
+
+export interface ScheduledJob {
+  name: string;
+  cron: string;
+  nextRun: Date;
+  lastRun?: Date;
+  status: 'active' | 'paused' | 'error';
+}
+
+export interface IPluginMetrics {
+  increment(name: string, value?: number, tags?: Record<string, string>): void;
+  decrement(name: string, value?: number, tags?: Record<string, string>): void;
+  gauge(name: string, value: number, tags?: Record<string, string>): void;
+  histogram(name: string, value: number, tags?: Record<string, string>): void;
+  timer(name: string): ITimer;
+  flush(): Promise<void>;
+}
+
+export interface ITimer {
+  stop(): number;
+}
