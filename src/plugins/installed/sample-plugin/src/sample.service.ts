@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PluginConfig, PluginEventHandler, PluginHook, PluginLogger, PluginService } from '@/shared/decorators/plugin.decorator';
 import { PluginServiceInterface } from '@/shared/interfaces/plugin.interface';
-import { HealthStatus, HealthStatusType, Logger, PluginContext, PluginMetrics, SamplePluginConfig } from '@types';
+import { HealthStatus, HealthStatusType, Logger, MessageType, PluginContext, PluginMetrics, SamplePluginConfig } from '@types';
 
 @Injectable()
 @PluginService({
@@ -61,8 +61,14 @@ export class SampleService implements PluginServiceInterface {
     if (this.context.eventBus) {
       this.context.eventBus.publish({
         id: `response-${Date.now()}`,
-        type: 'sample.event.processed',
+        type: MessageType.EVENT,
+        eventType: 'sample.event.processed',
         source: 'sample-plugin',
+        payload: {
+          originalData: data,
+          processedAt: new Date(),
+          requestCount: this.requestCount,
+        },
         data: {
           originalData: data,
           processedAt: new Date(),
@@ -131,8 +137,10 @@ export class SampleService implements PluginServiceInterface {
       if (this.context.eventBus) {
         this.context.eventBus.publish({
           id: `data-created-${Date.now()}`,
-          type: 'sample.data.created',
+          type: MessageType.EVENT,
           source: 'sample-plugin',
+          eventType: 'sample.data.created',
+          payload: { id, size: this.dataStore.size },
           data: { id, size: this.dataStore.size },
           timestamp: new Date(),
         });
@@ -163,8 +171,10 @@ export class SampleService implements PluginServiceInterface {
     if (deleted && this.context.eventBus) {
       this.context.eventBus.publish({
         id: `data-deleted-${Date.now()}`,
-        type: 'sample.data.deleted',
+        type: MessageType.EVENT,
         source: 'sample-plugin',
+        eventType: 'sample.data.deleted',
+        payload: { id, size: this.dataStore.size },
         data: { id, size: this.dataStore.size },
         timestamp: new Date(),
       });
@@ -182,6 +192,7 @@ export class SampleService implements PluginServiceInterface {
       requests: this.requestCount,
       errors: this.errorCount,
       uptime,
+      executionTime: Date.now() - this.startTime.getTime(),
       // Additional custom metrics
       dataStoreSize: this.dataStore.size,
       maxItems: this.maxItems,

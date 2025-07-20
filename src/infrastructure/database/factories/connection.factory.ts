@@ -27,7 +27,7 @@ export class ConnectionFactory {
       this.logger.log(`Successfully created connection: ${name}`);
 
       // For now, return a mock connection that follows the interface
-      return this.createMockConnection(name, type, config);
+      return Promise.resolve(this.createMockConnection(name, type, config));
     } catch (error) {
       this.logger.error(`Failed to create connection ${name}:`, error);
       throw error;
@@ -80,7 +80,7 @@ export class ConnectionFactory {
       type,
       query<T>(sql: string, params?: unknown[]): Promise<T[]> {
         // Mock query implementation
-        return [] as T[];
+        return Promise.resolve([] as T[]);
       },
       transaction<T>(fn: (trx: any) => Promise<T>): Promise<T> {
         // Mock transaction implementation
@@ -92,7 +92,7 @@ export class ConnectionFactory {
         return fn(mockTrx);
       },
       checkHealth(): Promise<{ status: boolean; latency?: number }> {
-        return { status: true, latency: 10 };
+        return Promise.resolve({ status: true, latency: 10 });
       },
       getStatistics() {
         return {
@@ -106,6 +106,7 @@ export class ConnectionFactory {
       },
       close(): Promise<void> {
         // Mock close implementation
+        return Promise.resolve();
       },
     };
   }

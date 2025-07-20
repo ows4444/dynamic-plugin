@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from './config.service';
 import { ConfigLoaderService } from './config-loader.service';
 import { ConfigValidatorService } from './config-validator.service';
@@ -10,7 +11,7 @@ import { ConfigValidatorService } from './config-validator.service';
 @Global()
 @Module({
   imports: [
-    NestConfigModule.forRoot({
+    ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
       cache: true,

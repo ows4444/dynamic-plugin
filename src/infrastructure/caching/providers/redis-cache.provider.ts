@@ -60,7 +60,7 @@ export class RedisCacheProvider implements CacheProvider {
       const value = this.deserializeValue(entry.value);
       this.logger.debug(`Redis cache hit for key: ${key}`);
 
-      return Promise.resolve(value);
+      return Promise.resolve(value as T);
     } catch (error) {
       this.logger.error(`Redis cache get error for key ${key}:`, error);
       this.misses++;
@@ -419,6 +419,7 @@ export class RedisCacheProvider implements CacheProvider {
       this.redisClient.connected = false;
       this.redisClient = null;
     }
+    return Promise.resolve();
   }
 
   private async setInRedis(key: string, value: string, ttl?: number): Promise<void> {
@@ -453,15 +454,15 @@ export class RedisCacheProvider implements CacheProvider {
 
   private getRedisInfo(): Promise<Record<string, any>> {
     if (!this.connected || !this.redisClient) {
-      return { connected: false };
+      return Promise.resolve({ connected: false });
     }
 
     // Mock Redis INFO command
-    return {
+    return Promise.resolve({
       version: '6.2.0',
       memory: this.estimateMemoryUsage(),
       clients: 1,
       uptime: Date.now(),
-    };
+    });
   }
 }

@@ -13,6 +13,7 @@ export class MessageBrokerService {
   sendMessage(targetPluginId: string, message: BrokerMessage): Promise<void> {
     this.logger.debug(`Sending message to plugin: ${targetPluginId}`);
     // Implementation would go here
+    return Promise.resolve();
   }
 
   /**
@@ -21,6 +22,7 @@ export class MessageBrokerService {
   registerHandler(pluginId: string, handler: MessageHandler): Promise<void> {
     this.logger.debug(`Registering message handler for plugin: ${pluginId}`);
     // Implementation would go here
+    return Promise.resolve();
   }
 }
 

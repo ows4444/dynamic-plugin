@@ -88,7 +88,7 @@ export class ConnectionManagerService {
           host: process.env.REDIS_HOST ?? 'localhost',
           port: parseInt(process.env.REDIS_PORT ?? '6379'),
           password: process.env.REDIS_PASSWORD,
-          database: parseInt(process.env.REDIS_DB ?? '0'),
+          database: process.env.REDIS_DB ?? '0',
         });
         this.connections.set('cache', redisConnection);
         this.logger.log('Redis cache connection established');
@@ -106,7 +106,7 @@ export class ConnectionManagerService {
     if (!connection) {
       throw new Error('Primary database connection not initialized');
     }
-    return connection;
+    return Promise.resolve(connection);
   }
 
   /**
@@ -117,14 +117,14 @@ export class ConnectionManagerService {
     if (!connection) {
       throw new Error(`Database connection '${name}' not found`);
     }
-    return connection;
+    return Promise.resolve(connection);
   }
 
   /**
    * Get all active connections
    */
   getAllConnections(): Promise<DatabaseConnection[]> {
-    return Array.from(this.connections.values());
+    return Promise.resolve(Array.from(this.connections.values()));
   }
 
   /**

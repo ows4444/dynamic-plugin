@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { ActivitySummary, PluginActivity, PluginSecurityInfo, SecurityReport } from '@types';
+import { ActivitySummary, PluginActivity, PluginSecurityInfo, PluginSeverity, SecurityMetadata, SecurityReport, SecurityViolation } from '@types';
 
 /**
  * Service responsible for plugin activity auditing and security reporting
@@ -209,12 +209,32 @@ export class PluginAuditService {
 
       const report: SecurityReport = {
         timestamp: new Date(),
-        totalPlugins: plugins.length,
-        totalActivities: activities.length,
-        recentActivities,
-        securityViolations,
+        timeframe: {
+          start: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24 hours ago
+          end: new Date(),
+        },
+        summary: {
+          totalPlugins: plugins.length,
+          totalActivities: activities.length,
+          securityEvents: securityViolations.length,
+          violations: securityViolations.length,
+          riskScore: 0,
+        },
+        activities: [],
+        events: [],
+        violations: securityViolations.map((activity) => ({
+          id: activity.id,
+          pluginId: activity.source,
+          type: 'policy_violation' as const,
+          severity: activity.priority as unknown as PluginSeverity,
+          description: `Security activity: ${activity.type}`,
+          timestamp: activity.timestamp,
+          resolved: false,
+          metadata: activity.data as SecurityMetadata,
+        })),
         rateLimitViolations,
         plugins,
+        recommendations: [],
       };
 
       this.eventEmitter.emit('security.report.generated', {

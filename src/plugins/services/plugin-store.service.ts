@@ -354,19 +354,21 @@ export class PluginStoreService {
       },
       metadata: {
         id: plugin.id,
+        pluginId: plugin.id,
         name: plugin.name,
         version: plugin.version,
         description: plugin.description ?? '',
         author: plugin.author ?? '',
         license: plugin.license ?? 'MIT',
+        category: plugin.categories?.[0] ?? 'utility',
         dependencies: plugin.dependencies,
         pluginDependencies: plugin.pluginDependencies,
-        engines: plugin.engines,
+        engines: plugin.engines || {},
         capabilities: plugin.capabilities,
         permissions: Object.values(plugin.permissions || {}).flat(),
         hooks: {},
         configuration: {},
-        metadata: {
+        runtimeMetadata: {
           category: plugin.categories?.[0] ?? 'utility',
           tags: plugin.keywords ?? [],
           documentation: plugin.homepage,

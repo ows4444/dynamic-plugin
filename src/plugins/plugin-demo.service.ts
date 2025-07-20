@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PluginManagerService } from '@/core/plugin-manager/plugin-manager.service';
 import { PluginRegistryService } from '@/core/plugin-registry/plugin-registry.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { PluginEvent, PluginStatus } from '@types';
+import { MessageType, PluginEvent, PluginStatus } from '@types';
 
 @Injectable()
 export class PluginDemoService {
@@ -171,8 +171,18 @@ export class PluginDemoService {
       // Publish a custom event
       const customEvent: PluginEvent = {
         id: `demo-${Date.now()}`,
-        type: 'plugin.demo.event',
+        type: MessageType.EVENT,
         source: 'plugin-demo-service',
+        eventType: 'plugin.demo.event',
+        payload: {
+          message: 'This is a demonstration event',
+          timestamp: new Date().toISOString(),
+          demoData: {
+            number: Math.floor(Math.random() * 100),
+            boolean: Math.random() > 0.5,
+            array: ['demo', 'event', 'data'],
+          },
+        },
         data: {
           message: 'This is a demonstration event',
           timestamp: new Date().toISOString(),
@@ -194,8 +204,14 @@ export class PluginDemoService {
       // Simulate sample plugin event
       const sampleEvent: PluginEvent = {
         id: `sample-${Date.now()}`,
-        type: 'sample.notification',
+        type: MessageType.EVENT,
         source: 'sample-plugin',
+        eventType: 'sample.notification',
+        payload: {
+          message: 'Demo notification from sample plugin',
+          severity: 'info',
+          action: 'demo_action',
+        },
         data: {
           message: 'Demo notification from sample plugin',
           severity: 'info',

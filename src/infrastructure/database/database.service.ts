@@ -70,7 +70,7 @@ export class DatabaseService implements OnModuleDestroy {
 
       const results = healthChecks.map((check, index) => ({
         name: connections[index].name,
-        healthy: check.status === 'fulfilled' && check.value.status,
+        healthy: check.status === 'fulfilled' && typeof check.value === 'object' && 'status' in check.value && check.value.status === true,
         error: check.status === 'rejected' ? check.reason?.message : undefined,
       }));
 
@@ -97,10 +97,13 @@ export class DatabaseService implements OnModuleDestroy {
     try {
       const connections = await this.connectionManager.getAllConnections();
       const stats = await Promise.all(
-        connections.map(async (conn) => ({
-          name: conn.name,
-          ...(await conn.getStatistics()),
-        })),
+        connections.map(async (conn) => {
+          const stats = await conn.getStatistics();
+          return {
+            connectionName: conn.name,
+            ...stats,
+          };
+        }),
       );
 
       return {

@@ -108,6 +108,7 @@ export abstract class BaseRepository {
    */
   setConnection(connectionName: string): Promise<void> {
     this.connectionName = connectionName;
+    return Promise.resolve();
   }
 
   /**
