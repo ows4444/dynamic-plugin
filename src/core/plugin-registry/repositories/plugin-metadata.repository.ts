@@ -111,14 +111,14 @@ export class PluginMetadataRepository {
         id: plugin.id,
         name: plugin.name,
         version: plugin.version,
-        description: plugin.description || '',
-        author: plugin.author || '',
+        description: plugin.description ?? '',
+        author: plugin.author ?? '',
         license: plugin.license,
         category: (plugin.metadata as any)?.category || 'general',
         tags: (plugin.metadata as any)?.tags || [],
         capabilities: plugin.capabilities,
         permissions: typeof plugin.permissions === 'object' && !Array.isArray(plugin.permissions) ? plugin.permissions : { general: Array.isArray(plugin.permissions) ? plugin.permissions : [] },
-        dependencies: plugin.dependencies || {},
+        dependencies: plugin.dependencies ?? {},
         pluginDependencies: Array.isArray(plugin.pluginDependencies)
           ? plugin.pluginDependencies
           : Object.entries(plugin.pluginDependencies || {}).map(([name, version]) => ({

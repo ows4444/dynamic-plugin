@@ -86,7 +86,7 @@ export class PluginDevelopmentController {
     message: string;
   }> {
     try {
-      const result = await this.pluginDevelopmentService.generateDocumentation(pluginId, config || {});
+      const result = await this.pluginDevelopmentService.generateDocumentation(pluginId, config ?? {});
       return {
         success: true,
         outputPath: result.outputPath,

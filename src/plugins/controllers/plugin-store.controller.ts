@@ -32,7 +32,7 @@ export class PluginStoreController {
         plugins: this.pluginStoreService.getFeaturedPlugins(limit),
         total: 10,
         page: 1,
-        limit: limit || 10,
+        limit: limit ?? 10,
         totalPages: 1,
         hasMore: false,
         stores: [],
