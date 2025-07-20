@@ -180,6 +180,7 @@ export class PluginDevelopmentController {
   }> {
     try {
       const result = this.pluginDevelopmentService.packagePlugin(pluginId, options);
+
       return Promise.resolve({
         success: true,
         packagePath: result.packagePath,
@@ -218,7 +219,7 @@ export class PluginDevelopmentController {
    * Get development metrics
    */
   @Get('metrics')
-  getDevelopmentMetrics(): Promise<PluginDevelopmentMetrics> {
+  async getDevelopmentMetrics(): Promise<PluginDevelopmentMetrics> {
     try {
       return this.pluginDevelopmentService.getDevelopmentMetrics();
     } catch (error) {

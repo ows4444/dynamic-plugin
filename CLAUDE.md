@@ -362,8 +362,6 @@ nestjs-plugin-system/
 ├── scripts/                                 # Build and deployment scripts
 ├── docker/                                  # Docker configurations
 ├── k8s/                                     # Kubernetes manifests
-├── nx.json                                  # Nx configuration
-├── workspace.json                           # Workspace configuration
 ├── package.json                             # Root package configuration
 ├── tsconfig.json                            # TypeScript configuration
 └── README.md                                # Project overview
