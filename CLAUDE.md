@@ -291,3 +291,5 @@ nizaami-plugins-monorepo/
 ├── .env.example                                            # Example environment variables
 └── package.json                                            # Root package.json with workspaces
 ```
+
+read @CLAUDE.md  and update properly @libs/shared/plugin-sdk/src/  properly
