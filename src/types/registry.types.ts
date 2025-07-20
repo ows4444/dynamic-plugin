@@ -1,33 +1,12 @@
-import type { PluginDependency, PluginEngines, PluginPermissions } from './plugin.types';
-export enum PluginRegistryScope {
-  PUBLIC = 'public',
-  PRIVATE = 'private',
-  ORGANIZATION = 'organization',
-  LOCAL = 'local',
-}
+/**
+ * Registry Types - Plugin registry and catalog types
+ */
 
-export enum PluginRegistrySortBy {
-  NAME = 'name',
-  DOWNLOADS = 'downloads',
-  RATING = 'rating',
-  UPDATED = 'updated',
-  CREATED = 'created',
-  POPULARITY = 'popularity',
-}
+import type { PluginDependency, PluginEngines, PluginLicense, PluginRegistryScope, PluginRegistrySortBy, SortOrder } from './common.types';
+import type { PluginPermissions } from './plugin.types';
 
-export enum SortOrder {
-  ASC = 'asc',
-  DESC = 'desc',
-}
-
-export enum PluginLicense {
-  MIT = 'MIT',
-  APACHE_2_0 = 'Apache-2.0',
-  GPL_3_0 = 'GPL-3.0',
-  BSD_3_CLAUSE = 'BSD-3-Clause',
-  ISC = 'ISC',
-  PROPRIETARY = 'proprietary',
-}
+// Re-export registry-related common types
+export type { PluginRegistryScope, PluginRegistrySortBy, SortOrder, PluginLicense } from './common.types';
 
 export interface PluginRegistry {
   plugins: Map<string, PluginRegistryEntry>;
@@ -46,8 +25,8 @@ export interface PluginRegistryEntry {
   tags: string[];
   capabilities: string[];
   permissions: PluginPermissions;
-  dependencies: PluginDependency[];
-  pluginDependencies: Record<string, string>;
+  dependencies: Record<string, string>;
+  pluginDependencies: PluginDependency[];
   engines: PluginEngines;
   status: PluginRegistryStatus;
   downloadCount: number;
@@ -122,8 +101,8 @@ export interface PluginStats {
   categoriesCount: number;
   averageRating: number;
   totalDownloads: number;
-  topCategories: { category: string; count: number }[];
-  topAuthors: { author: string; count: number }[];
+  topCategories: Array<{ category: string; count: number }>;
+  topAuthors: Array<{ author: string; count: number }>;
   recentlyUpdated: PluginRegistryEntry[];
   mostPopular: PluginRegistryEntry[];
 }

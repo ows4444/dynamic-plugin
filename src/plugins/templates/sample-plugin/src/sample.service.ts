@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PluginConfig, PluginEventHandler, PluginHook, PluginLogger, PluginService } from '@/shared/decorators/plugin.decorator';
 import { PluginServiceInterface } from '@/shared/interfaces/plugin.interface';
-import { HealthStatus, HealthStatusType, Logger, PluginContext, PluginMetrics, SamplePluginConfig } from '@/types/plugin.types';
+import { HealthStatus, HealthStatusType, Logger, MessageType, PluginContext, PluginMetrics, SamplePluginConfig } from '@types';
 
 @Injectable()
-@PluginService({
-  name: 'SampleService',
-  singleton: true,
-})
+@PluginService({ name: 'SampleService', singleton: true })
 export class SampleService implements PluginServiceInterface {
   @PluginLogger('SampleService')
   private readonly logger?: Logger;
@@ -61,7 +58,7 @@ export class SampleService implements PluginServiceInterface {
     if (this.context.eventBus) {
       this.context.eventBus.publish({
         id: `response-${Date.now()}`,
-        type: 'sample.event.processed',
+        type: MessageType.EVENT,
         source: 'sample-plugin',
         data: {
           originalData: data,

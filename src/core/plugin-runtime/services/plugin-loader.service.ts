@@ -10,12 +10,13 @@ import {
   ModuleStatus,
   PluginExports,
   PluginLoader,
+  PluginManifest,
   PluginModule,
   PluginModuleInstanceWithMethods,
   RuntimeContext,
   ValidationResult,
-} from '@/types/runtime.types';
-import { PluginManifest } from '@/types/plugin.types';
+} from '@types';
+
 import { PluginValidationUtil } from '@/shared/utils/validation.util';
 import { PluginErrorCodes, PluginErrorHandler } from '@/shared/utils/error-handler.util';
 import type { Type } from '@nestjs/common';
@@ -375,10 +376,10 @@ export class PluginLoaderService implements PluginLoader {
   private extractModuleExports(moduleClass: Type<unknown>, _pluginPath: string): PluginExports {
     try {
       // Extract metadata from the NestJS module decorator
-      const imports = (Reflect.getMetadata('imports', moduleClass) as Type<unknown>[]) ?? [];
-      const providers = (Reflect.getMetadata('providers', moduleClass) as Type<unknown>[]) ?? [];
-      const controllers = (Reflect.getMetadata('controllers', moduleClass) as Type<unknown>[]) ?? [];
-      const exports = (Reflect.getMetadata('exports', moduleClass) as (Type<unknown> | string)[]) ?? [];
+      const imports = (Reflect.getMetadata('imports', moduleClass) as Array<Type<unknown>>) ?? [];
+      const providers = (Reflect.getMetadata('providers', moduleClass) as Array<Type<unknown>>) ?? [];
+      const controllers = (Reflect.getMetadata('controllers', moduleClass) as Array<Type<unknown>>) ?? [];
+      const exports = (Reflect.getMetadata('exports', moduleClass) as Array<Type<unknown> | string>) ?? [];
 
       this.logger.debug(`Extracted metadata for ${moduleClass.name}:`, {
         controllersCount: controllers.length,

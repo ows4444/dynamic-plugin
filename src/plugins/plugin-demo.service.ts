@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PluginManagerService } from '@/core/plugin-manager/plugin-manager.service';
 import { PluginRegistryService } from '@/core/plugin-registry/plugin-registry.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { type PluginEvent, PluginStatus } from '@/types/plugin.types';
+import { PluginEvent, PluginStatus } from '@types';
 
 @Injectable()
 export class PluginDemoService {
@@ -44,18 +44,18 @@ export class PluginDemoService {
     });
   }
 
-  async demonstratePluginUsage(): Promise<{
+  demonstratePluginUsage(): {
     systemStatus: any;
     pluginOperations: any[];
     eventDemonstration: any;
-  }> {
+  } {
     this.logger.log('🎬 Starting plugin system demonstration...');
 
     const operations: any[] = [];
 
     try {
       // 1. Show system status
-      const systemStatus = await this.getSystemStatus();
+      const systemStatus = this.getSystemStatus();
       operations.push({
         operation: 'System Status Check',
         success: true,
@@ -95,7 +95,7 @@ export class PluginDemoService {
       });
 
       // 5. Demonstrate event publishing
-      const eventDemo = await this.demonstrateEvents();
+      const eventDemo = this.demonstrateEvents();
       operations.push({
         operation: 'Event System Demo',
         success: true,
@@ -271,9 +271,9 @@ export class PluginDemoService {
 
   performHealthCheck(): {
     healthy: boolean;
-    checks: { name: string; status: 'healthy' | 'unhealthy'; details?: any }[];
+    checks: Array<{ name: string; status: 'healthy' | 'unhealthy'; details?: any }>;
   } {
-    const checks: { name: string; status: 'healthy' | 'unhealthy'; details?: any }[] = [];
+    const checks: Array<{ name: string; status: 'healthy' | 'unhealthy'; details?: any }> = [];
 
     // Check plugin registry
     try {

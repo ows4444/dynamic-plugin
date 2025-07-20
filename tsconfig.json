@@ -1,27 +1,74 @@
 {
   "compilerOptions": {
+    // Module system
     "module": "commonjs",
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2020",
-    "sourceMap": true,
+    "resolveJsonModule": true,
+    
+    // Target and output
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
     "outDir": "./dist",
-    "baseUrl": "./",
+    "rootDir": "./src",
+    
+    // Type checking - Balanced for productivity and safety
+    "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": false,
+    "noImplicitAny": false,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false,
+    
+    // Advanced checks - relaxed for development
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    
+    // Decorators and metadata
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    
+    // Output settings
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": false,
+    "importHelpers": true,
+    
+    // Performance and reliability
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false,
+    "forceConsistentCasingInFileNames": true,
+    
+    // Path mapping
+    "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"],
-      "@/common/*": ["src/common/*"],
+      "@/core/*": ["src/core/*"],
+      "@/shared/*": ["src/shared/*"],
+      "@types": ["src/types/index.ts"],
       "@/plugins/*": ["src/plugins/*"],
-      "@/config/*": ["src/config/*"]
+      "@/infrastructure/*": ["src/infrastructure/*"]
     }
-  }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "test",
+    "coverage"
+  ]
 }

@@ -1,5 +1,5 @@
 import * as semver from 'semver';
-import type { PluginManifest, ValidationResult } from '@/types/plugin.types';
+import type { PluginManifest, ValidationResult } from '@types';
 import { PluginErrorCodes, PluginErrorHandler } from './error-handler.util';
 
 /**
@@ -255,7 +255,7 @@ export class PluginValidationUtil {
       // TODO: Implement JSON Schema validation here
       // For now, we'll do basic validation
 
-      const configObj = (config as Record<string, unknown>) || {};
+      const configObj = config ?? {};
       const schemaObj = schema as Record<string, unknown>;
 
       // Check required fields if specified

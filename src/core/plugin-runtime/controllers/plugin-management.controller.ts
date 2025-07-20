@@ -5,8 +5,7 @@ import { PluginContextService } from '../services/plugin-context.service';
 import { PluginRouterService } from '../services/plugin-router.service';
 import { PluginErrorCodes, PluginErrorHandler } from '@/shared/utils/error-handler.util';
 import { PluginValidationUtil } from '@/shared/utils/validation.util';
-import type { PluginModule, ValidationResult } from '@/types/runtime.types';
-import { PluginMetadata, PluginStatus } from '@/types/plugin.types';
+import { PluginMetadata, PluginModule, PluginStatus, ValidationResult } from '@types';
 
 /**
  * DTOs for Plugin Management API
@@ -74,8 +73,8 @@ export class PluginManagementController {
         status: PluginStatus.LOADING,
         capabilities: [],
         permissions: {},
-        dependencies: [],
-        pluginDependencies: {},
+        dependencies: {},
+        pluginDependencies: [],
         loadTime: 0,
         memory: 0,
         cpu: 0,

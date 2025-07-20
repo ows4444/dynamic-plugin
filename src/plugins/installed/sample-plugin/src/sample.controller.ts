@@ -1,7 +1,7 @@
 import { Body, Get, Logger, Post } from '@nestjs/common';
 import { PluginController, PluginLogger, PluginPermission, PluginRoute } from '@/shared/decorators/plugin.decorator';
 import { SampleService } from './sample.service';
-import type { PluginMetrics } from '@/types/plugin.types';
+import { PluginMetrics } from '@types';
 
 type CreateDataDto = Record<string, unknown>;
 

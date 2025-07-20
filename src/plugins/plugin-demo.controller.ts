@@ -77,17 +77,17 @@ export class PluginDemoController {
       },
     },
   })
-  async runDemonstration(): Promise<{
+  runDemonstration(): {
     timestamp: string;
     duration: number;
     success: boolean;
     systemStatus: any;
     pluginOperations: any[];
     eventDemonstration: any;
-  }> {
+  } {
     const startTime = Date.now();
 
-    const result = await this.demoService.demonstratePluginUsage();
+    const result = this.demoService.demonstratePluginUsage();
 
     const duration = Date.now() - startTime;
     const success = result.pluginOperations.every((op) => op.success);
@@ -169,7 +169,7 @@ export class PluginDemoController {
   healthCheck(): {
     timestamp: string;
     healthy: boolean;
-    checks: { name: string; status: 'healthy' | 'unhealthy'; details?: any }[];
+    checks: Array<{ name: string; status: 'healthy' | 'unhealthy'; details?: any }>;
   } {
     const result = this.demoService.performHealthCheck();
 
@@ -227,20 +227,20 @@ export class PluginDemoController {
   getQuickStart(): {
     quickStart: {
       title: string;
-      steps: {
+      steps: Array<{
         step: number;
         title: string;
         description: string;
         example: string;
-      }[];
+      }>;
     };
-    examples: {
+    examples: Array<{
       title: string;
       method: string;
       url: string;
       description: string;
       payload?: any;
-    }[];
+    }>;
   } {
     return {
       quickStart: {

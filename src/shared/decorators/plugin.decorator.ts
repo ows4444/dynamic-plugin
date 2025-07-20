@@ -69,8 +69,8 @@ export function PluginController(
     permissions?: string[];
     middleware?: string[];
   },
-): PluginClassDecorator {
-  return function <TConstructor extends Constructor>(constructor: TConstructor): TConstructor {
+): ClassDecorator {
+  return function (constructor: Function): void {
     // Store controller configuration
     Reflect.defineMetadata('plugin:controller:config', config ?? {}, constructor);
 
@@ -86,8 +86,6 @@ export function PluginController(
     } else {
       Controller()(constructor);
     }
-
-    return constructor;
   };
 }
 
@@ -255,8 +253,8 @@ export class PluginMetadataReader {
   /**
    * Get event handlers from a class
    */
-  static getEventHandlers(target: Type<object> | Constructor | object): { method: string; eventTypes: string[] }[] {
-    const handlers: { method: string; eventTypes: string[] }[] = [];
+  static getEventHandlers(target: Type<object> | Constructor | object): Array<{ method: string; eventTypes: string[] }> {
+    const handlers: Array<{ method: string; eventTypes: string[] }> = [];
     let prototypeTarget: object;
 
     if ('prototype' in target && target.prototype) {
@@ -268,7 +266,7 @@ export class PluginMetadataReader {
     const methodNames = Object.getOwnPropertyNames(prototypeTarget).filter((name) => name !== 'constructor' && typeof (prototypeTarget as Record<string, unknown>)[name] === 'function');
     for (const methodName of methodNames) {
       if (Reflect.getMetadata('plugin:event:handler', prototypeTarget, methodName) as boolean | undefined) {
-        const eventTypes: string[] = (Reflect.getMetadata('plugin:event:types', prototypeTarget, methodName) as string[] | undefined) ?? [];
+        const eventTypes = (Reflect.getMetadata('plugin:event:types', prototypeTarget, methodName) as string[] | undefined) ?? [];
         handlers.push({ method: methodName, eventTypes });
       }
     }
@@ -279,8 +277,8 @@ export class PluginMetadataReader {
   /**
    * Get hook handlers from a class
    */
-  static getHookHandlers(target: Type<object> | Constructor | object): { method: string; hookName: string }[] {
-    const handlers: { method: string; hookName: string }[] = [];
+  static getHookHandlers(target: Type<object> | Constructor | object): Array<{ method: string; hookName: string }> {
+    const handlers: Array<{ method: string; hookName: string }> = [];
     let prototypeTarget: object;
 
     if ('prototype' in target && target.prototype) {
@@ -292,7 +290,7 @@ export class PluginMetadataReader {
     const methodNames = Object.getOwnPropertyNames(prototypeTarget).filter((name) => name !== 'constructor' && typeof (prototypeTarget as Record<string, unknown>)[name] === 'function');
     for (const methodName of methodNames) {
       if (Reflect.getMetadata('plugin:hook:handler', prototypeTarget, methodName) as boolean | undefined) {
-        const hookName: string = Reflect.getMetadata('plugin:hook:name', prototypeTarget, methodName) as string;
+        const hookName = Reflect.getMetadata('plugin:hook:name', prototypeTarget, methodName) as string;
         if (hookName) {
           handlers.push({ method: methodName, hookName });
         }

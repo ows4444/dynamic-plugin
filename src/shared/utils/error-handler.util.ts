@@ -1,6 +1,5 @@
 import { Logger } from '@nestjs/common';
-import type { PluginError } from '@/types/plugin.types';
-import { PluginSeverity } from '@/types/plugin.types';
+import { type PluginError, PluginSeverity } from '@types';
 
 /**
  * Comprehensive error handling utility for the plugin system
@@ -27,7 +26,7 @@ export class PluginErrorHandler {
   /**
    * Handles plugin errors with appropriate logging and recovery actions
    */
-  static handlePluginError(error: PluginError | Error, pluginId?: string): void {
+  static handlePluginError(error: any, pluginId?: string): void {
     const pluginError = this.normalizeError(error, pluginId);
 
     // Log based on severity

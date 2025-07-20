@@ -1,7 +1,7 @@
 import { Injectable, Logger, RequestMethod } from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
-import type { Type } from '@nestjs/common';
-import type { PluginModule } from '@/types/runtime.types';
+import { Type } from '@nestjs/common';
+import type { PluginModule } from '@types';
 import { PluginErrorCodes, PluginErrorHandler } from '@/shared/utils/error-handler.util';
 import { PluginValidationUtil } from '@/shared/utils/validation.util';
 
@@ -12,7 +12,7 @@ export interface DynamicRoute {
   path: string;
   method: string;
   handler: (...args: unknown[]) => unknown;
-  paramTypes: Type<unknown>[];
+  paramTypes: Array<Type<unknown>>;
   pluginId: string;
   controllerName: string;
   methodName: string;
@@ -185,7 +185,7 @@ export class PluginRouterService {
   /**
    * Gets all routes with detailed information
    */
-  getAllRoutes(): { pluginId: string; routes: DynamicRoute[] }[] {
+  getAllRoutes(): Array<{ pluginId: string; routes: DynamicRoute[] }> {
     return Array.from(this.dynamicRoutes.entries()).map(([pluginId, routes]) => ({
       pluginId,
       routes: routes.map((route) => ({ ...route })), // Return copies to prevent mutation
@@ -374,7 +374,7 @@ export class PluginRouterService {
         methodName,
         method: httpMethod,
         path: routePath,
-        handler: (method as Function).bind(controllerInstance),
+        handler: method.bind(controllerInstance) as (...args: unknown[]) => unknown,
         paramTypes,
         middlewares,
         guards,
@@ -415,7 +415,7 @@ export class PluginRouterService {
     return pluginRoute?.path ?? path ?? '';
   }
 
-  private getParameterTypes(prototype: object, methodName: string): Type<unknown>[] {
+  private getParameterTypes(prototype: object, methodName: string): Array<Type<unknown>> {
     // Get parameter metadata for proper request handling
     const paramTypes = this.reflector.get('design:paramtypes', (prototype as Record<string, unknown>)[methodName] as Function);
     return paramTypes ?? [];
@@ -506,7 +506,7 @@ interface RouteMethodInfo {
   method: string;
   path: string;
   handler: (...args: unknown[]) => unknown;
-  paramTypes: Type<unknown>[];
+  paramTypes: Array<Type<unknown>>;
   middlewares?: string[];
   guards?: string[];
   interceptors?: string[];

@@ -2,13 +2,12 @@ import { BadRequestException, Body, ConflictException, Controller, Delete, Get, 
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PluginManagerService } from './plugin-manager.service';
 import { PluginRegistryService } from '@/core/plugin-registry/plugin-registry.service';
-import type { InstallationResult, LoadResult, PluginInstance, PluginSource, ReloadResult, UnloadResult, UpdateResult } from '@/types/plugin.types';
-import { PluginStatus } from '@/types/plugin.types';
+import { InstallationResult, LoadResult, PluginInstance, PluginRegistryEntry, PluginSource, PluginStatus, ReloadResult, UnloadResult, UpdateResult } from '@types';
 
 // DTOs for request/response
 export class InstallPluginDto {
-  type: 'file' | 'npm' | 'git' | 'url';
-  location: string;
+  type?: 'file' | 'npm' | 'git' | 'url';
+  location?: string;
   version?: string;
 }
 
@@ -347,7 +346,7 @@ export class PluginManagementController {
       },
     },
   })
-  getAllPlugins(@Query('status') status?: PluginStatus, @Query('limit') limit?: string, @Query('offset') offset?: string): { plugins: any[]; total: number } {
+  getAllPlugins(@Query('status') status?: PluginStatus, @Query('limit') limit?: string, @Query('offset') offset?: string): { plugins: PluginRegistryEntry[]; total: number } {
     const registryPlugins = this.registryService.getAllPlugins();
     const loadedPlugins = this.pluginManager.getLoadedPlugins();
 

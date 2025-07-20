@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import type { ActivitySummary, PluginActivity, PluginSecurityInfo, SecurityReport } from '@/types/plugin.types';
+import { ActivitySummary, PluginActivity, PluginSecurityInfo, SecurityReport } from '@types';
 
 /**
  * Service responsible for plugin activity auditing and security reporting
@@ -36,10 +36,7 @@ export class PluginAuditService {
    */
   auditActivity(activity: PluginActivity): void {
     try {
-      // Add timestamp if not provided
-      if (!activity.timestamp) {
-        activity.timestamp = new Date();
-      }
+      activity.timestamp = activity.timestamp ?? new Date();
 
       // Add to in-memory log
       this.activityLog.push(activity);
@@ -432,6 +429,6 @@ interface ActivityStatistics {
   lastWeek: number;
   securityEvents: number;
   violations: number;
-  topActions: { action: string; count: number }[];
+  topActions: Array<{ action: string; count: number }>;
   timeRange: { start: Date; end: Date };
 }

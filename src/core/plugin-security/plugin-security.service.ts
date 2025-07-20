@@ -3,18 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as crypto from 'crypto';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import {
-  PluginActivity,
-  PluginPackage,
-  PluginPermissions,
-  PluginRateLimits,
-  RateLimitOperation,
-  ResourceLimits,
-  SecurityAction,
-  SecurityContext,
-  SecurityReport,
-  SecurityResourceType,
-} from '@/types/plugin.types';
+import { PluginActivity, PluginPackage, PluginPermissions, PluginRateLimits, RateLimitOperation, ResourceLimits, SecurityAction, SecurityContext, SecurityReport, SecurityResourceType } from '@types';
 import { PluginAuthService } from './services/plugin-auth.service';
 import { PluginAuditService } from './services/plugin-audit.service';
 

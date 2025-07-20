@@ -143,7 +143,7 @@ export class PluginProxyController {
   /**
    * Executes the plugin route with proper parameter extraction and error handling
    */
-  private async executePluginRoute(route: DynamicRoute, request: Request): Promise<unknown> {
+  private executePluginRoute(route: DynamicRoute, request: Request): unknown {
     try {
       // Extract parameters based on the route configuration
       const params = this.extractParameters(request, route);
@@ -151,7 +151,7 @@ export class PluginProxyController {
       this.logger.debug(`Executing plugin route: ${route.pluginId}:${route.controllerName}.${route.methodName}`);
 
       // Execute the route handler with extracted parameters
-      const result = await route.handler(...params);
+      const result = route.handler(...params);
 
       return result;
     } catch (error) {
@@ -262,7 +262,7 @@ export class PluginProxyController {
       // For now, we provide a basic implementation that covers common use cases
 
       // Check if route expects specific parameter types
-      if (route.paramTypes && route.paramTypes.length > 0) {
+      if (route.paramTypes.length > 0) {
         for (const paramType of route.paramTypes) {
           if (this.isRequestType(paramType)) {
             params.push(request);
@@ -272,9 +272,9 @@ export class PluginProxyController {
           } else if (this.isBodyType(paramType)) {
             params.push(request.body ?? {});
           } else if (this.isQueryType(paramType)) {
-            params.push(request.query ?? {});
+            params.push(request.query);
           } else if (this.isParamsType(paramType)) {
-            params.push(request.params ?? {});
+            params.push(request.params);
           } else {
             // Default to request body for unknown types
             params.push(request.body ?? {});
@@ -282,11 +282,11 @@ export class PluginProxyController {
         }
       } else {
         // Default parameter extraction when no type information is available
-        params.push(request.body ?? {});
-        if (Object.keys(request.query || {}).length > 0) {
+        params.push(request.body);
+        if (Object.keys(request.query).length > 0) {
           params.push(request.query);
         }
-        if (Object.keys(request.params || {}).length > 0) {
+        if (Object.keys(request.params).length > 0) {
           params.push(request.params);
         }
       }
@@ -303,25 +303,25 @@ export class PluginProxyController {
    * Type checking helpers for parameter extraction
    */
   private isRequestType(paramType: unknown): boolean {
-    return paramType === Request || (paramType as { name?: string })?.name === 'Request';
+    return paramType === Request || (paramType as { name?: string }).name === 'Request';
   }
 
   private isResponseType(paramType: unknown): boolean {
-    return paramType === Response || (paramType as { name?: string })?.name === 'Response';
+    return paramType === Response || (paramType as { name?: string }).name === 'Response';
   }
 
   private isBodyType(paramType: unknown): boolean {
     // In a real implementation, this would check for @Body decorator metadata
-    return (paramType as { name?: string })?.name?.includes('Body') ?? false;
+    return (paramType as { name?: string }).name?.includes('Body') ?? false;
   }
 
   private isQueryType(paramType: unknown): boolean {
     // In a real implementation, this would check for @Query decorator metadata
-    return (paramType as { name?: string })?.name?.includes('Query') ?? false;
+    return (paramType as { name?: string }).name?.includes('Query') ?? false;
   }
 
   private isParamsType(paramType: unknown): boolean {
     // In a real implementation, this would check for @Param decorator metadata
-    return (paramType as { name?: string })?.name?.includes('Param') ?? false;
+    return (paramType as { name?: string }).name?.includes('Param') ?? false;
   }
 }

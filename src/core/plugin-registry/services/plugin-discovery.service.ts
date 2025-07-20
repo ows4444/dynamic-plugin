@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import type { PluginManifest, PluginMetadata } from '@/types/plugin.types';
-import { PluginStatus } from '@/types/plugin.types';
+import { PluginManifest, PluginMetadata, PluginStatus } from '@types';
 
 /**
  * Service for discovering plugins in the system
@@ -154,28 +153,19 @@ export class PluginDiscoveryService {
       author: manifest.author,
       license: manifest.license,
       status: PluginStatus.INSTALLED,
-      capabilities: manifest.capabilities ?? [],
-      permissions: manifest.permissions ?? {},
-      dependencies: Object.entries(manifest.dependencies ?? {}).map(([name, version]) => ({
-        name,
-        version,
-        required: true,
-      })),
-      pluginDependencies: manifest.pluginDependencies ?? {},
+      capabilities: manifest.capabilities,
+      permissions: manifest.permissions,
+      dependencies: manifest.dependencies,
+      pluginDependencies: manifest.pluginDependencies,
       loadTime: 0,
       memory: 0,
       cpu: 0,
       main: manifest.main,
       types: manifest.types,
       engines: manifest.engines,
-      hooks: manifest.hooks ?? {},
-      configuration: manifest.configuration ?? {},
-      metadata: {
-        category: manifest.metadata?.category ?? 'general',
-        tags: manifest.metadata?.tags ?? [],
-        repository: manifest.metadata?.repository,
-        documentation: manifest.metadata?.documentation,
-      },
+      hooks: manifest.hooks,
+      configuration: manifest.configuration,
+      metadata: manifest.metadata,
     };
   }
 

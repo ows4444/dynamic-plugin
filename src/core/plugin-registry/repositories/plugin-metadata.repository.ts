@@ -1,9 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import type { PluginDependency, PluginMetadata } from '@/types/plugin.types';
-import { PluginStatus } from '@/types/plugin.types';
-import { type PluginRegistry, type PluginRegistryEntry, type PluginStats } from '@/types/registry.types';
+import { PluginDependency, PluginMetadata, PluginRegistry, PluginRegistryEntry, PluginStats, PluginStatus } from '@types';
 
 /**
  * Repository for managing plugin metadata persistence and retrieval
@@ -223,7 +221,7 @@ export class PluginMetadataRepository {
     if (!entry) {
       throw new Error(`Plugin not found: ${pluginId}`);
     }
-    return entry.dependencies;
+    return entry.pluginDependencies;
   }
 
   /**

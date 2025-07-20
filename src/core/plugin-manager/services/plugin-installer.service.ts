@@ -2,9 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import type { InstallationResult, PluginManifest, PluginMetadata, PluginSource } from '@/types/plugin.types';
-import { PluginStatus } from '@/types/plugin.types';
 import { PluginRegistryService } from '@/core/plugin-registry/plugin-registry.service';
+import type { InstallationResult, PluginManifest, PluginMetadata, PluginSource, PluginStatus } from '@types';
 
 /**
  * Service responsible for plugin installation operations
@@ -40,7 +39,7 @@ export class PluginInstallerService {
    */
   async installPlugin(source: PluginSource): Promise<InstallationResult> {
     // Input validation
-    if (!source?.type || !source?.location) {
+    if (!source.type || !source.location) {
       return this.createFailureResult('', '', 'Invalid plugin source - type and location are required');
     }
 
@@ -93,7 +92,7 @@ export class PluginInstallerService {
       await this.registryService.registerPlugin(metadata);
 
       // Run installation hook if exists
-      if (manifest.hooks?.onInstall) {
+      if (manifest.hooks.onInstall) {
         await this.runInstallationHook(installedDir, manifest.hooks.onInstall);
       }
 
@@ -181,6 +180,9 @@ export class PluginInstallerService {
       case 'url':
         this.downloadFromUrl(source.location, targetDir);
         break;
+      case undefined: {
+        throw new Error('Not implemented yet: undefined case');
+      }
       default:
         throw new Error(`Unsupported plugin source type: ${String(source.type)}`);
     }
@@ -232,19 +234,17 @@ export class PluginInstallerService {
    */
   private installDependencies(manifest: PluginManifest): void {
     // Install NPM dependencies
-    if (manifest.dependencies && Object.keys(manifest.dependencies).length > 0) {
+    if (Object.keys(manifest.dependencies).length > 0) {
       this.logger.debug('Installing NPM dependencies...');
       // This would run npm install for the plugin dependencies
     }
 
     // Install plugin dependencies
-    if (manifest.pluginDependencies) {
-      for (const [depName, depVersion] of Object.entries(manifest.pluginDependencies)) {
-        const depPlugin = this.registryService.getPlugin(`${depName}@${depVersion}`);
-        if (!depPlugin?.status.installed) {
-          this.logger.warn(`Plugin dependency not found: ${depName}@${depVersion}`);
-          // Could attempt to auto-install dependency here
-        }
+    for (const [depName, depVersion] of Object.entries(manifest.pluginDependencies)) {
+      const depPlugin = this.registryService.getPlugin(`${depName}@${depVersion.version}`);
+      if (!depPlugin?.status.installed) {
+        this.logger.warn(`Plugin dependency not found: ${depName}@${depVersion.version}`);
+        // Could attempt to auto-install dependency here
       }
     }
   }
@@ -276,7 +276,7 @@ export class PluginInstallerService {
       if (await fs.pathExists(manifestPath)) {
         const manifest = (await fs.readJson(manifestPath)) as PluginManifest;
 
-        if (manifest.hooks?.onUninstall) {
+        if (manifest.hooks.onUninstall) {
           const hookPath = path.join(pluginDir, manifest.hooks.onUninstall);
 
           if (await fs.pathExists(hookPath)) {
@@ -304,26 +304,19 @@ export class PluginInstallerService {
       author: manifest.author,
       license: manifest.license,
       status: PluginStatus.INSTALLED,
-      capabilities: manifest.capabilities ?? [],
-      permissions: manifest.permissions ?? {},
-      dependencies: Object.entries(manifest.dependencies ?? {}).map(([name, version]) => ({
-        name,
-        version,
-        required: true,
-      })),
-      pluginDependencies: manifest.pluginDependencies ?? {},
+      capabilities: manifest.capabilities,
+      permissions: manifest.permissions,
+      dependencies: manifest.dependencies,
+      pluginDependencies: manifest.pluginDependencies,
       loadTime: 0,
       memory: 0,
       cpu: 0,
       main: manifest.main,
       types: manifest.types,
       engines: manifest.engines,
-      hooks: manifest.hooks ?? {},
-      configuration: manifest.configuration ?? {},
-      metadata: manifest.metadata ?? {
-        category: 'general',
-        tags: [],
-      },
+      hooks: manifest.hooks,
+      configuration: manifest.configuration,
+      metadata: manifest.metadata,
     };
   }
 

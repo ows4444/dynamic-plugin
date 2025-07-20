@@ -1,29 +1,39 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+/**
+ * Runtime Types - Plugin runtime and execution environment types
+ */
+
 import type { Type } from '@nestjs/common';
-import type { PluginPermissions, ValidationResult } from './plugin.types';
 
-export enum EnvironmentType {
-  DEVELOPMENT = 'development',
-  STAGING = 'staging',
-  PRODUCTION = 'production',
-  TEST = 'test',
-}
+import type {
+  BaseCompilationCache,
+  BaseCompilationDiagnostic,
+  BaseCompilationResult,
+  BaseCompiledAsset,
+  EnvironmentType,
+  IsolationLevel,
+  ModuleState,
+  ResourceLimits,
+  ResourceUsage,
+  ValidationResult,
+} from './common.types';
 
-export enum IsolationLevel {
-  NONE = 'none',
-  BASIC = 'basic',
-  ENHANCED = 'enhanced',
-  STRICT = 'strict',
-}
+import type { RuntimePermissions } from './security.types';
 
-export enum ModuleState {
-  UNLOADED = 'unloaded',
-  LOADING = 'loading',
-  LOADED = 'loaded',
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  ERROR = 'error',
-  UNLOADING = 'unloading',
-}
+// Re-export runtime-related common types
+export type {
+  EnvironmentType,
+  IsolationLevel,
+  ModuleState,
+  NetworkProtocol,
+  ResourceLimits,
+  ResourceUsage,
+  ValidationResult,
+  BaseCompilationResult,
+  BaseCompilationDiagnostic,
+  BaseCompiledAsset,
+  BaseCompilationCache,
+} from './common.types';
 
 export interface ModuleStatus {
   state: ModuleState;
@@ -34,15 +44,6 @@ export interface ModuleStatus {
   errorCount: number;
   lastError?: Error;
   version?: string;
-}
-
-export enum NetworkProtocol {
-  HTTP = 'http',
-  HTTPS = 'https',
-  TCP = 'tcp',
-  UDP = 'udp',
-  WS = 'ws',
-  WSS = 'wss',
 }
 
 export interface RuntimeContext {
@@ -67,45 +68,8 @@ export interface RuntimeEnvironment {
   locale?: string;
 }
 
-export interface RuntimePermissions {
-  filesystem: FilesystemPermissions;
-  network: NetworkPermissions;
-  system: SystemPermissions;
-  database: DatabasePermissions;
-  plugins: PluginPermissions;
-}
-
-export interface FilesystemPermissions {
-  read: string[];
-  write: string[];
-  execute: string[];
-  delete: string[];
-}
-
-export interface NetworkPermissions {
-  outbound: NetworkRule[];
-  inbound: NetworkRule[];
-}
-
-export interface NetworkRule {
-  protocol: 'http' | 'https' | 'tcp' | 'udp';
-  host?: string;
-  port?: number | number[];
-  path?: string;
-}
-
-export interface SystemPermissions {
-  processes: boolean;
-  environment: boolean;
-  filesystem: boolean;
-  network: boolean;
-}
-
-export interface DatabasePermissions {
-  read: string[];
-  write: string[];
-  schema: string[];
-}
+// Import permission types from security.types to avoid duplication
+export type { RuntimePermissions, FilesystemPermissions, NetworkPermissions, NetworkRule, SystemPermissions, DatabasePermissions } from './security.types';
 
 export interface RuntimeHooks {
   beforeLoad?: string;
@@ -154,19 +118,19 @@ export interface PluginModule {
 }
 
 export interface PluginExports {
-  controllers?: Type<unknown>[];
-  providers?: Type<unknown>[];
-  imports?: (Type<unknown> | DynamicModule)[];
-  exports?: (Type<unknown> | string)[];
+  controllers?: Array<Type<unknown>>;
+  providers?: Array<Type<unknown>>;
+  imports?: Array<Type<unknown> | DynamicModule>;
+  exports?: Array<Type<unknown> | string>;
   module: Type<unknown>;
 }
 
 export interface DynamicModule {
   module: Type<unknown>;
-  imports?: (Type<unknown> | DynamicModule)[];
-  controllers?: Type<unknown>[];
-  providers?: Type<unknown>[];
-  exports?: (Type<unknown> | string)[];
+  imports?: Array<Type<unknown> | DynamicModule>;
+  controllers?: Array<Type<unknown>>;
+  providers?: Array<Type<unknown>>;
+  exports?: Array<Type<unknown> | string>;
   global?: boolean;
 }
 
@@ -187,49 +151,18 @@ export interface ModuleMetadata {
 }
 
 export interface PluginCompiler {
-  compile(sourcePath: string, outputPath: string): Promise<CompilationResult>;
-  watch(sourcePath: string, callback: (result: CompilationResult) => void): Promise<void>;
+  compile(sourcePath: string, outputPath: string): Promise<RuntimeCompilationResult>;
+  watch(sourcePath: string, callback: (result: RuntimeCompilationResult) => void): Promise<void>;
   stopWatching(sourcePath: string): Promise<void>;
-  getCompilationCache(pluginId: string): CompilationCache | null;
+  getCompilationCache(pluginId: string): RuntimeCompilationCache | null;
   clearCache(pluginId?: string): Promise<void>;
 }
 
-export interface CompilationResult {
-  success: boolean;
-  outputPath: string;
-  sourceMap?: string;
-  diagnostics: CompilationDiagnostic[];
-  assets: CompiledAsset[];
-  dependencies: string[];
-  size: number;
-  time: number;
-}
-
-export interface CompilationDiagnostic {
-  level: 'error' | 'warning' | 'info';
-  message: string;
-  file?: string;
-  line?: number;
-  column?: number;
-  code?: string;
-}
-
-export interface CompiledAsset {
-  name: string;
-  path: string;
-  size: number;
-  type: string;
-  checksum: string;
-}
-
-export interface CompilationCache {
-  pluginId: string;
-  sourceHash: string;
-  compiledPath: string;
-  timestamp: Date;
-  dependencies: string[];
-  valid: boolean;
-}
+// Runtime compilation types (use base types directly)
+export interface RuntimeCompilationResult extends BaseCompilationResult {}
+export interface RuntimeCompilationDiagnostic extends BaseCompilationDiagnostic {}
+export interface RuntimeCompiledAsset extends BaseCompiledAsset {}
+export interface RuntimeCompilationCache extends BaseCompilationCache {}
 
 export interface PluginSandbox {
   createSandbox(context: RuntimeContext): Promise<SandboxInstance>;
@@ -256,14 +189,6 @@ export interface SandboxStatus {
   isolated: boolean;
   resourceLimited: boolean;
   lastError?: Error;
-}
-
-export interface ResourceUsage {
-  memory: number;
-  cpu: number;
-  network: number;
-  filesystem: number;
-  processes: number;
 }
 
 export interface PluginProfiler {
@@ -345,40 +270,5 @@ export interface FilesystemOperation {
   timestamp: Date;
 }
 
-export interface ResourceLimits {
-  memory: number;
-  cpu: number;
-  network: number;
-  filesystem: number;
-  processes: number;
-  timeouts: {
-    startup: number;
-    shutdown: number;
-    idle: number;
-  };
-}
-
-export interface IsolationOptions {
-  level?: IsolationLevel;
-  resourceLimits?: Partial<ResourceLimits>;
-  networkRestrictions?: NetworkRule[];
-  filesystemRestrictions?: string[];
-  allowedModules?: string[];
-  deniedModules?: string[];
-  timeout?: number;
-  memoryLimit?: number;
-  cpuLimit?: number;
-  enableResourceMonitoring?: boolean;
-}
-
-export interface IsolationResult {
-  success: boolean;
-  pluginId?: string;
-  sandboxId?: string;
-  isolated: boolean;
-  resourceUsage: ResourceUsage;
-  violations: string[];
-  error?: string;
-}
-
-export { ValidationResult } from './plugin.types';
+// Import isolation types from security.types to avoid duplication
+export type { IsolationOptions, IsolationResult } from './security.types';

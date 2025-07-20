@@ -1,16 +1,29 @@
 import { Injectable, Logger, Type } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ModuleRef } from '@nestjs/core';
-import type { ExecutionResult, PluginContext, PluginError, PluginInstance, PluginMetadata } from '@/types/plugin.types';
-import { PluginSeverity } from '@/types/plugin.types';
-import { type ModuleStatus, PluginInstanceMethods, type PluginLoader, type PluginModule, type RuntimeContext, type ValidationResult } from '@/types/runtime.types';
 import { PluginLoaderService } from './services/plugin-loader.service';
 import { PluginContextService } from './services/plugin-context.service';
 import { PluginExecutionService } from './services/plugin-execution.service';
 import { PluginIsolationService } from './services/plugin-isolation.service';
 import { PluginErrorHandler } from '@/shared/utils/error-handler.util';
-import type { SecurityContext } from '@/types/plugin.types';
-import type { IsolationOptions, IsolationResult, ResourceUsage } from '@/types/runtime.types';
+import {
+  ExecutionResult,
+  IsolationOptions,
+  IsolationResult,
+  ModuleStatus,
+  PluginContext,
+  PluginError,
+  PluginInstance,
+  PluginInstanceMethods,
+  PluginLoader,
+  PluginMetadata,
+  PluginModule,
+  PluginSeverity,
+  ResourceUsage,
+  RuntimeContext,
+  SecurityContext,
+  ValidationResult,
+} from '@types';
 
 /**
  * Enhanced plugin runtime service with improved architecture and error handling
@@ -21,7 +34,7 @@ export class PluginRuntimeService implements PluginLoader {
 
   constructor(
     private readonly eventEmitter: EventEmitter2,
-    private readonly moduleRef: ModuleRef,
+    private readonly _moduleRef: ModuleRef,
     private readonly pluginLoader: PluginLoaderService,
     private readonly contextService: PluginContextService,
     private readonly executionService: PluginExecutionService,
@@ -31,7 +44,7 @@ export class PluginRuntimeService implements PluginLoader {
   /**
    * Creates a plugin context using the context service
    */
-  async createPluginContext(plugin: PluginMetadata): Promise<PluginContext> {
+  createPluginContext(plugin: PluginMetadata): Promise<PluginContext> {
     return this.contextService.createPluginContext(plugin);
   }
 
@@ -54,7 +67,7 @@ export class PluginRuntimeService implements PluginLoader {
   /**
    * Loads a plugin using the plugin loader service
    */
-  async loadPlugin(pluginPath: string, context: RuntimeContext): Promise<PluginModule> {
+  loadPlugin(pluginPath: string, context: RuntimeContext): Promise<PluginModule> {
     return this.pluginLoader.loadPlugin(pluginPath, context);
   }
 
@@ -69,14 +82,14 @@ export class PluginRuntimeService implements PluginLoader {
   /**
    * Reloads a plugin using the plugin loader service
    */
-  async reloadPlugin(pluginId: string): Promise<PluginModule> {
+  reloadPlugin(pluginId: string): Promise<PluginModule> {
     return this.pluginLoader.reloadPlugin(pluginId);
   }
 
   /**
    * Validates a plugin using the plugin loader service
    */
-  async validatePlugin(pluginPath: string): Promise<ValidationResult> {
+  validatePlugin(pluginPath: string): Promise<ValidationResult> {
     return this.pluginLoader.validatePlugin(pluginPath);
   }
 
@@ -199,33 +212,66 @@ export class PluginRuntimeService implements PluginLoader {
   }
 
   /**
-   * Calls a method on a plugin instance
+   * Calls a method on a plugin instance with enhanced security and performance monitoring
    */
-  private async callPluginMethod(pluginId: string, method: string, args: unknown[]): Promise<unknown> {
+  async callPluginMethod(pluginId: string, method: string, args: unknown[]): Promise<unknown> {
+    const startTime = performance.now();
+
     try {
+      // Security validation
+      if (!this.isOperationAllowed(pluginId, 'method_call', method)) {
+        throw new Error(`Method call not permitted for plugin ${pluginId}: ${method}`);
+      }
+
       const pluginModule = this.pluginLoader.getPluginModule(pluginId);
       if (!pluginModule?.instance) {
         throw new Error(`Plugin not loaded or instance not available: ${pluginId}`);
       }
 
+      // Validate method exists and is callable
       const instance = pluginModule.instance as PluginInstanceMethods;
       if (typeof instance[method] !== 'function') {
         throw new Error(`Method not found in plugin ${pluginId}: ${method}`);
       }
 
-      const methodFn = instance[method] as (...args: unknown[]) => Promise<unknown>;
-      const result = await methodFn(...args);
+      // Execute with resource limits and timeout
+      const result = await this.executeWithLimits(pluginId, method, args, {
+        timeout: 30000, // 30 second default timeout
+        memoryLimit: 100 * 1024 * 1024, // 100MB default memory limit
+        cpuLimit: 80, // 80% CPU limit
+      });
 
+      const executionTime = performance.now() - startTime;
+
+      // Emit performance metrics
       this.eventEmitter.emit('plugin.method.called', {
         pluginId,
         method,
         argsCount: args.length,
+        executionTime,
+        success: result.success,
         timestamp: new Date(),
       });
 
-      return result;
+      if (!result.success) {
+        throw result.error ?? new Error('Method execution failed');
+      }
+
+      return result.result;
     } catch (error) {
+      const executionTime = performance.now() - startTime;
+
       this.logger.error(`Failed to call method ${method} on plugin ${pluginId}:`, error);
+
+      // Emit error metrics
+      this.eventEmitter.emit('plugin.method.error', {
+        pluginId,
+        method,
+        error: error instanceof Error ? error.message : String(error),
+        executionTime,
+        timestamp: new Date(),
+      });
+
       throw error;
     }
   }
@@ -240,7 +286,7 @@ export class PluginRuntimeService implements PluginLoader {
   /**
    * Gets plugin health using the plugin loader service
    */
-  async getPluginHealth(pluginId: string): Promise<ModuleStatus | null> {
+  getPluginHealth(pluginId: string): Promise<ModuleStatus | null> {
     return this.pluginLoader.checkPluginHealth(pluginId);
   }
 
@@ -275,7 +321,7 @@ export class PluginRuntimeService implements PluginLoader {
   /**
    * Execute plugin method with resource limits
    */
-  async executeWithLimits(pluginId: string, method: string, args: unknown[], options?: { timeout?: number; memoryLimit?: number; cpuLimit?: number }): Promise<ExecutionResult> {
+  executeWithLimits(pluginId: string, method: string, args: unknown[], options?: { timeout?: number; memoryLimit?: number; cpuLimit?: number }): Promise<ExecutionResult> {
     return this.executionService.executeWithLimits(pluginId, method, args, options);
   }
 

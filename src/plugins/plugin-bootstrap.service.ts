@@ -3,7 +3,7 @@ import { PluginManagerService } from '@/core/plugin-manager/plugin-manager.servi
 import { PluginRegistryService } from '@/core/plugin-registry/plugin-registry.service';
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { PluginStatus } from '@/types/plugin.types';
+import { PluginStatus } from '@types';
 
 @Injectable()
 export class PluginBootstrapService implements OnApplicationBootstrap {

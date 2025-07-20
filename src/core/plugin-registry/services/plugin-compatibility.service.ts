@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as semver from 'semver';
-import type { CompatibilityResult, PluginEngines } from '@/types/plugin.types';
 import { PluginMetadataRepository } from '../repositories/plugin-metadata.repository';
+import { CompatibilityResult, PluginEngines } from '@types';
 
 /**
  * Service for checking plugin compatibility
@@ -106,7 +106,7 @@ export class PluginCompatibilityService {
   /**
    * Check npm dependencies compatibility
    */
-  private checkNpmDependencies(dependencies: { name: string; version: string; required: boolean }[], reasons: string[], suggestions: string[]): void {
+  private checkNpmDependencies(dependencies: Array<{ name: string; version: string; required: boolean }>, reasons: string[], suggestions: string[]): void {
     for (const dep of dependencies) {
       if (!dep.required) {
         continue;

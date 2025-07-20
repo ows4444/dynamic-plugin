@@ -1,10 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { InstallationResult, LoadResult, PluginInstance, PluginSource, ReloadResult, UnloadResult, UpdateResult } from '@/types/plugin.types';
-import { PluginStatus } from '@/types/plugin.types';
 import { PluginRegistryService } from '@/core/plugin-registry/plugin-registry.service';
 import { PluginInstallerService } from './services/plugin-installer.service';
 import { PluginLifecycleService } from './services/plugin-lifecycle.service';
+import { InstallationResult, LoadResult, PluginInstance, PluginSource, PluginStatus, ReloadResult, UnloadResult, UpdateResult } from '@types';
 
 /**
  * Enhanced Plugin Manager Service
@@ -17,7 +16,7 @@ export class PluginManagerService {
   private readonly logger = new Logger(PluginManagerService.name);
 
   constructor(
-    private readonly registryService: PluginRegistryService,
+    private readonly _registryService: PluginRegistryService,
     private readonly eventEmitter: EventEmitter2,
     private readonly installerService: PluginInstallerService,
     private readonly lifecycleService: PluginLifecycleService,

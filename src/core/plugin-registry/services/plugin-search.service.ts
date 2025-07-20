@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PluginRegistrySortBy, type PluginSearchQuery, type PluginSearchResult, SortOrder } from '@/types/registry.types';
+import { PluginRegistrySortBy, PluginSearchQuery, PluginSearchResult, SortOrder } from '@types';
 import { PluginMetadataRepository } from '../repositories/plugin-metadata.repository';
 
 /**

@@ -1,9 +1,7 @@
 import { BadRequestException, Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PluginRegistryService } from './plugin-registry.service';
-import type { PluginRegistryEntry, PluginSearchQuery, PluginSearchResult, PluginStats } from '@/types/registry.types';
-import { PluginRegistrySortBy, SortOrder } from '@/types/registry.types';
-import type { CompatibilityResult, PluginDependency, PluginMetadata } from '@/types/plugin.types';
+import { CompatibilityResult, PluginDependency, PluginMetadata, PluginRegistryEntry, PluginRegistrySortBy, PluginSearchQuery, PluginSearchResult, PluginStats, SortOrder } from '@types';
 
 // DTOs for request/response
 export class PluginSearchDto implements PluginSearchQuery {
@@ -312,8 +310,8 @@ export class PluginRegistryController {
       },
     },
   })
-  getCategories(): { categories: { name: string; count: number; plugins: string[] }[]; total: number } {
-    const _stats = this.registryService.getPluginStats();
+  getCategories(): { categories: Array<{ name: string; count: number; plugins: string[] }>; total: number } {
+    // const stats = this.registryService.getPluginStats();
     const allPlugins = this.registryService.getAllPlugins();
 
     // Group plugins by category

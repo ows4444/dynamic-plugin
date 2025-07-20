@@ -1,22 +1,29 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as path from 'path';
+import * as fs from 'fs-extra';
+import { PluginErrorCodes, PluginErrorHandler } from '@/shared/utils/error-handler.util';
 import {
   DatabasePermissions,
   EnvironmentType,
+  EventBus,
   FilesystemPermissions,
   IsolationLevel,
   NetworkPermissions,
+  PluginConfig,
+  PluginContext,
+  PluginEvent,
+  PluginInterop,
+  PluginMetadata,
   ResourceLimits,
   RuntimeContext,
   RuntimeEnvironment,
   RuntimeHooks,
   RuntimePermissions,
+  SecurityContext,
+  SharedResource,
   SystemPermissions,
-} from '@/types/runtime.types';
-import { EventBus, PluginConfig, PluginContext, PluginEvent, PluginInterop, PluginMetadata, SecurityContext, SharedResource } from '@/types/plugin.types';
-import * as fs from 'fs-extra';
-import { PluginErrorCodes, PluginErrorHandler } from '@/shared/utils/error-handler.util';
+} from '@types';
 
 /**
  * Service for creating and managing plugin runtime contexts
@@ -188,7 +195,7 @@ export class PluginContextService {
     const hasFileSystemAccess = plugin.permissions.filesystem && plugin.permissions.filesystem.length > 0;
     const hasDatabaseAccess = plugin.permissions.database && plugin.permissions.database.length > 0;
 
-    if (hasNetworkAccess || hasFileSystemAccess || hasDatabaseAccess) {
+    if (hasNetworkAccess ?? hasFileSystemAccess ?? hasDatabaseAccess) {
       return IsolationLevel.BASIC;
     }
 

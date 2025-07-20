@@ -1,12 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { CompatibilityResult, PluginDependency, PluginManifest, PluginMetadata, ValidationResult } from '@/types/plugin.types';
-import { type PluginRegistryEntry, type PluginSearchQuery, type PluginSearchResult, type PluginStats } from '@/types/registry.types';
 import { PluginValidationUtil } from '@/shared/utils/validation.util';
 import { PluginMetadataRepository } from './repositories/plugin-metadata.repository';
 import { PluginDiscoveryService } from './services/plugin-discovery.service';
 import { PluginCompatibilityService } from './services/plugin-compatibility.service';
 import { PluginSearchService } from './services/plugin-search.service';
+import { CompatibilityResult, PluginDependency, PluginManifest, PluginMetadata, PluginRegistryEntry, PluginSearchQuery, PluginSearchResult, PluginStats, ValidationResult } from '@types';
 
 /**
  * Enhanced Plugin Registry Service

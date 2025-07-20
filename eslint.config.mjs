@@ -75,14 +75,18 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-return': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
       '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/await-thenable': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/require-await': 'error',
 
       // Variable and function rules
       '@typescript-eslint/no-unused-vars': [
-        'error',
+        'warn',
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
           caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
         },
       ],
       '@typescript-eslint/no-empty-function': 'warn',
@@ -122,7 +126,7 @@ export default tseslint.config(
       '@typescript-eslint/prefer-promise-reject-errors': 'error',
 
       // Array and object rules
-      '@typescript-eslint/array-type': ['error', { default: 'array' }],
+      '@typescript-eslint/array-type': ['error', { default: 'array-simple', readonly: 'generic' }],
 
       // Naming conventions - Practical for NestJS
       '@typescript-eslint/naming-convention': [
@@ -192,10 +196,22 @@ export default tseslint.config(
           modifiers: ['static'],
           format: ['camelCase', 'UPPER_CASE'],
         },
+        {
+          selector: 'objectLiteralProperty',
+          modifiers: ['requiresQuotes'],
+          format: null,
+        },
       ],
 
       '@typescript-eslint/no-require-imports': 'off',
-      '@typescript-eslint/no-unsafe-function-type':'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+
+      // Additional TypeScript rules for better code quality
+      '@typescript-eslint/no-shadow': 'error',
+      '@typescript-eslint/no-use-before-define': 'warn',
+      '@typescript-eslint/switch-exhaustiveness-check': 'error',
+      '@typescript-eslint/no-unnecessary-condition': 'warn',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
 
       // General JavaScript/TypeScript rules
       'no-console': 'warn',
@@ -216,6 +232,20 @@ export default tseslint.config(
         },
       ],
 
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@types',
+              importNames: [],
+              message: 'Use direct `@types` import only. Do not use `@types/*` subpaths.',
+            },
+          ],
+          patterns: ['@/types/*'], // This blocks all subpath imports
+        },
+      ],
+
       // Code style rules
       'prefer-const': 'error',
       'prefer-template': 'error',
@@ -232,7 +262,7 @@ export default tseslint.config(
       // Complexity rules - Relaxed for complex validation logic
       complexity: ['warn', 40],
       'max-depth': ['warn', 5],
-      'max-lines': ['warn', 800],
+      'max-lines': ['warn', 1500],
       'max-lines-per-function': ['warn', 200],
       'max-params': ['warn', 10],
     },

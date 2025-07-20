@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { PluginInstance, SecurityContext } from '@/types/plugin.types';
-import type { IsolationOptions, IsolationResult } from '@/types/runtime.types';
+import type { IsolationOptions, IsolationResult, PluginInstance, SecurityContext } from '@types';
 
 /**
  * Service responsible for plugin isolation and sandboxing

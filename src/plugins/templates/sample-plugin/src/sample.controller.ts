@@ -1,7 +1,7 @@
 import { Body, Get, Logger, Post } from '@nestjs/common';
 import { PluginController, PluginLogger, PluginPermission, PluginRoute } from '@/shared/decorators/plugin.decorator';
 import { SampleService } from './sample.service';
-import type { PluginMetrics } from '@/types/plugin.types';
+import { PluginMetrics } from '@types';
 
 type CreateDataDto = Record<string, unknown>;
 
@@ -14,7 +14,7 @@ interface CreateDataResponse {
 @PluginController('/sample')
 export class SampleController {
   @PluginLogger('SampleController')
-  private readonly logger: Logger;
+  private readonly logger!: Logger;
 
   constructor(private readonly sampleService: SampleService) {}
 
@@ -26,7 +26,7 @@ export class SampleController {
   })
   @PluginPermission(['read'])
   getHello(): { message: string; timestamp: string } {
-    this.logger?.log('Getting hello message');
+    this.logger.log('Getting hello message');
 
     return {
       message: this.sampleService.getHelloMessage(),
@@ -40,7 +40,7 @@ export class SampleController {
     method: 'GET',
   })
   getStatus(): { status: string; version: string; uptime: number } {
-    this.logger?.log('Getting plugin status');
+    this.logger.log('Getting plugin status');
 
     return {
       status: 'running',
@@ -57,7 +57,7 @@ export class SampleController {
   })
   @PluginPermission(['write'])
   createData(@Body() data: CreateDataDto): CreateDataResponse {
-    this.logger?.log('Creating new data entry');
+    this.logger.log('Creating new data entry');
 
     const result = this.sampleService.createData(data);
 
@@ -74,7 +74,7 @@ export class SampleController {
     method: 'GET',
   })
   getMetrics(): PluginMetrics {
-    this.logger?.log('Getting plugin metrics');
+    this.logger.log('Getting plugin metrics');
 
     return this.sampleService.getMetrics();
   }

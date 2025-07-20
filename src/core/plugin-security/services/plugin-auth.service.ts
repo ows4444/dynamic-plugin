@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as crypto from 'crypto';
-import type { PluginPermissions, SecurityAction, SecurityResourceType } from '@/types/plugin.types';
+import type { PluginPermissions, SecurityAction, SecurityResourceType } from '@types';
 
 /**
  * Service responsible for plugin authentication and authorization
@@ -246,10 +246,6 @@ export class PluginAuthService {
   private validateCredentials(pluginId: string, credentials: PluginCredentials): boolean {
     // In a real implementation, this would validate against a store
     // For now, we'll do basic validation
-
-    if (!credentials.type) {
-      return false;
-    }
 
     switch (credentials.type) {
       case 'api-key':

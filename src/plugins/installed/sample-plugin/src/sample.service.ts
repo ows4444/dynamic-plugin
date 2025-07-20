@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PluginConfig, PluginEventHandler, PluginHook, PluginLogger, PluginService } from '@/shared/decorators/plugin.decorator';
 import { PluginServiceInterface } from '@/shared/interfaces/plugin.interface';
-import { HealthStatus, HealthStatusType, Logger, PluginContext, PluginMetrics, SamplePluginConfig } from '@/types/plugin.types';
+import { HealthStatus, HealthStatusType, Logger, PluginContext, PluginMetrics, SamplePluginConfig } from '@types';
 
 @Injectable()
 @PluginService({

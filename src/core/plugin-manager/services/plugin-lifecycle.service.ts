@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { LoadResult, PluginInstance, ReloadResult, UnloadResult } from '@/types/plugin.types';
-import { PluginStatus } from '@/types/plugin.types';
 import { PluginRegistryService } from '@/core/plugin-registry/plugin-registry.service';
 import { PluginRuntimeService } from '@/core/plugin-runtime/plugin-runtime.service';
+import { LoadResult, PluginInstance, PluginStatus, ReloadResult, UnloadResult } from '@types';
 
 /**
  * Service responsible for plugin lifecycle management (load, unload, reload)

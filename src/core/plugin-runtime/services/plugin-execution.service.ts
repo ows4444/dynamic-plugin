@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { ExecutionResult, PluginError, PluginInstance } from '@/types/plugin.types';
-import { PluginSeverity } from '@/types/plugin.types';
-import { type PluginInstanceMethods } from '@/types/runtime.types';
+import type { ExecutionResult, PluginError, PluginInstance, PluginInstanceMethods, PluginSeverity } from '@types';
+
 import { PluginErrorHandler } from '@/shared/utils/error-handler.util';
 import { PluginLoaderService } from './plugin-loader.service';
 
@@ -104,7 +103,7 @@ export class PluginExecutionService {
       const hookMethod = instance[hookName];
 
       if (typeof hookMethod === 'function') {
-        await (hookMethod as Function).call(instance, hookData);
+        (hookMethod as Function).call(instance, hookData);
 
         this.eventEmitter.emit('plugin.hook.executed', {
           pluginId,
