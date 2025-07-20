@@ -59,10 +59,10 @@ export class AuthenticationService {
   /**
    * Initialize authentication service
    */
-  async initialize(): Promise<void> {
+  initialize(): void {
     try {
       // Create default admin user for testing
-      await this.createDefaultUsers();
+      this.createDefaultUsers();
 
       this.isInitialized = true;
       this.logger.log('Authentication service initialized');
@@ -75,14 +75,14 @@ export class AuthenticationService {
   /**
    * Authenticate user with credentials
    */
-  async authenticate(credentials: { username: string; password: string; ipAddress?: string; userAgent?: string }): Promise<{
+  authenticate(credentials: { username: string; password: string; ipAddress?: string; userAgent?: string }): {
     success: boolean;
     userId?: string;
     sessionId?: string;
     token?: string;
     expiresAt?: Date;
     error?: string;
-  }> {
+  } {
     if (!this.isInitialized) {
       throw new Error('Authentication service not initialized');
     }
@@ -114,7 +114,7 @@ export class AuthenticationService {
       }
 
       // Verify password (mock implementation)
-      const passwordValid = await this.verifyPassword(credentials.password, user.passwordHash);
+      const passwordValid = this.verifyPassword(credentials.password, user.passwordHash);
 
       if (!passwordValid) {
         this.failedAttempts++;
@@ -137,7 +137,7 @@ export class AuthenticationService {
       user.lastLogin = new Date();
 
       // Create session
-      const session = await this.createSession(user.id, credentials.ipAddress, credentials.userAgent);
+      const session = this.createSession(user.id, credentials.ipAddress, credentials.userAgent);
 
       this.logger.log(`User authenticated successfully - ${user.username}`);
 
@@ -158,12 +158,12 @@ export class AuthenticationService {
   /**
    * Validate authentication token
    */
-  validateToken(token: string): Promise<{
+  validateToken(token: string): {
     valid: boolean;
     userId?: string;
     sessionId?: string;
     error?: string;
-  }> {
+  } {
     try {
       const sessionId = this.tokens.get(token);
       if (!sessionId) {
@@ -199,7 +199,7 @@ export class AuthenticationService {
   /**
    * Logout user by invalidating session
    */
-  logout(sessionId: string): Promise<boolean> {
+  logout(sessionId: string): boolean {
     try {
       return this.invalidateSession(sessionId);
     } catch (error) {
@@ -211,7 +211,7 @@ export class AuthenticationService {
   /**
    * Logout all sessions for a user
    */
-  logoutAllSessions(userId: string): Promise<number> {
+  logoutAllSessions(userId: string): number {
     try {
       let invalidatedCount = 0;
 
@@ -233,21 +233,21 @@ export class AuthenticationService {
   /**
    * Get user by ID
    */
-  getUserById(userId: string): Promise<User | null> {
+  getUserById(userId: string): User | null {
     return this.users.get(userId) ?? null;
   }
 
   /**
    * Get user by username or email
    */
-  getUserByUsernameOrEmail(usernameOrEmail: string): Promise<User | null> {
+  getUserByUsernameOrEmail(usernameOrEmail: string): User | null {
     return this.findUserByUsernameOrEmail(usernameOrEmail);
   }
 
   /**
    * Create new user
    */
-  async createUser(userData: { username: string; email: string; password: string; roles?: string[] }): Promise<User> {
+  createUser(userData: { username: string; email: string; password: string; roles?: string[] }): User {
     try {
       // Check if user already exists
       const existingUser = this.findUserByUsernameOrEmail(userData.username) ?? this.findUserByUsernameOrEmail(userData.email);
@@ -257,7 +257,7 @@ export class AuthenticationService {
       }
 
       const userId = this.generateUserId();
-      const passwordHash = await this.hashPassword(userData.password);
+      const passwordHash = this.hashPassword(userData.password);
 
       const user: User = {
         id: userId,
@@ -284,7 +284,7 @@ export class AuthenticationService {
   /**
    * Update user
    */
-  updateUser(userId: string, updates: Partial<User>): Promise<User | null> {
+  updateUser(userId: string, updates: Partial<User>): User | null {
     try {
       const user = this.users.get(userId);
       if (!user) {
@@ -304,7 +304,7 @@ export class AuthenticationService {
   /**
    * Delete user
    */
-  async deleteUser(userId: string): Promise<boolean> {
+  deleteUser(userId: string): boolean {
     try {
       const user = this.users.get(userId);
       if (!user) {
@@ -312,7 +312,7 @@ export class AuthenticationService {
       }
 
       // Invalidate all user sessions
-      await this.logoutAllSessions(userId);
+      this.logoutAllSessions(userId);
 
       // Delete user
       this.users.delete(userId);
@@ -328,7 +328,7 @@ export class AuthenticationService {
   /**
    * Get active sessions for a user
    */
-  getUserSessions(userId: string): Promise<Session[]> {
+  getUserSessions(userId: string): Session[] {
     const userSessions: Session[] = [];
 
     for (const session of this.sessions.values()) {
@@ -343,7 +343,7 @@ export class AuthenticationService {
   /**
    * Get authentication statistics
    */
-  getStatistics(): Promise<AuthenticationStatistics> {
+  getStatistics(): AuthenticationStatistics {
     try {
       const totalUsers = this.users.size;
       const activeUsers = Array.from(this.users.values()).filter((user) => user.isActive).length;
@@ -380,7 +380,7 @@ export class AuthenticationService {
   /**
    * Clean up expired sessions
    */
-  cleanupExpiredSessions(): Promise<number> {
+  cleanupExpiredSessions(): number {
     try {
       let cleanedCount = 0;
       const now = new Date();
@@ -406,7 +406,7 @@ export class AuthenticationService {
   /**
    * Create session for authenticated user
    */
-  private createSession(userId: string, ipAddress?: string, userAgent?: string): Promise<Session> {
+  private createSession(userId: string, ipAddress?: string, userAgent?: string): Session {
     const sessionId = this.generateSessionId();
     const token = this.generateToken();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
@@ -463,7 +463,7 @@ export class AuthenticationService {
   /**
    * Hash password (mock implementation)
    */
-  private hashPassword(password: string): Promise<string> {
+  private hashPassword(password: string): string {
     // In real implementation, use bcrypt or similar
     return `hashed_${password}_${Date.now()}`;
   }
@@ -471,7 +471,7 @@ export class AuthenticationService {
   /**
    * Verify password (mock implementation)
    */
-  private verifyPassword(password: string, hash: string): Promise<boolean> {
+  private verifyPassword(password: string, hash: string): boolean {
     // In real implementation, use bcrypt.compare or similar
     return hash.includes(password);
   }
@@ -500,10 +500,10 @@ export class AuthenticationService {
   /**
    * Create default users for testing
    */
-  private async createDefaultUsers(): Promise<void> {
+  private createDefaultUsers(): void {
     try {
       // Create admin user
-      await this.createUser({
+      this.createUser({
         username: 'admin',
         email: 'admin@example.com',
         password: 'admin123',
@@ -511,7 +511,7 @@ export class AuthenticationService {
       });
 
       // Create test user
-      await this.createUser({
+      this.createUser({
         username: 'testuser',
         email: 'test@example.com',
         password: 'test123',
@@ -527,14 +527,14 @@ export class AuthenticationService {
   /**
    * Check if authentication service is healthy
    */
-  isHealthy(): Promise<boolean> {
+  isHealthy(): boolean {
     return this.isInitialized;
   }
 
   /**
    * Shutdown authentication service
    */
-  shutdown(): Promise<void> {
+  shutdown(): void {
     try {
       // Clear all sessions
       this.sessions.clear();

@@ -18,19 +18,15 @@ import type { RuntimeCompilationResult } from './runtime.types';
 // CORE FOUNDATION TYPES (Most Frequently Used)
 // =============================================================================
 
-export { PluginSeverity, HealthStatusType, PluginStatus } from './common.types';
+export { PluginSeverity, HealthStatusType, PluginStatus, ModuleState, IsolationLevel, PluginRegistrySortBy, SortOrder } from './common.types';
 
 export type {
   EnvironmentType,
-  IsolationLevel,
   NetworkProtocol,
-  ModuleState,
   BuildTarget,
 
   // Registry enums
   PluginRegistryScope,
-  PluginRegistrySortBy,
-  SortOrder,
   PluginLicense,
 
   // Base interfaces and result types

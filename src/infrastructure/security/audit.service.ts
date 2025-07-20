@@ -20,12 +20,12 @@ export class AuditService {
   private readonly auditLog: SecurityEvent[] = [];
   private isInitialized = false;
 
-  initialize(): Promise<void> {
+  initialize(): void {
     this.isInitialized = true;
     this.logger.log('Audit service initialized');
   }
 
-  logSecurityEvent(event: { event: string; userId?: string; success: boolean; ipAddress?: string; userAgent?: string; details?: Record<string, any> }): Promise<void> {
+  logSecurityEvent(event: { event: string; userId?: string; success: boolean; ipAddress?: string; userAgent?: string; details?: Record<string, any> }): void {
     try {
       const securityEvent: SecurityEvent = {
         id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -46,7 +46,7 @@ export class AuditService {
     }
   }
 
-  getAuditLog(filter?: { userId?: string; event?: string; success?: boolean; limit?: number }): Promise<SecurityEvent[]> {
+  getAuditLog(filter?: { userId?: string; event?: string; success?: boolean; limit?: number }): SecurityEvent[] {
     let filteredLog = [...this.auditLog];
 
     if (filter) {
@@ -67,7 +67,12 @@ export class AuditService {
     return filteredLog.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }
 
-  getStatistics(): Promise<any> {
+  getStatistics(): {
+    totalEvents: number;
+    successfulEvents: number;
+    failedEvents: number;
+    recentEvents: SecurityEvent[];
+  } {
     const totalEvents = this.auditLog.length;
     const successfulEvents = this.auditLog.filter((e) => e.success).length;
     const failedEvents = totalEvents - successfulEvents;
@@ -80,11 +85,11 @@ export class AuditService {
     };
   }
 
-  isHealthy(): Promise<boolean> {
+  isHealthy(): boolean {
     return this.isInitialized;
   }
 
-  shutdown(): Promise<void> {
+  shutdown(): void {
     this.isInitialized = false;
     this.logger.log('Audit service shut down');
   }

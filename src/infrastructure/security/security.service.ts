@@ -97,7 +97,7 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
     const initPromises: Array<Promise<void>> = [];
 
     if (this.config.enableAuthentication) {
-      initPromises.push(this.authenticationService.initialize());
+      this.authenticationService.initialize();
     }
 
     if (this.config.enableAuthorization) {
@@ -109,7 +109,7 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (this.config.enableAuditing) {
-      initPromises.push(this.auditService.initialize());
+      this.auditService.initialize();
     }
 
     await Promise.allSettled(initPromises);
@@ -119,17 +119,17 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
   /**
    * Authenticate user with credentials
    */
-  async authenticate(credentials: { username: string; password: string; ipAddress?: string; userAgent?: string }): Promise<AuthenticationResult> {
+  authenticate(credentials: { username: string; password: string; ipAddress?: string; userAgent?: string }): AuthenticationResult {
     if (!this.config.enableAuthentication) {
       return { success: false, error: 'Authentication disabled' };
     }
 
     try {
-      const result = await this.authenticationService.authenticate(credentials);
+      const result = this.authenticationService.authenticate(credentials);
 
       // Audit authentication attempt
       if (this.config.enableAuditing) {
-        await this.auditService.logSecurityEvent({
+        this.auditService.logSecurityEvent({
           event: 'authentication_attempt',
           userId: credentials.username,
           success: result.success,
@@ -159,7 +159,7 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
 
       // Audit authorization attempt
       if (this.config.enableAuditing) {
-        await this.auditService.logSecurityEvent({
+        this.auditService.logSecurityEvent({
           event: 'authorization_check',
           userId: context.userId,
           success: result.authorized,
@@ -294,7 +294,7 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
 
       // Audit context creation
       if (this.config.enableAuditing) {
-        await this.auditService.logSecurityEvent({
+        this.auditService.logSecurityEvent({
           event: 'security_context_created',
           userId: params.userId,
           success: true,
@@ -350,13 +350,13 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
   /**
    * Log security event
    */
-  async logSecurityEvent(event: { event: string; userId?: string; success: boolean; ipAddress?: string; userAgent?: string; details?: Record<string, any> }): Promise<void> {
+  logSecurityEvent(event: { event: string; userId?: string; success: boolean; ipAddress?: string; userAgent?: string; details?: Record<string, any> }): void {
     if (!this.config.enableAuditing) {
       return;
     }
 
     try {
-      await this.auditService.logSecurityEvent(event);
+      this.auditService.logSecurityEvent(event);
     } catch (error) {
       this.logger.error('Failed to log security event:', error);
     }
@@ -368,9 +368,9 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
   async getSecurityStatistics(): Promise<SecurityStatistics> {
     try {
       const stats: SecurityStatistics = {
-        authentication: this.config.enableAuthentication ? await this.authenticationService.getStatistics() : null,
+        authentication: this.config.enableAuthentication ? this.authenticationService.getStatistics() : null,
         authorization: this.config.enableAuthorization ? await this.authorizationService.getStatistics() : null,
-        audit: this.config.enableAuditing ? await this.auditService.getStatistics() : null,
+        audit: this.config.enableAuditing ? this.auditService.getStatistics() : null,
         configuration: this.config,
       };
 
@@ -421,7 +421,7 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
       const healthChecks: Array<Promise<boolean>> = [];
 
       if (this.config.enableAuthentication) {
-        healthChecks.push(this.authenticationService.isHealthy());
+        this.authenticationService.isHealthy();
       }
 
       if (this.config.enableAuthorization) {
@@ -433,7 +433,7 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
       }
 
       if (this.config.enableAuditing) {
-        healthChecks.push(this.auditService.isHealthy());
+        this.auditService.isHealthy();
       }
 
       const results = await Promise.allSettled(healthChecks);
@@ -451,7 +451,7 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
     const shutdownPromises: Array<Promise<void>> = [];
 
     if (this.config.enableAuthentication) {
-      shutdownPromises.push(this.authenticationService.shutdown());
+      this.authenticationService.shutdown();
     }
 
     if (this.config.enableAuthorization) {
@@ -463,7 +463,7 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (this.config.enableAuditing) {
-      shutdownPromises.push(this.auditService.shutdown());
+      this.auditService.shutdown();
     }
 
     await Promise.allSettled(shutdownPromises);

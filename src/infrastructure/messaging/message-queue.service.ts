@@ -10,7 +10,7 @@ export class MessageQueueService {
   /**
    * Enqueue a job for background processing
    */
-  enqueue(queueName: string, job: QueueJob): Promise<string> {
+  enqueue(queueName: string, job: QueueJob): string {
     this.logger.debug(`Enqueuing job to queue: ${queueName}`);
     // Implementation would go here
     return `job-id-${Date.now()}`;
@@ -19,7 +19,7 @@ export class MessageQueueService {
   /**
    * Register a worker for processing jobs
    */
-  registerWorker(queueName: string, worker: JobWorker): Promise<void> {
+  registerWorker(queueName: string, _worker: JobWorker): void {
     this.logger.debug(`Registering worker for queue: ${queueName}`);
     // Implementation would go here
   }

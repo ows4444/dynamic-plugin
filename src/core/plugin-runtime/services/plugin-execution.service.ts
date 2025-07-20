@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { ExecutionResult, PluginError, PluginInstance, PluginInstanceMethods, PluginSeverity } from '@types';
+import { ExecutionResult, PluginError, PluginInstance, PluginInstanceMethods, PluginSeverity } from '@types';
 
 import { PluginErrorHandler } from '@/shared/utils/error-handler.util';
 import { PluginLoaderService } from './plugin-loader.service';

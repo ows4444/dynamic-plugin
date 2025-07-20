@@ -48,7 +48,7 @@ export class TracingService {
   /**
    * Initialize tracing service
    */
-  initialize(): Promise<void> {
+  initialize(): void {
     try {
       this.isInitialized = true;
       this.logger.log('Tracing service initialized');
@@ -61,7 +61,7 @@ export class TracingService {
   /**
    * Start a new trace
    */
-  startTrace(operationName: string, metadata?: Record<string, any>): Promise<string> {
+  startTrace(operationName: string, metadata?: Record<string, any>): string {
     if (!this.isInitialized) {
       this.logger.warn('Tracing service not initialized, skipping trace creation');
       return 'tracing-disabled';
@@ -99,7 +99,7 @@ export class TracingService {
   /**
    * Start a child span
    */
-  startChildSpan(parentTraceId: string, operationName: string, metadata?: Record<string, any>): Promise<string> {
+  startChildSpan(parentTraceId: string, operationName: string, metadata?: Record<string, any>): string {
     if (!this.isInitialized) {
       return 'tracing-disabled';
     }
@@ -143,7 +143,7 @@ export class TracingService {
   /**
    * End a trace
    */
-  endTrace(traceId: string, result?: any, error?: Error): Promise<void> {
+  endTrace(traceId: string, result?: any, error?: Error): void {
     if (!this.isInitialized || traceId === 'tracing-disabled' || traceId === 'trace-error') {
       return;
     }
@@ -268,7 +268,7 @@ export class TracingService {
   /**
    * Get tracing summary for dashboard
    */
-  getTracingSummary(): Promise<TracingSummary> {
+  getTracingSummary(): TracingSummary {
     try {
       const activeTraces = this.activeSpans.size;
       const totalTraces = this.totalTracesCreated;
@@ -344,7 +344,7 @@ export class TracingService {
   /**
    * Clear all trace data
    */
-  clearTraces(): Promise<void> {
+  clearTraces(): void {
     try {
       this.activeSpans.clear();
       this.completedSpans.clear();
@@ -403,7 +403,7 @@ export class TracingService {
   /**
    * Check if tracing service is healthy
    */
-  isHealthy(): Promise<boolean> {
+  isHealthy(): boolean {
     return this.isInitialized;
   }
 
