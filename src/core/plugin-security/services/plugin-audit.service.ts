@@ -195,6 +195,8 @@ export class PluginAuditService {
           currentCount: activity.metadata?.currentCount ?? 0,
           limit: activity.metadata?.limit ?? 0,
           timestamp: activity.timestamp,
+          windowStart: new Date(activity.timestamp.getTime() - 60000), // 1 minute window
+          windowEnd: activity.timestamp,
         }));
 
       // Generate plugin security info

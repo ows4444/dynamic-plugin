@@ -44,14 +44,14 @@ export class RedisCacheProvider implements CacheProvider {
       const entry = this.cache.get(key);
       if (!entry) {
         this.misses++;
-        return null;
+        return Promise.resolve(null);
       }
 
       // Check expiration
       if (entry.expires && Date.now() > entry.expires) {
         this.cache.delete(key);
         this.misses++;
-        return null;
+        return Promise.resolve(null);
       }
 
       this.hits++;
@@ -60,11 +60,11 @@ export class RedisCacheProvider implements CacheProvider {
       const value = this.deserializeValue(entry.value);
       this.logger.debug(`Redis cache hit for key: ${key}`);
 
-      return value;
+      return Promise.resolve(value);
     } catch (error) {
       this.logger.error(`Redis cache get error for key ${key}:`, error);
       this.misses++;
-      return null;
+      return Promise.resolve(null);
     }
   }
 
@@ -144,25 +144,25 @@ export class RedisCacheProvider implements CacheProvider {
    */
   has(key: string): Promise<boolean> {
     if (!this.connected) {
-      return false;
+      return Promise.resolve(false);
     }
 
     try {
       const entry = this.cache.get(key);
       if (!entry) {
-        return false;
+        return Promise.resolve(false);
       }
 
       // Check expiration
       if (entry.expires && Date.now() > entry.expires) {
         this.cache.delete(key);
-        return false;
+        return Promise.resolve(false);
       }
 
-      return true;
+      return Promise.resolve(true);
     } catch (error) {
       this.logger.error(`Redis cache exists check error for key ${key}:`, error);
-      return false;
+      return Promise.resolve(false);
     }
   }
 
@@ -279,13 +279,13 @@ export class RedisCacheProvider implements CacheProvider {
    */
   async expire(key: string, ttl: number): Promise<boolean> {
     if (!this.connected) {
-      return false;
+      return Promise.resolve(false);
     }
 
     try {
       const entry = this.cache.get(key);
       if (!entry) {
-        return false;
+        return Promise.resolve(false);
       }
 
       // Update expiration time
@@ -295,10 +295,10 @@ export class RedisCacheProvider implements CacheProvider {
       // In real implementation, use Redis EXPIRE command
       await this.expireInRedis(key, ttl);
 
-      return true;
+      return Promise.resolve(true);
     } catch (error) {
       this.logger.error(`Redis cache expire error for key ${key}:`, error);
-      return false;
+      return Promise.resolve(false);
     }
   }
 

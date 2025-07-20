@@ -293,7 +293,7 @@ export class PluginStoreService {
     }
 
     if (query.category) {
-      filtered = filtered.filter((plugin) => plugin.categories?.includes(query.category));
+      filtered = filtered.filter((plugin) => plugin.categories?.includes(query.category!));
     }
 
     if (query.author) {
@@ -363,7 +363,7 @@ export class PluginStoreService {
         pluginDependencies: plugin.pluginDependencies,
         engines: plugin.engines,
         capabilities: plugin.capabilities,
-        permissions: plugin.permissions,
+        permissions: Object.values(plugin.permissions || {}).flat(),
         hooks: {},
         configuration: {},
         metadata: {

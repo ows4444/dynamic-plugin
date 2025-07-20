@@ -855,7 +855,8 @@ describe('${this.toPascalCase(config.pluginName)}Service', () => {
   }
 
   private async generateReadme(pluginPath: string, config: PluginDocumentationConfig): Promise<string> {
-    const readmePath = path.join(config.outputPath, 'README.md');
+    const outputPath = config.outputPath || path.join(pluginPath, 'docs');
+    const readmePath = path.join(outputPath, 'README.md');
     const content = '# Plugin Documentation\n\nTODO: Plugin overview and usage';
     await fs.writeFile(readmePath, content);
     return readmePath;

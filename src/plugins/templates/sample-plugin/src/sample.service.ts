@@ -189,7 +189,7 @@ export class SampleService implements PluginServiceInterface {
       requests: this.requestCount,
       errors: this.errorCount,
       uptime,
-      executionTime: Date.now() - this.startTime,
+      executionTime: Date.now() - this.startTime.getTime(),
       // Additional custom metrics
       dataStoreSize: this.dataStore.size,
       maxItems: this.maxItems,

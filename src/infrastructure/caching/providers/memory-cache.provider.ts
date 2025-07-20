@@ -36,7 +36,7 @@ export class MemoryCacheProvider {
   /**
    * Get value from memory cache
    */
-  get<T>(key: string): T | null {
+  async get<T>(key: string): Promise<T | null> {
     const entry = this.cache.get(key);
 
     if (!entry) {
@@ -57,7 +57,7 @@ export class MemoryCacheProvider {
   /**
    * Set value in memory cache
    */
-  set(key: string, value: unknown, ttl?: number): void {
+  async set(key: string, value: unknown, ttl?: number): Promise<void> {
     const expiresAt = ttl ? Date.now() + ttl * 1000 : undefined;
 
     this.cache.set(key, {
@@ -72,7 +72,7 @@ export class MemoryCacheProvider {
   /**
    * Delete value from memory cache
    */
-  del(key: string): void {
+  async del(key: string): Promise<void> {
     if (this.cache.delete(key)) {
       this.stats.deletes++;
     }
@@ -81,7 +81,7 @@ export class MemoryCacheProvider {
   /**
    * Clear all cache
    */
-  clear(): void {
+  async clear(): Promise<void> {
     this.cache.clear();
     this.resetStats();
   }
@@ -89,7 +89,7 @@ export class MemoryCacheProvider {
   /**
    * Check if key exists
    */
-  has(key: string): boolean {
+  async has(key: string): Promise<boolean> {
     const entry = this.cache.get(key);
     if (!entry) {
       return false;
@@ -106,7 +106,7 @@ export class MemoryCacheProvider {
   /**
    * Get cache statistics
    */
-  getStats(): MemoryCacheStats {
+  async getStats(): Promise<MemoryCacheStats> {
     return {
       keys: this.cache.size,
       memoryUsage: this.calculateMemoryUsage(),
@@ -118,7 +118,7 @@ export class MemoryCacheProvider {
   /**
    * Clear cache entries by prefix
    */
-  clearByPrefix(prefix: string): void {
+  async clearByPrefix(prefix: string): Promise<void> {
     const keysToDelete: string[] = [];
 
     for (const key of this.cache.keys()) {
