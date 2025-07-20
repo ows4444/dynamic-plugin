@@ -12,7 +12,7 @@ Enterprise-grade microservice plugin system implementing **Clean Architecture**,
 
 ---
 
-```
+``` 
 nizaami-plugins-enterprise/
 ├── apps/                                                   # Microservice Applications
 │   ├── api-gateway/                                        # 🌐 API Gateway & Load Balancer

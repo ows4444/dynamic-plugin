@@ -70,7 +70,13 @@
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/apps/"
-    ]
+      "<rootDir>/apps/",
+      "<rootDir>/libs/"
+    ],
+    "moduleNameMapper": {
+      "^@app/shared/common(|/.*)$": "<rootDir>/libs/shared/common/src/$1",
+      "^@app/shared/plugin-sdk(|/.*)$": "<rootDir>/libs/shared/plugin-sdk/src/$1",
+      "^@app/shared/plugin-types(|/.*)$": "<rootDir>/libs/shared/plugin-types/src/$1"
+    }
   }
 }

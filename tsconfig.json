@@ -17,6 +17,25 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "paths": {}
+    "paths": {
+      "@app/shared/common": [
+        "libs/shared/common/src"
+      ],
+      "@app/shared/common/*": [
+        "libs/shared/common/src/*"
+      ],
+      "@app/shared/plugin-sdk": [
+        "libs/shared/plugin-sdk/src"
+      ],
+      "@app/shared/plugin-sdk/*": [
+        "libs/shared/plugin-sdk/src/*"
+      ],
+      "@app/shared/plugin-types": [
+        "libs/shared/plugin-types/src"
+      ],
+      "@app/shared/plugin-types/*": [
+        "libs/shared/plugin-types/src/*"
+      ]
+    }
   }
 }

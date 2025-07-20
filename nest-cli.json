@@ -18,6 +18,60 @@
       "compilerOptions": {
         "tsConfigPath": "apps/plugin-host/tsconfig.app.json"
       }
+    },
+    "plugin-registry": {
+      "type": "application",
+      "root": "apps/plugin-registry",
+      "entryFile": "main",
+      "sourceRoot": "apps/plugin-registry/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/plugin-registry/tsconfig.app.json"
+      }
+    },
+    "plugin-template": {
+      "type": "application",
+      "root": "apps/plugin-template",
+      "entryFile": "main",
+      "sourceRoot": "apps/plugin-template/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/plugin-template/tsconfig.app.json"
+      }
+    },
+    "shared/common": {
+      "type": "library",
+      "root": "libs/shared/common",
+      "entryFile": "index",
+      "sourceRoot": "libs/shared/common/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/shared/common/tsconfig.lib.json"
+      }
+    },
+    "shared/plugin-sdk": {
+      "type": "library",
+      "root": "libs/shared/plugin-sdk",
+      "entryFile": "index",
+      "sourceRoot": "libs/shared/plugin-sdk/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/shared/plugin-sdk/tsconfig.lib.json"
+      }
+    },
+    "shared/plugin-types": {
+      "type": "library",
+      "root": "libs/shared/plugin-types",
+      "entryFile": "index",
+      "sourceRoot": "libs/shared/plugin-types/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/shared/plugin-types/tsconfig.lib.json"
+      }
+    },
+    "tools/plugin-builder": {
+      "type": "application",
+      "root": "apps/tools/plugin-builder",
+      "entryFile": "main",
+      "sourceRoot": "apps/tools/plugin-builder/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/tools/plugin-builder/tsconfig.app.json"
+      }
     }
   }
 }
