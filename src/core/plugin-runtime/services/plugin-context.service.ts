@@ -10,6 +10,7 @@ import {
   FilesystemPermissions,
   IsolationLevel,
   NetworkPermissions,
+  NetworkProtocol,
   PluginConfig,
   PluginContext,
   PluginEvent,
@@ -191,9 +192,11 @@ export class PluginContextService {
 
   private determineIsolationLevel(plugin: PluginMetadata): IsolationLevel {
     // Basic isolation level determination based on plugin capabilities and permissions
-    const hasNetworkAccess = plugin.permissions.network && plugin.permissions.network.length > 0;
-    const hasFileSystemAccess = plugin.permissions.filesystem && plugin.permissions.filesystem.length > 0;
-    const hasDatabaseAccess = plugin.permissions.database && plugin.permissions.database.length > 0;
+    const permissions = Array.isArray(plugin.permissions) ? { general: plugin.permissions } : (plugin.permissions as any);
+
+    const hasNetworkAccess = permissions.network && permissions.network.length > 0;
+    const hasFileSystemAccess = permissions.filesystem && permissions.filesystem.length > 0;
+    const hasDatabaseAccess = permissions.database && permissions.database.length > 0;
 
     if (hasNetworkAccess ?? hasFileSystemAccess ?? hasDatabaseAccess) {
       return IsolationLevel.BASIC;
@@ -230,8 +233,8 @@ export class PluginContextService {
 
     const network: NetworkPermissions = {
       outbound: [
-        { protocol: 'https', host: '*', port: 443 },
-        { protocol: 'http', host: 'localhost', port: [3000, 8000, 8080] },
+        { protocol: NetworkProtocol.HTTPS, host: '*', port: 443, allowed: true },
+        { protocol: NetworkProtocol.HTTP, host: 'localhost', port: [3000, 8000, 8080], allowed: true },
       ],
       inbound: [],
     };
@@ -243,8 +246,10 @@ export class PluginContextService {
       network: true,
     };
 
+    const pluginPermissions = Array.isArray(plugin.permissions) ? { general: plugin.permissions } : (plugin.permissions as any);
+
     const database: DatabasePermissions = {
-      read: plugin.permissions.database ?? [],
+      read: pluginPermissions.database ?? [],
       write: [],
       schema: [],
     };

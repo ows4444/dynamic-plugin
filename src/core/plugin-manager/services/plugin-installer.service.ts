@@ -297,17 +297,10 @@ export class PluginInstallerService {
    */
   private createPluginMetadata(manifest: PluginManifest, pluginId: string): PluginMetadata {
     return {
+      // Required properties from PluginMetadata interface
       id: pluginId,
       name: manifest.name,
-      version: manifest.version,
-      description: manifest.description,
-      author: manifest.author,
-      license: manifest.license,
       status: PluginStatus.INSTALLED,
-      capabilities: manifest.capabilities,
-      permissions: manifest.permissions,
-      dependencies: manifest.dependencies,
-      pluginDependencies: manifest.pluginDependencies,
       loadTime: 0,
       memory: 0,
       cpu: 0,
@@ -316,7 +309,42 @@ export class PluginInstallerService {
       engines: manifest.engines,
       hooks: manifest.hooks,
       configuration: manifest.configuration,
-      metadata: manifest.metadata,
+      runtimeMetadata: {
+        category: (manifest.metadata as any)?.category || 'general',
+        tags: (manifest.metadata as any)?.tags || [],
+        documentation: (manifest.metadata as any)?.documentation,
+        repository: (manifest.metadata as any)?.repository,
+      },
+      // Properties from BasePluginMetadata
+      pluginId: pluginId,
+      version: manifest.version,
+      category: (manifest.metadata as any)?.category || 'general',
+      keywords: (manifest.metadata as any)?.keywords || [],
+      homepage: (manifest.metadata as any)?.homepage,
+      repository: (manifest.metadata as any)?.repository,
+      bugs: (manifest.metadata as any)?.bugs,
+      license: manifest.license,
+      capabilities: manifest.capabilities || [],
+      permissions: Array.isArray(manifest.permissions) ? manifest.permissions : Object.keys(manifest.permissions),
+      dependencies: manifest.dependencies || {},
+      peerDependencies: (manifest as any).peerDependencies || {},
+      devDependencies: (manifest as any).devDependencies || {},
+      size: (manifest.metadata as any)?.size,
+      downloadCount: (manifest.metadata as any)?.downloadCount,
+      rating: (manifest.metadata as any)?.rating,
+      verified: (manifest.metadata as any)?.verified || false,
+      featured: (manifest.metadata as any)?.featured || false,
+      deprecated: (manifest.metadata as any)?.deprecated || false,
+      createdBy: (manifest.metadata as any)?.createdBy,
+      updatedBy: (manifest.metadata as any)?.updatedBy,
+      author: manifest.author,
+      maintainers: (manifest.metadata as any)?.maintainers || [],
+      previousVersion: (manifest.metadata as any)?.previousVersion,
+      versionChanges: (manifest.metadata as any)?.versionChanges || [],
+      security: (manifest.metadata as any)?.security || {
+        signed: false,
+        verified: false,
+      },
     };
   }
 

@@ -111,15 +111,23 @@ export class PluginMetadataRepository {
         id: plugin.id,
         name: plugin.name,
         version: plugin.version,
-        description: plugin.description,
-        author: plugin.author,
+        description: plugin.description || '',
+        author: plugin.author || '',
         license: plugin.license,
-        category: plugin.metadata.category,
-        tags: plugin.metadata.tags,
+        category: (plugin.metadata as any)?.category || 'general',
+        tags: (plugin.metadata as any)?.tags || [],
         capabilities: plugin.capabilities,
-        permissions: plugin.permissions,
-        dependencies: plugin.dependencies,
-        pluginDependencies: plugin.pluginDependencies,
+        permissions: typeof plugin.permissions === 'object' && !Array.isArray(plugin.permissions) 
+          ? plugin.permissions 
+          : { general: Array.isArray(plugin.permissions) ? plugin.permissions : [] },
+        dependencies: plugin.dependencies || {},
+        pluginDependencies: Array.isArray(plugin.pluginDependencies) 
+          ? plugin.pluginDependencies 
+          : Object.entries(plugin.pluginDependencies || {}).map(([name, version]) => ({
+              name,
+              version: typeof version === 'object' ? (version as any).version : version,
+              required: typeof version === 'object' ? (version as any).required !== false : true,
+            })),
         engines: plugin.engines,
         status: {
           installed: true,
@@ -133,8 +141,8 @@ export class PluginMetadataRepository {
         reviews: 0,
         lastUpdated: new Date(),
         createdAt: new Date(),
-        repository: plugin.metadata.repository,
-        documentation: plugin.metadata.documentation,
+        repository: (plugin.metadata as any)?.repository || '',
+        documentation: (plugin.metadata as any)?.documentation || '',
         size: 0,
         checksum: '',
         verified: false,
@@ -143,14 +151,14 @@ export class PluginMetadataRepository {
       this.registry.plugins.set(plugin.id, entry);
 
       // Update category mapping
-      const category = plugin.metadata.category;
+      const category = (plugin.metadata as any)?.category || 'general';
       if (!this.registry.categories.has(category)) {
         this.registry.categories.set(category, []);
       }
       this.registry.categories.get(category)?.push(plugin.id);
 
       // Update dependency mapping
-      const deps = plugin.dependencies.map((dep) => dep.name);
+      const deps = plugin.dependencies ? Object.keys(plugin.dependencies) : [];
       this.registry.dependencies.set(plugin.id, deps);
 
       await this.saveRegistryToDisk();

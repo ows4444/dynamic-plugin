@@ -63,18 +63,12 @@ export class PluginManagementController {
       }
 
       // Create runtime context first
+      const pluginId = loadPluginDto.pluginId;
       const pluginMetadata: PluginMetadata = {
-        id: loadPluginDto.pluginId,
-        name: loadPluginDto.pluginId.split('@')[0] || 'unknown',
-        version: loadPluginDto.pluginId.split('@')[1] || '1.0.0',
-        description: 'Runtime loaded plugin',
-        author: 'system',
-        license: 'unknown',
+        // Required properties from PluginMetadata interface
+        id: pluginId,
+        name: pluginId.split('@')[0] || 'unknown',
         status: PluginStatus.LOADING,
-        capabilities: [],
-        permissions: {},
-        dependencies: {},
-        pluginDependencies: [],
         loadTime: 0,
         memory: 0,
         cpu: 0,
@@ -82,7 +76,31 @@ export class PluginManagementController {
         engines: { node: process.version, nestjs: '11.0.0' },
         hooks: {},
         configuration: {},
-        metadata: { category: 'runtime', tags: ['runtime-loaded'] },
+        runtimeMetadata: { 
+          category: 'runtime', 
+          tags: ['runtime-loaded'],
+        },
+        // Properties from BasePluginMetadata
+        pluginId: pluginId,
+        version: pluginId.split('@')[1] || '1.0.0',
+        category: 'runtime',
+        keywords: ['runtime'],
+        license: 'unknown',
+        capabilities: [],
+        permissions: [],
+        dependencies: {},
+        peerDependencies: {},
+        devDependencies: {},
+        verified: false,
+        featured: false,
+        deprecated: false,
+        author: 'system',
+        maintainers: [],
+        versionChanges: [],
+        security: {
+          signed: false,
+          verified: false,
+        },
       };
 
       const runtimeContext = this.contextService.createRuntimeContext(pluginMetadata);

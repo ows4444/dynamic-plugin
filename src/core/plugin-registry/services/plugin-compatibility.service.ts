@@ -32,10 +32,18 @@ export class PluginCompatibilityService {
       this.checkNestJSCompatibility(entry.engines.nestjs, reasons, suggestions);
 
       // Check npm dependencies
-      this.checkNpmDependencies(entry.dependencies, reasons, suggestions);
+      const npmDeps = Object.entries(entry.dependencies || {}).map(([name, version]) => ({
+        name,
+        version,
+        required: true,
+      }));
+      this.checkNpmDependencies(npmDeps, reasons, suggestions);
 
       // Check plugin dependencies
-      this.checkPluginDependencies(entry.pluginDependencies, reasons, suggestions);
+      const pluginDeps = Array.isArray(entry.pluginDependencies) 
+        ? entry.pluginDependencies.reduce((acc, dep) => ({ ...acc, [dep.name]: dep.version }), {})
+        : entry.pluginDependencies || {};
+      this.checkPluginDependencies(pluginDeps, reasons, suggestions);
 
       // Check engine compatibility
       this.checkEngineCompatibility(entry.engines, reasons, suggestions);
