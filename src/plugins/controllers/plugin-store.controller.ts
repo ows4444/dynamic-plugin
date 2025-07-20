@@ -28,14 +28,14 @@ export class PluginStoreController {
   @Get('featured')
   getFeaturedPlugins(@Query('limit') limit?: number): Promise<PluginStoreResult> {
     try {
-      return Promise.resolve({ 
-        plugins: this.pluginStoreService.getFeaturedPlugins(limit), 
-        total: 10, 
+      return Promise.resolve({
+        plugins: this.pluginStoreService.getFeaturedPlugins(limit),
+        total: 10,
         page: 1,
         limit: limit || 10,
         totalPages: 1,
         hasMore: false,
-        stores: []
+        stores: [],
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -49,7 +49,7 @@ export class PluginStoreController {
   @Get('categories')
   getCategories(): Promise<string[]> {
     try {
-      return Promise.resolve(this.pluginStoreService.getCategories().map(c => c.name));
+      return Promise.resolve(this.pluginStoreService.getCategories().map((c) => c.name));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to get categories: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);

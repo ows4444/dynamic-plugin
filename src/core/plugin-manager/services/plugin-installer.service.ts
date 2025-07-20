@@ -316,7 +316,7 @@ export class PluginInstallerService {
         repository: (manifest.metadata as any)?.repository,
       },
       // Properties from BasePluginMetadata
-      pluginId: pluginId,
+      pluginId,
       version: manifest.version,
       category: (manifest.metadata as any)?.category || 'general',
       keywords: (manifest.metadata as any)?.keywords || [],

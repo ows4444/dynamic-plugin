@@ -117,16 +117,14 @@ export class PluginMetadataRepository {
         category: (plugin.metadata as any)?.category || 'general',
         tags: (plugin.metadata as any)?.tags || [],
         capabilities: plugin.capabilities,
-        permissions: typeof plugin.permissions === 'object' && !Array.isArray(plugin.permissions) 
-          ? plugin.permissions 
-          : { general: Array.isArray(plugin.permissions) ? plugin.permissions : [] },
+        permissions: typeof plugin.permissions === 'object' && !Array.isArray(plugin.permissions) ? plugin.permissions : { general: Array.isArray(plugin.permissions) ? plugin.permissions : [] },
         dependencies: plugin.dependencies || {},
-        pluginDependencies: Array.isArray(plugin.pluginDependencies) 
-          ? plugin.pluginDependencies 
+        pluginDependencies: Array.isArray(plugin.pluginDependencies)
+          ? plugin.pluginDependencies
           : Object.entries(plugin.pluginDependencies || {}).map(([name, version]) => ({
               name,
-              version: typeof version === 'object' ? (version as any).version : version,
-              required: typeof version === 'object' ? (version as any).required !== false : true,
+              version: typeof version === 'object' ? version.version : version,
+              required: typeof version === 'object' ? version.required !== false : true,
             })),
         engines: plugin.engines,
         status: {

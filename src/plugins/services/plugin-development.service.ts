@@ -884,7 +884,7 @@ describe('${this.toPascalCase(config.pluginName)}Service', () => {
     return {
       packagePath: `/packages/${pluginId}.tar.gz`,
       size: 1024 * 1024, // 1MB
-      checksum: 'mock-checksum-' + Date.now(),
+      checksum: `mock-checksum-${Date.now()}`,
     };
   }
 
@@ -919,10 +919,7 @@ describe('${this.toPascalCase(config.pluginName)}Service', () => {
   generateComponent(pluginId: string, type: string, options?: any): { generatedFiles: string[] } {
     this.logger.log(`Generating ${type} component for plugin: ${pluginId}`);
     return {
-      generatedFiles: [
-        `src/components/${type}.component.ts`,
-        `src/components/${type}.component.spec.ts`,
-      ],
+      generatedFiles: [`src/components/${type}.component.ts`, `src/components/${type}.component.spec.ts`],
     };
   }
 }

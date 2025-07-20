@@ -40,9 +40,7 @@ export class PluginCompatibilityService {
       this.checkNpmDependencies(npmDeps, reasons, suggestions);
 
       // Check plugin dependencies
-      const pluginDeps = Array.isArray(entry.pluginDependencies) 
-        ? entry.pluginDependencies.reduce((acc, dep) => ({ ...acc, [dep.name]: dep.version }), {})
-        : entry.pluginDependencies || {};
+      const pluginDeps = Array.isArray(entry.pluginDependencies) ? entry.pluginDependencies.reduce((acc, dep) => ({ ...acc, [dep.name]: dep.version }), {}) : entry.pluginDependencies || {};
       this.checkPluginDependencies(pluginDeps, reasons, suggestions);
 
       // Check engine compatibility

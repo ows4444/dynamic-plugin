@@ -76,12 +76,12 @@ export class PluginManagementController {
         engines: { node: process.version, nestjs: '11.0.0' },
         hooks: {},
         configuration: {},
-        runtimeMetadata: { 
-          category: 'runtime', 
+        runtimeMetadata: {
+          category: 'runtime',
           tags: ['runtime-loaded'],
         },
         // Properties from BasePluginMetadata
-        pluginId: pluginId,
+        pluginId,
         version: pluginId.split('@')[1] || '1.0.0',
         category: 'runtime',
         keywords: ['runtime'],
