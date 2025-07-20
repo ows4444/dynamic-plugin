@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { PluginRegistryService } from '@/core/plugin-registry/plugin-registry.service';
-import type { InstallationResult, PluginManifest, PluginMetadata, PluginSource, PluginStatus } from '@types';
+import { InstallationResult, PluginManifest, PluginMetadata, PluginSource, PluginStatus } from '@types';
 
 /**
  * Service responsible for plugin installation operations
