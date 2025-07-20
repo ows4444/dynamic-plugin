@@ -2,7 +2,8 @@ import type { ModuleMetadata } from '@nestjs/common';
 import type { PluginContext } from './plugin.interface';
 
 // Re-export plugin types to maintain compatibility
-export { IPlugin, PluginContext, PluginConfigSchema, PluginConfigProperty, HealthStatus, PluginMetrics } from '@types';
+export { IPlugin, PluginContext, HealthStatus, PluginMetrics } from '@types';
+export type { PluginConfigSchema, PluginConfigProperty } from '../../types/plugin.types';
 
 export interface PluginModuleMetadata extends ModuleMetadata {
   /**

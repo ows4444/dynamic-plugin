@@ -60,6 +60,12 @@ export class SampleService implements PluginServiceInterface {
         id: `response-${Date.now()}`,
         type: MessageType.EVENT,
         source: 'sample-plugin',
+        eventType: 'sample.data.processed',
+        payload: {
+          originalData: data,
+          processedAt: new Date(),
+          requestCount: this.requestCount,
+        },
         data: {
           originalData: data,
           processedAt: new Date(),
@@ -128,8 +134,10 @@ export class SampleService implements PluginServiceInterface {
       if (this.context.eventBus) {
         this.context.eventBus.publish({
           id: `data-created-${Date.now()}`,
-          type: 'sample.data.created',
+          type: MessageType.EVENT,
           source: 'sample-plugin',
+          eventType: 'sample.data.created',
+          payload: { id, size: this.dataStore.size },
           data: { id, size: this.dataStore.size },
           timestamp: new Date(),
         });
@@ -160,8 +168,10 @@ export class SampleService implements PluginServiceInterface {
     if (deleted && this.context.eventBus) {
       this.context.eventBus.publish({
         id: `data-deleted-${Date.now()}`,
-        type: 'sample.data.deleted',
+        type: MessageType.EVENT,
         source: 'sample-plugin',
+        eventType: 'sample.data.deleted',
+        payload: { id, size: this.dataStore.size },
         data: { id, size: this.dataStore.size },
         timestamp: new Date(),
       });
@@ -179,6 +189,7 @@ export class SampleService implements PluginServiceInterface {
       requests: this.requestCount,
       errors: this.errorCount,
       uptime,
+      executionTime: Date.now() - this.startTime,
       // Additional custom metrics
       dataStoreSize: this.dataStore.size,
       maxItems: this.maxItems,
