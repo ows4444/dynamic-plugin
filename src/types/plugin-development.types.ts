@@ -4,6 +4,7 @@
  */
 
 import type { BaseCompilationCache, BaseCompilationDiagnostic, BaseCompilationResult, BaseCompiledAsset } from './common.types';
+import type { CompilationMetadata, DevelopmentMetadata } from './metadata.types';
 
 export interface PluginTemplate {
   id: string;
@@ -187,11 +188,7 @@ export interface PluginBuildConfig {
 export interface CompilationCache extends BaseCompilationCache {
   sourceMapPath?: string;
   outputSize: number;
-  metadata?: {
-    compilerVersion: string;
-    options: CompilationOptions;
-    environmentHash: string;
-  };
+  metadata?: CompilationMetadata;
 }
 
 export interface PluginDevelopmentMetrics {
@@ -232,7 +229,7 @@ export interface GeneratorOptions {
   addDocs?: boolean;
   typescript?: boolean;
   decorators?: string[];
-  metadata?: Record<string, unknown>;
+  metadata?: DevelopmentMetadata;
 }
 
 export interface PluginCliCommand {

@@ -3,6 +3,7 @@
  */
 
 import type { EnvironmentType, IsolationLevel, NetworkProtocol, ResourceLimits } from './common.types';
+import type { ConfigurationMetadata } from './metadata.types';
 
 // Base Configuration Types
 export enum ConfigurationScope {
@@ -33,20 +34,7 @@ export enum ConfigurationSource {
   ETCD = 'etcd',
 }
 
-export interface ConfigurationMetadata {
-  source: ConfigurationSource;
-  format: ConfigurationFormat;
-  scope: ConfigurationScope;
-  priority: number;
-  readonly: boolean;
-  encrypted: boolean;
-  sensitive: boolean;
-  version: string;
-  lastModified: Date;
-  modifiedBy?: string;
-  description?: string;
-  tags?: string[];
-}
+// ConfigurationMetadata is imported from metadata.types.ts
 
 export interface ConfigurationEntry {
   key: string;

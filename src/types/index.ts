@@ -9,6 +9,7 @@ import type { BaseCompilationResult, InstallationResult, LoadResult, PluginStatu
 import type { MonitoringConfiguration, PluginSystemConfiguration, SecurityConfiguration, SystemConfiguration } from './config.types';
 import type { BaseEvent, BusinessEvent, PerformanceEvent, PluginLifecycleEvent, SecurityEvent, SystemEvent } from './events.types';
 import type { InteropCustomEvent, InteropSystemEvent, Message, PluginEvent, PluginEventBus, RpcRequest, RpcResponse } from './interop.types';
+// Metadata types will be exported separately below
 import type { CompilationResult } from './plugin-development.types';
 import type { PluginContext, PluginInstance, PluginMetadata } from './plugin.types';
 import type { RuntimeCompilationResult } from './runtime.types';
@@ -494,7 +495,6 @@ export type {
   ConfigurationFormat,
   ConfigurationSource,
   ConfigurationValueType,
-  ConfigurationMetadata,
   ConfigurationEntry,
   ConfigurationValidation,
 
@@ -584,6 +584,47 @@ export type {
 
 // Type guards from config
 export { isConfigurationEntry, isSystemConfiguration, isPluginConfiguration } from './config.types';
+
+// =============================================================================
+// METADATA SYSTEM
+// =============================================================================
+
+export type {
+  // Base metadata interfaces
+  BaseMetadata,
+  VersionedMetadata,
+  TimestampedMetadata,
+  AuthoredMetadata,
+
+  // Domain-specific metadata
+  ConfigurationMetadata as MetadataConfigurationMetadata,
+  PluginMetadata as MetadataPluginMetadata,
+  EventMetadata as MetadataEventMetadata,
+  SecurityMetadata,
+  ActivityMetadata as MetadataActivityMetadata,
+  MessageMetadata as MetadataMessageMetadata,
+  ResourceMetadata,
+  StoreMetadata,
+  CompilationMetadata,
+  RegistryMetadata,
+  RuntimeMetadata,
+  DevelopmentMetadata,
+  AnalyticsMetadata,
+  MonitoringMetadata,
+  BackupMetadata,
+  AuditMetadata,
+  TestMetadata,
+  DocumentationMetadata,
+
+  // Metadata utility types
+  MetadataWithDefaults,
+  OptionalMetadata,
+  MetadataUpdate,
+  MetadataValidation,
+} from './metadata.types';
+
+// Type guards from metadata
+export { isBaseMetadata, isVersionedMetadata, isTimestampedMetadata, isAuthoredMetadata, isPluginMetadata, isEventMetadata, isSecurityMetadata } from './metadata.types';
 
 // =============================================================================
 // COMMONLY USED TYPE COMBINATIONS

@@ -4,6 +4,7 @@
 
 import type { ActivityMetadata, PluginActivityAction, PluginActivityResult, PluginSeverity } from './common.types';
 import type { LatencyMetrics } from './interop.types';
+import type { EventMetadata as BaseEventMetadata } from './metadata.types';
 
 // Base Event Types
 export enum EventCategory {
@@ -45,22 +46,9 @@ export interface BaseEvent {
   metadata?: EventMetadata;
 }
 
-export interface EventMetadata {
-  correlationId?: string;
-  causationId?: string;
-  userId?: string;
-  sessionId?: string;
-  traceId?: string;
-  spanId?: string;
-  retryCount?: number;
-  maxRetries?: number;
-  ttl?: number;
-  encrypted?: boolean;
-  compressed?: boolean;
-  version?: string;
-  schema?: string;
-  tags?: string[];
-  [key: string]: unknown;
+// EventMetadata extends BaseEventMetadata for events
+export interface EventMetadata extends BaseEventMetadata {
+  // Additional event-specific metadata fields if needed
 }
 
 // Plugin Lifecycle Events
@@ -99,7 +87,7 @@ export interface PluginEventError {
   stack?: string;
   severity: PluginSeverity;
   recoverable: boolean;
-  context?: Record<string, unknown>;
+  context?: EventMetadata;
 }
 
 // System Events
@@ -121,7 +109,7 @@ export interface SystemEvent extends BaseEvent {
   component?: string;
   version?: string;
   environment?: string;
-  details?: Record<string, unknown>;
+  details?: EventMetadata;
 }
 
 // Security Events
@@ -217,7 +205,7 @@ export interface EventHandlerResult {
   error?: Error;
   retry?: boolean;
   retryDelay?: number;
-  metadata?: Record<string, unknown>;
+  metadata?: EventMetadata;
 }
 
 export interface EventHandlerRegistration {
@@ -241,7 +229,7 @@ export interface EventHandlerOptions {
   filter?: EventFilter;
   rateLimit?: RateLimitOptions;
   timeout?: number;
-  metadata?: Record<string, unknown>;
+  metadata?: EventMetadata;
 }
 
 export interface RetryOptions {
@@ -263,7 +251,7 @@ export interface EventFilter {
   source?: string | string[];
   category?: EventCategory | EventCategory[];
   priority?: EventPriority | EventPriority[];
-  metadata?: Record<string, unknown>;
+  metadata?: EventMetadata;
   customFilter?: (event: BaseEvent) => boolean;
 }
 
@@ -273,7 +261,7 @@ export interface EventStream {
   name: string;
   description?: string;
   events: BaseEvent[];
-  metadata?: Record<string, unknown>;
+  metadata?: EventMetadata;
   createdAt: Date;
   lastEventAt?: Date;
   eventCount: number;
@@ -295,7 +283,7 @@ export interface EventSnapshot {
   aggregateId: string;
   version: number;
   data: unknown;
-  metadata?: Record<string, unknown>;
+  metadata?: EventMetadata;
   createdAt: Date;
 }
 
@@ -323,7 +311,7 @@ export interface EventQuery {
   offset?: number;
   orderBy?: 'timestamp' | 'priority' | 'category';
   orderDirection?: 'asc' | 'desc';
-  metadata?: Record<string, unknown>;
+  metadata?: EventMetadata;
 }
 
 export interface EventQueryResult {

@@ -3,6 +3,7 @@
  */
 
 import type { NetworkProtocol } from './common.types';
+import type { MessageMetadata as BaseMessageMetadata } from './metadata.types';
 
 // Message and Communication Types
 export enum MessageType {
@@ -27,22 +28,11 @@ export enum DeliveryMode {
   REQUEST_RESPONSE = 'request_response',
 }
 
-export interface MessageMetadata {
-  correlationId?: string;
+// MessageMetadata extends BaseMessageMetadata for interop messages
+export interface MessageMetadata extends BaseMessageMetadata {
   replyTo?: string;
-  userId?: string;
-  sessionId?: string;
-  traceId?: string;
   priority?: MessagePriority;
-  retryCount?: number;
-  maxRetries?: number;
-  ttl?: number;
-  encrypted?: boolean;
-  compressed?: boolean;
   deliveryMode?: DeliveryMode;
-  contentType?: string;
-  encoding?: string;
-  [key: string]: unknown;
 }
 
 export interface Message {
@@ -63,7 +53,7 @@ export interface MessageFilter {
   type?: MessageType | MessageType[];
   topic?: string | string[];
   priority?: MessagePriority | MessagePriority[];
-  metadata?: Record<string, unknown>;
+  metadata?: MessageMetadata;
 }
 
 // Event Types
@@ -125,7 +115,7 @@ export interface MessageHandlerResult {
   error?: Error;
   ack?: boolean;
   requeue?: boolean;
-  metadata?: Record<string, unknown>;
+  metadata?: MessageMetadata;
 }
 
 // RPC and Method Call Types
@@ -290,7 +280,7 @@ export interface SharedResource {
   owner: string;
   data: unknown;
   permissions: ResourcePermissions;
-  metadata?: Record<string, unknown>;
+  metadata?: MessageMetadata;
   ttl?: number;
   createdAt: Date;
   lastAccessed?: Date;
@@ -320,7 +310,7 @@ export interface ResourceLease {
   type: 'read' | 'write' | 'exclusive';
   expiresAt: Date;
   renewable: boolean;
-  metadata?: Record<string, unknown>;
+  metadata?: MessageMetadata;
 }
 
 // Plugin Interop Service Interface
@@ -353,20 +343,20 @@ export interface MessageOptions {
   priority?: MessagePriority;
   ttl?: number;
   deliveryMode?: DeliveryMode;
-  metadata?: Record<string, unknown>;
+  metadata?: MessageMetadata;
 }
 
 export interface BroadcastOptions {
   target?: string | string[];
   excludeSender?: boolean;
   persistent?: boolean;
-  metadata?: Record<string, unknown>;
+  metadata?: MessageMetadata;
 }
 
 export interface RpcOptions {
   timeout?: number;
   retries?: number;
-  metadata?: Record<string, unknown>;
+  metadata?: MessageMetadata;
 }
 
 export interface ChannelOptions {
@@ -381,10 +371,10 @@ export interface ResourceFilter {
   type?: string;
   owner?: string;
   permissions?: Partial<ResourcePermissions>;
-  metadata?: Record<string, unknown>;
+  metadata?: MessageMetadata;
 }
 
-export type RpcMethodHandler = (params: unknown[], metadata?: Record<string, unknown>) => Promise<unknown>;
+export type RpcMethodHandler = (params: unknown[], metadata?: MessageMetadata) => Promise<unknown>;
 
 // Communication Patterns
 export interface RequestResponsePattern {
@@ -404,7 +394,7 @@ export interface EventSourcingPattern {
   streamId: string;
   events: PluginEvent[];
   version: number;
-  metadata?: Record<string, unknown>;
+  metadata?: MessageMetadata;
 }
 
 // Plugin Event Bus Interface (for plugin communication)

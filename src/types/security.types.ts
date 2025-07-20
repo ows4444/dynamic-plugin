@@ -2,7 +2,8 @@
  * Security Types - Security-related types for authentication, authorization, and auditing
  */
 
-import type { Activity, ActivityMetadata, IsolationLevel, NetworkProtocol, PluginSeverity, ResourceLimits, ResourceUsage } from './common.types';
+import type { Activity, IsolationLevel, NetworkProtocol, PluginSeverity, ResourceLimits, ResourceUsage } from './common.types';
+import type { AuditMetadata, ActivityMetadata as BaseActivityMetadata, SecurityMetadata } from './metadata.types';
 
 // Security Resource and Action Types
 export enum SecurityResourceType {
@@ -68,7 +69,7 @@ export interface SecurityPrincipal {
   name: string;
   roles: string[];
   permissions: SecurityPermission[];
-  metadata?: Record<string, unknown>;
+  metadata?: SecurityMetadata;
   createdAt: Date;
   lastActivity?: Date;
 }
@@ -80,7 +81,7 @@ export interface AuthenticationToken {
   principalId: string;
   expiresAt?: Date;
   scope?: string[];
-  metadata?: Record<string, unknown>;
+  metadata?: SecurityMetadata;
   createdAt: Date;
 }
 
@@ -89,7 +90,7 @@ export interface AuthenticationResult {
   principal?: SecurityPrincipal;
   token?: AuthenticationToken;
   error?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: SecurityMetadata;
 }
 
 export interface AuthenticationProvider {
@@ -107,14 +108,14 @@ export interface AuthorizationRequest {
   resource: SecurityResourceType;
   action: SecurityAction;
   context?: Record<string, unknown>;
-  metadata?: Record<string, unknown>;
+  metadata?: SecurityMetadata;
 }
 
 export interface AuthorizationResult {
   granted: boolean;
   reason?: string;
   conditions?: SecurityCondition[];
-  metadata?: Record<string, unknown>;
+  metadata?: SecurityMetadata;
 }
 
 // Rate Limiting Types
@@ -258,7 +259,7 @@ export interface SecurityViolationEvent {
   pluginId?: string;
   principalId?: string;
   message: string;
-  details: Record<string, unknown>;
+  details: SecurityMetadata;
   timestamp: Date;
   resolved: boolean;
   resolvedAt?: Date;
@@ -269,7 +270,7 @@ export interface ActivitySummary {
   pluginId: string;
   action: string;
   timestamp: Date;
-  metadata?: ActivityMetadata;
+  metadata?: BaseActivityMetadata;
 }
 
 export interface PluginSecurityInfo {
@@ -291,7 +292,7 @@ export interface SecurityViolation {
   description: string;
   timestamp: Date;
   resolved: boolean;
-  metadata?: Record<string, unknown>;
+  metadata?: SecurityMetadata;
 }
 
 export interface SecurityReport {
@@ -323,7 +324,7 @@ export interface SecurityRecommendation {
   description: string;
   action: string;
   pluginId?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: SecurityMetadata;
 }
 
 // Security Configuration Types
@@ -376,7 +377,7 @@ export interface SignatureInfo {
   keyId: string;
   signature: string;
   timestamp: Date;
-  metadata?: Record<string, unknown>;
+  metadata?: SecurityMetadata;
 }
 
 export interface IntegrityCheck {

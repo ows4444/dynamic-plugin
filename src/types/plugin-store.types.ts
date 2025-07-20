@@ -3,6 +3,7 @@
  */
 
 import type { PluginDependency, PluginEngines } from './common.types';
+import type { StoreMetadata } from './metadata.types';
 
 export interface PluginStoreEntry {
   id: string;
@@ -87,7 +88,7 @@ export interface PluginStoreConfig {
 export interface PluginDownloadInfo {
   downloadUrl: string;
   checksums: Record<string, string>;
-  metadata: Record<string, unknown>; // PluginMetadata to avoid circular dep
+  metadata: StoreMetadata;
   size?: number;
   mirrors?: string[];
   expires?: Date;

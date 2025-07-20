@@ -4,6 +4,7 @@
 
 import type { BaseMetrics, HealthStatus, MetadataInfo, PluginConfiguration, PluginDependency, PluginEngines, PluginHooks, PluginSeverity, PluginStatus } from './common.types';
 import type { PluginEventBus, PluginInterop } from './interop.types';
+import type { PluginMetadata as BasePluginMetadata } from './metadata.types';
 import type { SecurityContext } from './security.types';
 
 // IPlugin interface definition (moved here to avoid circular dependency)
@@ -153,18 +154,11 @@ export type PluginConfig<T extends BasePluginConfig = BasePluginConfig> = T;
 // Utility type for strongly typed plugin configurations
 export type TypedPluginConfig<T> = T extends BasePluginConfig ? T : BasePluginConfig;
 
-export interface PluginMetadata {
+// Plugin Metadata - extends base metadata with runtime information
+export interface PluginMetadata extends BasePluginMetadata {
   id: string;
   name: string;
-  version: string;
-  description: string;
-  author: string;
-  license: string;
   status: PluginStatus;
-  capabilities: string[];
-  permissions: PluginPermissions;
-  dependencies: Record<string, string>;
-  pluginDependencies: PluginDependency[];
   loadTime: number;
   memory: number;
   cpu: number;
@@ -173,7 +167,7 @@ export interface PluginMetadata {
   engines: PluginEngines;
   hooks: PluginHooks;
   configuration: PluginConfiguration;
-  metadata: MetadataInfo;
+  runtimeMetadata: MetadataInfo;
 }
 
 export interface PluginManifest {
