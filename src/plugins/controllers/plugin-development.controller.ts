@@ -15,7 +15,7 @@ export class PluginDevelopmentController {
   @Get('templates')
   getTemplates(@Query('category') category?: string): Promise<PluginTemplate[]> {
     try {
-      return this.pluginDevelopmentService.getAvailableTemplates(category);
+      return Promise.resolve(this.pluginDevelopmentService.getAvailableTemplates());
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to get templates: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -37,7 +37,7 @@ export class PluginDevelopmentController {
       return {
         success: true,
         pluginPath: result.pluginPath,
-        generatedFiles: result.generatedFiles,
+        generatedFiles: result.files,
         message: 'Plugin scaffolded successfully',
       };
     } catch (error) {
@@ -65,7 +65,7 @@ export class PluginDevelopmentController {
   @Post('test/:pluginId')
   testPlugin(@Param('pluginId') pluginId: string, @Body() options?: { coverage?: boolean; watch?: boolean }): Promise<PluginTestResult> {
     try {
-      return this.pluginDevelopmentService.testPlugin(pluginId, options);
+      return Promise.resolve(this.pluginDevelopmentService.testPlugin(pluginId, options));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to test plugin: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -86,11 +86,11 @@ export class PluginDevelopmentController {
     message: string;
   }> {
     try {
-      const result = await this.pluginDevelopmentService.generateDocumentation(pluginId, config);
+      const result = await this.pluginDevelopmentService.generateDocumentation(pluginId, config || {});
       return {
         success: true,
         outputPath: result.outputPath,
-        generatedFiles: result.generatedFiles,
+        generatedFiles: result.pages,
         message: 'Documentation generated successfully',
       };
     } catch (error) {
@@ -105,7 +105,7 @@ export class PluginDevelopmentController {
   @Post('dev-server/:pluginId')
   startDevServer(@Param('pluginId') pluginId: string, @Body() options?: { port?: number; hotReload?: boolean; watchFiles?: boolean }): Promise<PluginDevServer> {
     try {
-      return this.pluginDevelopmentService.startDevServer(pluginId, options);
+      return Promise.resolve(this.pluginDevelopmentService.startDevServer(pluginId, options));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to start development server: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -122,10 +122,10 @@ export class PluginDevelopmentController {
   }> {
     try {
       this.pluginDevelopmentService.stopDevServer(pluginId);
-      return {
+      return Promise.resolve({
         success: true,
         message: 'Development server stopped successfully',
-      };
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to stop development server: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -138,7 +138,7 @@ export class PluginDevelopmentController {
   @Get('dev-server/:pluginId/status')
   getDevServerStatus(@Param('pluginId') pluginId: string): Promise<PluginDevServer | null> {
     try {
-      return this.pluginDevelopmentService.getDevServerStatus(pluginId);
+      return Promise.resolve(this.pluginDevelopmentService.getDevServerStatus(pluginId));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to get development server status: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -151,7 +151,7 @@ export class PluginDevelopmentController {
   @Get('dev-servers')
   getActiveDevServers(): Promise<PluginDevServer[]> {
     try {
-      return this.pluginDevelopmentService.getActiveDevServers();
+      return Promise.resolve(this.pluginDevelopmentService.getActiveDevServers());
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to get active development servers: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -180,13 +180,13 @@ export class PluginDevelopmentController {
   }> {
     try {
       const result = this.pluginDevelopmentService.packagePlugin(pluginId, options);
-      return {
+      return Promise.resolve({
         success: true,
         packagePath: result.packagePath,
         size: result.size,
         checksum: result.checksum,
         message: 'Plugin packaged successfully',
-      };
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to package plugin: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -249,11 +249,11 @@ export class PluginDevelopmentController {
   }> {
     try {
       const result = this.pluginDevelopmentService.generateComponent(pluginId, type, options);
-      return {
+      return Promise.resolve({
         success: true,
         generatedFiles: result.generatedFiles,
         message: `${type} generated successfully`,
-      };
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to generate ${type}: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);

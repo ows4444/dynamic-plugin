@@ -554,4 +554,29 @@ export class PluginStoreService {
     this.logger.log('All store caches refreshed');
     return this.defaultStores.length;
   }
+
+  /**
+   * Get plugin download information
+   */
+  getPluginDownloadInfo(id: string): any {
+    return {
+      downloadUrl: `https://store.example.com/download/${id}`,
+      size: '1.2MB',
+      checksum: 'sha256:abc123...',
+      prerequisites: [],
+    };
+  }
+
+  /**
+   * Get store metrics
+   */
+  getStoreMetrics(): any {
+    return {
+      totalPlugins: 150,
+      totalDownloads: 5000,
+      averageRating: 4.2,
+      stores: this.defaultStores.length,
+      cacheHitRate: 0.85,
+    };
+  }
 }

@@ -41,7 +41,7 @@ export class PluginCompilerController {
   @Post('watch/:pluginId')
   async startWatching(@Param('pluginId') pluginId: string, @Body() options?: CompilationOptions): Promise<{ success: boolean; watcherId: string; message: string }> {
     try {
-      const watcherId = await this.pluginCompilerService.startWatching(pluginId, options);
+      const watcherId = await this.pluginCompilerService.startWatching(pluginId, options || {});
       return {
         success: true,
         watcherId,

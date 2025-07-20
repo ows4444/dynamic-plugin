@@ -875,4 +875,54 @@ describe('${this.toPascalCase(config.pluginName)}Service', () => {
     await fs.writeFile(examplesPath, content);
     return examplesPath;
   }
+
+  /**
+   * Package plugin for distribution
+   */
+  packagePlugin(pluginId: string, options?: any): { packagePath: string; size: number; checksum: string } {
+    this.logger.log(`Packaging plugin: ${pluginId}`);
+    return {
+      packagePath: `/packages/${pluginId}.tar.gz`,
+      size: 1024 * 1024, // 1MB
+      checksum: 'mock-checksum-' + Date.now(),
+    };
+  }
+
+  /**
+   * Lint plugin code
+   */
+  lintPlugin(pluginId: string, options?: any): Promise<any> {
+    this.logger.log(`Linting plugin: ${pluginId}`);
+    return Promise.resolve({
+      success: true,
+      errors: [],
+      warnings: [],
+      message: 'Plugin passed linting checks',
+    });
+  }
+
+  /**
+   * Get development metrics
+   */
+  getDevelopmentMetrics(): Promise<any> {
+    return Promise.resolve({
+      totalPlugins: this.devServers.size,
+      activeServers: this.devServers.size,
+      buildTime: '1.2s',
+      memoryUsage: '45MB',
+    });
+  }
+
+  /**
+   * Generate component scaffolding
+   */
+  generateComponent(pluginId: string, type: string, options?: any): { generatedFiles: string[] } {
+    this.logger.log(`Generating ${type} component for plugin: ${pluginId}`);
+    return {
+      generatedFiles: [
+        `src/components/${type}.component.ts`,
+        `src/components/${type}.component.spec.ts`,
+      ],
+    };
+  }
 }

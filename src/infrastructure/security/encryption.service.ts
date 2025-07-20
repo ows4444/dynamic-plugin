@@ -22,7 +22,7 @@ export class EncryptionService {
       const cipher = createCipheriv('aes-256-gcm', Buffer.from(this.encryptionKey), iv);
       let encrypted = cipher.update(data, 'utf8', 'hex');
       encrypted += cipher.final('hex');
-      return encrypted;
+      return Promise.resolve(encrypted);
     } catch (error) {
       this.logger.error('Encryption error:', error);
       throw error;
@@ -35,7 +35,7 @@ export class EncryptionService {
       const decipher = createDecipheriv('aes-256-gcm', Buffer.from(this.encryptionKey), iv);
       let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
       decrypted += decipher.final('utf8');
-      return decrypted;
+      return Promise.resolve(decrypted);
     } catch (error) {
       this.logger.error('Decryption error:', error);
       throw error;

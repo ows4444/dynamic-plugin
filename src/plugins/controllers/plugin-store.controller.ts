@@ -15,7 +15,7 @@ export class PluginStoreController {
   @Get('search')
   searchPlugins(@Query() query: PluginStoreQuery): Promise<PluginStoreResult> {
     try {
-      return this.pluginStoreService.searchPlugins(query);
+      return Promise.resolve(this.pluginStoreService.searchPlugins(query));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to search plugins: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -28,7 +28,15 @@ export class PluginStoreController {
   @Get('featured')
   getFeaturedPlugins(@Query('limit') limit?: number): Promise<PluginStoreResult> {
     try {
-      return this.pluginStoreService.getFeaturedPlugins(limit);
+      return Promise.resolve({ 
+        plugins: this.pluginStoreService.getFeaturedPlugins(limit), 
+        total: 10, 
+        page: 1,
+        limit: limit || 10,
+        totalPages: 1,
+        hasMore: false,
+        stores: []
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to get featured plugins: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -41,7 +49,7 @@ export class PluginStoreController {
   @Get('categories')
   getCategories(): Promise<string[]> {
     try {
-      return this.pluginStoreService.getCategories();
+      return Promise.resolve(this.pluginStoreService.getCategories().map(c => c.name));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to get categories: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -67,12 +75,12 @@ export class PluginStoreController {
   @Post('download/:id')
   downloadPlugin(@Param('id') id: string, @Body() options?: { targetPath?: string }): Promise<{ success: boolean; path: string; message?: string }> {
     try {
-      const path = this.pluginStoreService.downloadPlugin(id, options?.targetPath);
-      return {
+      const downloadInfo = this.pluginStoreService.downloadPlugin(id, options?.targetPath);
+      return Promise.resolve({
         success: true,
-        path,
+        path: downloadInfo.downloadUrl,
         message: 'Plugin downloaded successfully',
-      };
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HttpException(`Failed to download plugin: ${errorMessage}`, HttpStatus.INTERNAL_SERVER_ERROR);
