@@ -1,34 +1,18 @@
-export type ConfigValue = string | number | boolean | ConfigObject | ConfigArray | null | undefined;
+// Import types from centralized interfaces
+import type { 
+  ConfigArray,
+  ConfigObject,
+  ConfigSchema, 
+  ConfigValue, 
+  PluginConfig
+} from '@lib/shared/plugin-types';
 
-export interface ConfigObject {
-  [key: string]: ConfigValue;
-}
-
-export type ConfigArray = ConfigValue[];
-
-export interface ConfigSchema {
-  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
-  required?: boolean;
-  default?: ConfigValue;
-  enum?: ConfigValue[];
-  minimum?: number;
-  maximum?: number;
-  minLength?: number;
-  maxLength?: number;
-  pattern?: string;
-  properties?: Record<string, ConfigSchema>;
-  items?: ConfigSchema;
-  description?: string;
-}
-
-export interface PluginConfig {
-  [key: string]: ConfigValue;
-}
-
-export interface ValidationResult {
+// Local simplified validation result for this validator
+interface SimpleValidationResult {
   valid: boolean;
   errors: string[];
 }
+
 
 type TypeValidator = (value: unknown) => boolean;
 
@@ -45,7 +29,7 @@ export class ConfigValidator {
   static validate(
     config: PluginConfig,
     schema: Record<string, ConfigSchema>,
-  ): ValidationResult {
+  ): SimpleValidationResult {
     const errors: string[] = [];
 
     this.validateObject(

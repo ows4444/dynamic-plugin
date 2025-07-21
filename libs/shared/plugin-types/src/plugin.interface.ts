@@ -1,3 +1,7 @@
+import { IManifest } from "./manifest.interface";
+import type { ConfigSchema as ConfigPropertySchema, PluginConfig } from './config.interface';
+import type { ValidationError, ValidationResult, ValidationWarning } from './validation.interface';
+
 export interface IPlugin {
   readonly id: string;
   readonly name: string;
@@ -40,59 +44,19 @@ export interface IPlugin {
   ): Promise<void>;
 }
 
-export interface IPluginManifest {
-  name: string;
-  version: string;
-  description: string;
-  author: string;
-  license: string;
-  type: string;
-  category: string;
-  main: string;
-  dependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-  permissions: string[];
-  securityLevel: string;
-  supportedVersions: string[];
-  minHostVersion: string;
-  maxHostVersion?: string;
-  routes?: PluginRoute[];
-  hooks?: PluginHook[];
-  configuration?: PluginConfigSchema;
-  metadata?: Record<string, unknown>;
-  assets?: string[];
-  tags?: string[];
-  keywords?: string[];
-  repository?: string;
-  homepage?: string;
-  bugs?: string;
-}
+// Re-export the comprehensive manifest interface with a cleaner name
+export type IPluginManifest = IManifest;
 
-export interface PluginConfig {
-  [key: string]: unknown;
-}
-
-export interface PluginConfigSchema {
-  type: 'object';
-  properties: Record<string, ConfigPropertySchema>;
-  required?: string[];
-  additionalProperties?: boolean;
-}
-
-export interface ConfigPropertySchema {
-  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
-  description?: string;
-  default?: unknown;
-  enum?: unknown[];
-  minimum?: number;
-  maximum?: number;
-  minLength?: number;
-  maxLength?: number;
-  pattern?: string;
-  items?: ConfigPropertySchema;
-  properties?: Record<string, ConfigPropertySchema>;
-  required?: string[];
-}
+// Re-export configuration types from the centralized config interface
+export type {
+  PluginConfig,
+  PluginConfigSchema,
+  ConfigValue,
+  ConfigSchema as ConfigPropertySchema,
+  ConfigValidationResult,
+  ConfigValidationError,
+  ConfigValidationWarning
+} from './config.interface';
 
 export interface PluginRoute {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD';
@@ -166,25 +130,8 @@ export interface PluginMetrics {
   customMetrics?: Record<string, number>;
 }
 
-export interface ValidationResult {
-  valid: boolean;
-  errors: ValidationError[];
-  warnings?: ValidationWarning[];
-}
-
-export interface ValidationError {
-  field: string;
-  message: string;
-  code: string;
-  value?: unknown;
-}
-
-export interface ValidationWarning {
-  field: string;
-  message: string;
-  code: string;
-  value?: unknown;
-}
+// Re-export validation types from the centralized validation interface
+export type { ValidationResult, ValidationError, ValidationWarning };
 
 export interface PluginEvent {
   id: string;

@@ -8,7 +8,8 @@ export type SchemaValue =
   | SchemaValue[] 
   | { [key: string]: SchemaValue };
 
-export type ConfigValue = string | number | boolean | ConfigValue[] | { [key: string]: ConfigValue };
+// Import ConfigValue from the centralized config interface
+import type { ConfigValue } from './config.interface';
 
 export interface IManifest {
   schema: string;

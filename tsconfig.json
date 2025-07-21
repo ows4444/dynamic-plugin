@@ -43,5 +43,11 @@
         "libs/shared/plugin-types/src/*"
       ]
     }
-  }
+  },
+  "exclude": [
+    "**/*.template.ts",
+    "dist",
+    "node_modules",
+    "coverage"
+  ]
 }
