@@ -7,10 +7,15 @@ export interface PluginRoute {
   middleware?: ((...args: any[]) => any)[];
 }
 
+interface MiddlewareWithCleanup {
+  (...args: any[]): any;
+  cleanup?: () => void;
+}
+
 interface RouteMetadata {
   path: string;
   method: string;
-  middleware?: ((...args: any[]) => any)[];
+  middleware?: MiddlewareWithCleanup[];
 }
 
 interface ControllerPrototype {
@@ -84,7 +89,7 @@ export class RouteManagerService {
               middleware &&
               typeof (middleware as any).cleanup === 'function'
             ) {
-              (middleware as any).cleanup();
+              (middleware as MiddlewareWithCleanup).cleanup!();
             }
           });
         }

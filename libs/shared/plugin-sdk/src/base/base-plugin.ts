@@ -48,7 +48,13 @@ export abstract class BasePlugin
         'Plugin module initializing',
         this.logContext,
       );
-      await this.onEnable?.();
+      if (this.onEnable) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+        const result = this.onEnable();
+        if (result instanceof Promise) {
+          await result;
+        }
+      }
       this.isEnabled = true;
       LoggerUtil.log(
         this.metadata.id,
@@ -73,7 +79,13 @@ export abstract class BasePlugin
         'Plugin module destroying',
         this.logContext,
       );
-      await this.onDisable?.();
+      if (this.onDisable) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+        const result = this.onDisable();
+        if (result instanceof Promise) {
+          await result;
+        }
+      }
       this.isEnabled = false;
       LoggerUtil.log(
         this.metadata.id,

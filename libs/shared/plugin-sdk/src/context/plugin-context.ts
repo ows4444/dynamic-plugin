@@ -157,7 +157,7 @@ export class PluginContext {
   }
 
   get<T>(key: string): T | undefined {
-    return this._data.get(key);
+    return this._data.get(key) as T | undefined;
   }
 
   has(key: string): boolean {

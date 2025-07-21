@@ -152,12 +152,12 @@ export class PluginProxyService {
     const methodName = `handle${method.toUpperCase()}`;
 
     if (typeof pluginInstance[methodName] === 'function') {
-      return pluginInstance[methodName];
+      return pluginInstance[methodName] as PluginMethodHandler;
     }
 
     const routeHandler = `handle${this.routeToMethodName(route)}`;
     if (typeof pluginInstance[routeHandler] === 'function') {
-      return pluginInstance[routeHandler];
+      return pluginInstance[routeHandler] as PluginMethodHandler;
     }
 
     return null;

@@ -8,8 +8,12 @@ export class PluginError extends Error {
     super(message);
     this.name = 'PluginError';
 
-    if ((Error as any).captureStackTrace) {
-      (Error as any).captureStackTrace(this, PluginError);
+    // V8 stack trace capture for better debugging
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const captureStackTrace = (Error as any).captureStackTrace;
+    if (typeof captureStackTrace === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      captureStackTrace(this, PluginError);
     }
   }
 

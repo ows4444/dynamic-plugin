@@ -4,6 +4,7 @@ import * as path from 'path';
 interface PluginModule {
   default?: any;
   PluginModule?: any;
+  cleanup?: () => Promise<void> | void;
   [key: string]: any;
 }
 
@@ -68,7 +69,7 @@ export class ModuleResolverService {
     try {
       // Call cleanup method if it exists
       if (module && typeof module.cleanup === 'function') {
-        await module.cleanup();
+        await (module.cleanup as () => Promise<void> | void)();
       }
 
       // Additional cleanup logic can go here
