@@ -341,20 +341,20 @@ export class MetadataService {
 
       const byStatus = {} as Record<PluginStatus, number>;
       statusStats.forEach((stat) => {
-        byStatus[stat.status] = parseInt(stat.count, 10);
+        byStatus[stat.status as PluginStatus] = parseInt(String(stat.count), 10);
       });
 
       const byCategory = {} as Record<PluginCategory, number>;
       categoryStats.forEach((stat) => {
-        byCategory[stat.category] = parseInt(stat.count, 10);
+        byCategory[stat.category as PluginCategory] = parseInt(String(stat.count), 10);
       });
 
       return {
         total,
         byStatus,
         byCategory,
-        totalDownloads: parseInt(downloadStats?.totalDownloads ?? '0', 10),
-        averageRating: parseFloat(ratingStats?.averageRating ?? '0'),
+        totalDownloads: parseInt(String(downloadStats?.totalDownloads ?? '0'), 10),
+        averageRating: parseFloat(String(ratingStats?.averageRating ?? '0')),
       };
     } catch (error) {
       this.logger.error(`Failed to get plugin stats: ${error.message}`);

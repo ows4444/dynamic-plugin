@@ -112,7 +112,7 @@ export class ManifestValidator {
   }
 
   private static validateType(type: any, errors: string[]): void {
-    if (!Object.values(PluginType).includes(type)) {
+    if (!Object.values(PluginType).includes(type as PluginType)) {
       errors.push(
         `Invalid plugin type. Must be one of: ${Object.values(PluginType).join(', ')}`,
       );
@@ -120,7 +120,7 @@ export class ManifestValidator {
   }
 
   private static validateCategory(category: any, errors: string[]): void {
-    if (!Object.values(PluginCategory).includes(category)) {
+    if (!Object.values(PluginCategory).includes(category as PluginCategory)) {
       errors.push(
         `Invalid plugin category. Must be one of: ${Object.values(PluginCategory).join(', ')}`,
       );
@@ -134,7 +134,7 @@ export class ManifestValidator {
     }
 
     for (const permission of permissions) {
-      if (!Object.values(PluginPermission).includes(permission)) {
+      if (!Object.values(PluginPermission).includes(permission as PluginPermission)) {
         errors.push(
           `Invalid permission: ${permission}. Must be one of: ${Object.values(PluginPermission).join(', ')}`,
         );
@@ -146,7 +146,7 @@ export class ManifestValidator {
     securityLevel: any,
     errors: string[],
   ): void {
-    if (!Object.values(SecurityLevel).includes(securityLevel)) {
+    if (!Object.values(SecurityLevel).includes(securityLevel as SecurityLevel)) {
       errors.push(
         `Invalid security level. Must be one of: ${Object.values(SecurityLevel).join(', ')}`,
       );
@@ -185,7 +185,7 @@ export class ManifestValidator {
     }
 
     if (dependencies) {
-      for (const [name, version] of Object.entries(dependencies)) {
+      for (const [name, version] of Object.entries(dependencies as Record<string, unknown>)) {
         if (typeof name !== 'string' || typeof version !== 'string') {
           errors.push(`Invalid dependency: ${name}@${String(version)}`);
         }
@@ -206,7 +206,7 @@ export class ManifestValidator {
     }
 
     if (peerDependencies) {
-      for (const [name, version] of Object.entries(peerDependencies)) {
+      for (const [name, version] of Object.entries(peerDependencies as Record<string, unknown>)) {
         if (typeof name !== 'string' || typeof version !== 'string') {
           errors.push(`Invalid peer dependency: ${name}@${String(version)}`);
         }

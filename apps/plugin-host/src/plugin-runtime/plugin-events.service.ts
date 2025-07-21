@@ -87,7 +87,7 @@ export class PluginEventsService extends EventEmitter {
   ): void {
     // Note: This won't work perfectly with wrapped handlers from onPluginEvent
     // Consider maintaining a Map of original handlers to wrapped handlers
-    this.removeListener(type, handler as any);
+    this.removeListener(type, handler as (...args: any[]) => void);
   }
 
   async emitPluginLoaded(

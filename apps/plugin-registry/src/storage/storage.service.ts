@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
-import { createReadStream, promises as fs } from 'fs';
+import { createReadStream, promises as fs, ReadStreamOptions as FSReadStreamOptions } from 'fs';
 import * as path from 'path';
 import { Readable } from 'stream';
 
@@ -152,7 +152,7 @@ export class StorageService {
   createReadStream(filePath: string, options?: ReadStreamOptions): Readable {
     const fullPath = this.getFullPath(filePath);
 
-    const streamOptions: any = {};
+    const streamOptions: FSReadStreamOptions = {};
     if (options?.start !== undefined) {
       streamOptions.start = options.start;
     }
@@ -160,7 +160,7 @@ export class StorageService {
       streamOptions.end = options.end;
     }
 
-    return createReadStream(fullPath, streamOptions);
+    return createReadStream(fullPath, streamOptions as Parameters<typeof createReadStream>[1]);
   }
 
   async calculateDirectorySize(directoryPath: string): Promise<number> {

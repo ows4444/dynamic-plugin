@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PluginMetadata } from '../base/base-plugin';
 import { PluginContext } from '../context/plugin-context';
-import { ConfigUtil } from '../utilities/config.util';
+import { ConfigUtil, PluginConfigOptions } from '../utilities/config.util';
 import { LoggerUtil } from '../utilities/logger.util';
-import { ValidationUtil } from '../utilities/validation.util';
+import { ValidationSchema, ValidationUtil } from '../utilities/validation.util';
 
 @Injectable()
 export class PluginSdkService {
@@ -27,11 +27,11 @@ export class PluginSdkService {
   }
 
   validateConfig(config: any, schema: any): boolean {
-    return ConfigUtil.validateConfig(config, schema);
+    return ConfigUtil.validateConfig(config as PluginConfigOptions, schema);
   }
 
   validateInput(data: any, schema: any): any {
-    return ValidationUtil.validate(data, schema);
+    return ValidationUtil.validate(data, schema as ValidationSchema);
   }
 
   log(pluginId: string, message: string, data?: any): void {

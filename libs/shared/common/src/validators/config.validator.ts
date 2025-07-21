@@ -109,7 +109,7 @@ export class ConfigValidator {
     }
 
     if (schema.type === 'array' && schema.items) {
-      this.validateArray(value, schema, path, errors);
+      this.validateArray(value as any[], schema, path, errors);
     }
   }
 
@@ -136,15 +136,15 @@ export class ConfigValidator {
     }
 
     if (schema.type === 'string') {
-      this.validateStringConstraints(value, schema, path, errors);
+      this.validateStringConstraints(value as string, schema, path, errors);
     }
 
     if (schema.type === 'number') {
-      this.validateNumberConstraints(value, schema, path, errors);
+      this.validateNumberConstraints(value as number, schema, path, errors);
     }
 
     if (schema.type === 'array') {
-      this.validateArrayConstraints(value, schema, path, errors);
+      this.validateArrayConstraints(value as any[], schema, path, errors);
     }
   }
 
@@ -243,7 +243,7 @@ export class ConfigValidator {
         result[key]
       ) {
         result[key] = this.applyDefaults(
-          result[key],
+          result[key] as PluginConfig,
           propertySchema.properties,
         );
       }
@@ -262,8 +262,8 @@ export class ConfigValidator {
     }
 
     const cloned: any = {};
-    for (const [key, val] of Object.entries(value)) {
-      cloned[key] = this.cloneValue(val);
+    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+      cloned[key] = this.cloneValue(val as any);
     }
     return cloned;
   }
@@ -301,8 +301,8 @@ export class ConfigValidator {
 
     if (typeof value === 'object' && value !== null) {
       const properties: Record<string, ConfigSchema> = {};
-      for (const [key, val] of Object.entries(value)) {
-        properties[key] = this.inferSchemaFromValue(val);
+      for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+        properties[key] = this.inferSchemaFromValue(val as any);
       }
       return { type: 'object', properties, default: value };
     }

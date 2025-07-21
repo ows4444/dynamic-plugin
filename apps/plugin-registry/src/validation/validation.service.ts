@@ -41,7 +41,7 @@ export class ValidationService {
       }
 
       // Validate name format
-      if (manifest.name && !/^[a-z0-9\-_]+$/.test(manifest.name)) {
+      if (manifest.name && !/^[a-z0-9\-_]+$/.test(String(manifest.name))) {
         result.errors.push(
           'Plugin name must contain only lowercase letters, numbers, hyphens, and underscores',
         );
@@ -51,7 +51,7 @@ export class ValidationService {
       // Validate version format (semver)
       if (
         manifest.version &&
-        !/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(manifest.version)
+        !/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(String(manifest.version))
       ) {
         result.errors.push(
           'Version must follow semantic versioning (e.g., 1.0.0)',
@@ -62,7 +62,7 @@ export class ValidationService {
       // Validate API version compatibility
       if (manifest.apiVersion) {
         const supportedVersions = ['1.0.0', '1.1.0'];
-        if (!supportedVersions.includes(manifest.apiVersion)) {
+        if (!supportedVersions.includes(String(manifest.apiVersion))) {
           result.warnings.push(
             `API version ${manifest.apiVersion} may not be fully supported`,
           );
@@ -72,7 +72,7 @@ export class ValidationService {
       // Validate plugin type
       if (manifest.pluginType) {
         const validTypes = ['service', 'middleware', 'integration', 'utility'];
-        if (!validTypes.includes(manifest.pluginType)) {
+        if (!validTypes.includes(String(manifest.pluginType))) {
           result.warnings.push(`Unknown plugin type: ${manifest.pluginType}`);
         }
       }
@@ -89,7 +89,7 @@ export class ValidationService {
         ];
 
         for (const permission of manifest.permissions) {
-          if (!validPermissions.includes(permission)) {
+          if (!validPermissions.includes(String(permission))) {
             result.warnings.push(`Unknown permission: ${permission}`);
           }
         }
@@ -103,7 +103,7 @@ export class ValidationService {
 
       // Validate host requirements
       if (manifest.engines?.host) {
-        if (!/^[><=~^]*\d+\.\d+\.\d+/.test(manifest.engines.host)) {
+        if (!/^[><=~^]*\d+\.\d+\.\d+/.test(String(manifest.engines.host))) {
           result.warnings.push(
             'Host version requirement format may be invalid',
           );
@@ -124,7 +124,7 @@ export class ValidationService {
 
       // Validate routes (if specified)
       if (manifest.routes && Array.isArray(manifest.routes)) {
-        this.validateRoutes(manifest.routes, result);
+        this.validateRoutes(manifest.routes as any[], result);
       }
 
       // Validate hooks (if specified)
@@ -196,7 +196,7 @@ export class ValidationService {
         'flatmap-stream',
       ];
 
-      for (const [pkg, version] of Object.entries(dependencies)) {
+      for (const [pkg, version] of Object.entries(dependencies as Record<string, unknown>)) {
         if (vulnerablePackages.includes(pkg)) {
           result.errors.push(`Vulnerable package detected: ${pkg}`);
           result.valid = false;
@@ -213,7 +213,7 @@ export class ValidationService {
       }
 
       // Check for excessive dependencies
-      const depCount = Object.keys(dependencies).length;
+      const depCount = Object.keys(dependencies as Record<string, unknown>).length;
       if (depCount > 50) {
         result.warnings.push(
           `High number of dependencies (${depCount}). Consider reducing.`,
@@ -221,7 +221,7 @@ export class ValidationService {
       }
 
       // Check for conflicting versions
-      this.checkVersionConflicts(dependencies, result);
+      this.checkVersionConflicts(dependencies as Record<string, string>, result);
     } catch (error) {
       result.warnings.push(`Dependency validation failed: ${error.message}`);
     }
@@ -311,7 +311,7 @@ export class ValidationService {
     let match;
 
     while ((match = importPattern.exec(content)) !== null) {
-      const moduleName = match[1];
+      const moduleName = String(match[1]);
       if (
         suspiciousImports.includes(moduleName) ||
         moduleName.startsWith('.')
@@ -389,7 +389,7 @@ export class ValidationService {
         'HEAD',
         'OPTIONS',
       ];
-      if (!validMethods.includes(route.method.toUpperCase())) {
+      if (!validMethods.includes(String(route.method).toUpperCase())) {
         result.warnings.push(`Invalid HTTP method: ${route.method}`);
       }
 
@@ -409,7 +409,7 @@ export class ValidationService {
       'onError',
     ];
 
-    for (const hookName of Object.keys(hooks)) {
+    for (const hookName of Object.keys(hooks as Record<string, unknown>)) {
       if (!validHooks.includes(hookName)) {
         result.warnings.push(`Unknown hook: ${hookName}`);
       }
@@ -421,7 +421,7 @@ export class ValidationService {
     sensitiveKeys: string[],
     result: ValidationResult,
   ): void {
-    for (const key of Object.keys(obj)) {
+    for (const key of Object.keys(obj as Record<string, unknown>)) {
       const lowerKey = key.toLowerCase();
 
       if (sensitiveKeys.some((sensitive) => lowerKey.includes(sensitive))) {

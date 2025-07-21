@@ -57,8 +57,8 @@ export class PluginValidatorService {
       }
 
       // Validate version format
-      if (!this.isValidVersion(manifest.version)) {
-        this.logger.error(`Invalid version format: ${manifest.version}`);
+      if (!this.isValidVersion(String(manifest.version))) {
+        this.logger.error(`Invalid version format: ${String(manifest.version)}`);
         return false;
       }
 

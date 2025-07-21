@@ -20,7 +20,7 @@ export class RouteManagerService {
 
       // Extract routes from the plugin module
       if (module.routes && Array.isArray(module.routes)) {
-        routes.push(...module.routes);
+        routes.push(...(module.routes as PluginRoute[]));
       }
 
       // Extract routes from controllers

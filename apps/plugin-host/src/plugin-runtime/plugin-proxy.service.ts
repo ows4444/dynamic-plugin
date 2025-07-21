@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { WebSocket } from 'ws';
 import {
   PluginInstance,
   PluginInstanceService,
@@ -65,7 +66,8 @@ export class PluginProxyService {
     }
 
     if (instance.instance.onWebSocketConnection) {
-      await instance.instance.onWebSocketConnection(socket, data);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      await instance.instance.onWebSocketConnection(socket as WebSocket, data);
     }
   }
 
