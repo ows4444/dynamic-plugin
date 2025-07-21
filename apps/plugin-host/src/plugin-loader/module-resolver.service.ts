@@ -20,7 +20,7 @@ export class ModuleResolverService {
       ];
 
       let modulePath: string | null = null;
-      
+
       for (const entryPoint of possibleEntryPoints) {
         const fullPath = path.join(pluginPath, entryPoint);
         try {
@@ -42,14 +42,16 @@ export class ModuleResolverService {
 
       // Dynamically import the module
       const module = await import(modulePath);
-      
+
       // Cache the module
       this.moduleCache.set(pluginPath, module);
-      
+
       this.logger.log(`Module resolved successfully: ${modulePath}`);
       return module;
     } catch (error) {
-      this.logger.error(`Failed to resolve module at ${pluginPath}: ${error.message}`);
+      this.logger.error(
+        `Failed to resolve module at ${pluginPath}: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -90,7 +92,7 @@ export class ModuleResolverService {
   clearAllCache(): void {
     this.logger.log('Clearing all module cache');
     this.moduleCache.clear();
-    
+
     // Clear Node.js require cache for plugin modules
     for (const key of Object.keys(require.cache)) {
       if (key.includes('/plugins/')) {

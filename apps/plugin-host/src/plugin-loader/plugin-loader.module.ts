@@ -4,11 +4,7 @@ import { ModuleResolverService } from './module-resolver.service';
 import { RouteManagerService } from './route-manager.service';
 
 @Module({
-  providers: [
-    PluginLoaderService,
-    ModuleResolverService,
-    RouteManagerService,
-  ],
+  providers: [PluginLoaderService, ModuleResolverService, RouteManagerService],
   exports: [PluginLoaderService],
 })
 export class PluginLoaderModule {}

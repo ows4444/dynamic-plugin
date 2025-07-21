@@ -33,17 +33,23 @@ export class RouteManagerService {
 
       // Extract routes from default export if it's a controller
       if (module.default && typeof module.default === 'function') {
-        const controllerRoutes = this.extractRoutesFromController(module.default);
+        const controllerRoutes = this.extractRoutesFromController(
+          module.default,
+        );
         routes.push(...controllerRoutes);
       }
 
       // Store routes for this plugin
       this.pluginRoutes.set(pluginId, routes);
 
-      this.logger.log(`Registered ${routes.length} routes for plugin: ${pluginId}`);
+      this.logger.log(
+        `Registered ${routes.length} routes for plugin: ${pluginId}`,
+      );
       return routes;
     } catch (error) {
-      this.logger.error(`Failed to register routes for plugin ${pluginId}: ${error.message}`);
+      this.logger.error(
+        `Failed to register routes for plugin ${pluginId}: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -62,9 +68,12 @@ export class RouteManagerService {
       for (const route of routes) {
         // Perform any necessary cleanup
         if (route.middleware) {
-          route.middleware.forEach(middleware => {
-            if (typeof middleware.cleanup === 'function') {
-              middleware.cleanup();
+          route.middleware.forEach((middleware) => {
+            if (
+              middleware &&
+              typeof (middleware as any).cleanup === 'function'
+            ) {
+              (middleware as any).cleanup();
             }
           });
         }
@@ -73,9 +82,13 @@ export class RouteManagerService {
       // Remove routes from registry
       this.pluginRoutes.delete(pluginId);
 
-      this.logger.log(`Unregistered ${routes.length} routes for plugin: ${pluginId}`);
+      this.logger.log(
+        `Unregistered ${routes.length} routes for plugin: ${pluginId}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to unregister routes for plugin ${pluginId}: ${error.message}`);
+      this.logger.error(
+        `Failed to unregister routes for plugin ${pluginId}: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -106,7 +119,7 @@ export class RouteManagerService {
         if (typeof method === 'function') {
           // Check for route metadata (this would be extracted from decorators)
           const routeMetadata = this.getRouteMetadata(controller, methodName);
-          
+
           if (routeMetadata) {
             routes.push({
               path: routeMetadata.path,
@@ -118,7 +131,9 @@ export class RouteManagerService {
         }
       }
     } catch (error) {
-      this.logger.error(`Failed to extract routes from controller: ${error.message}`);
+      this.logger.error(
+        `Failed to extract routes from controller: ${error.message}`,
+      );
     }
 
     return routes;

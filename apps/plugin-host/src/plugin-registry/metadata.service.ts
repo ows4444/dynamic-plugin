@@ -37,7 +37,9 @@ export class MetadataService {
         author: 'Unknown',
       };
 
-      this.logger.log(`Extracted metadata: ${metadata.name}@${metadata.version}`);
+      this.logger.log(
+        `Extracted metadata: ${metadata.name}@${metadata.version}`,
+      );
       return metadata;
     } catch (error) {
       this.logger.error(`Failed to extract metadata: ${error.message}`);
@@ -56,7 +58,9 @@ export class MetadataService {
 
       // Read package.json if it exists
       if (fs.existsSync(packageJsonPath)) {
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        const packageJson = JSON.parse(
+          fs.readFileSync(packageJsonPath, 'utf8'),
+        );
         metadata = {
           id: packageJson.name,
           name: packageJson.name,
@@ -86,16 +90,22 @@ export class MetadataService {
         throw new Error('Missing required metadata fields (id, name, version)');
       }
 
-      this.logger.log(`Extracted metadata: ${metadata.name}@${metadata.version}`);
+      this.logger.log(
+        `Extracted metadata: ${metadata.name}@${metadata.version}`,
+      );
       return metadata as PluginMetadata;
     } catch (error) {
-      this.logger.error(`Failed to extract metadata from directory: ${error.message}`);
+      this.logger.error(
+        `Failed to extract metadata from directory: ${error.message}`,
+      );
       throw error;
     }
   }
 
   async validateMetadata(metadata: PluginMetadata): Promise<boolean> {
-    this.logger.log(`Validating metadata for: ${metadata.name}@${metadata.version}`);
+    this.logger.log(
+      `Validating metadata for: ${metadata.name}@${metadata.version}`,
+    );
 
     try {
       // Check required fields
@@ -119,7 +129,9 @@ export class MetadataService {
         return false;
       }
 
-      this.logger.log(`Metadata validation passed: ${metadata.name}@${metadata.version}`);
+      this.logger.log(
+        `Metadata validation passed: ${metadata.name}@${metadata.version}`,
+      );
       return true;
     } catch (error) {
       this.logger.error(`Metadata validation failed: ${error.message}`);
@@ -150,7 +162,8 @@ export class MetadataService {
   }
 
   private isValidVersion(version: string): boolean {
-    const semverRegex = /^\d+\.\d+\.\d+(-[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?(\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$/;
+    const semverRegex =
+      /^\d+\.\d+\.\d+(-[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?(\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$/;
     return semverRegex.test(version);
   }
 

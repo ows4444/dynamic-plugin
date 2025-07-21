@@ -26,13 +26,13 @@ export class PluginLoaderService {
     try {
       // Resolve plugin module path
       const pluginPath = this.getPluginPath(pluginId);
-      
+
       // Dynamically import the plugin module
       const module = await this.moduleResolver.resolveModule(pluginPath);
-      
+
       // Extract plugin metadata
       const metadata = await this.extractMetadata(pluginPath);
-      
+
       // Register plugin routes
       const routes = await this.routeManager.registerRoutes(pluginId, module);
 
@@ -44,7 +44,7 @@ export class PluginLoaderService {
       };
 
       this.loadedPlugins.set(pluginId, loadedPlugin);
-      
+
       this.logger.log(`Plugin loaded successfully: ${pluginId}`);
       return loadedPlugin;
     } catch (error) {
@@ -64,28 +64,30 @@ export class PluginLoaderService {
     try {
       // Unregister routes
       await this.routeManager.unregisterRoutes(pluginId);
-      
+
       // Clean up module references
       await this.moduleResolver.cleanupModule(plugin.module);
-      
+
       // Remove from loaded plugins
       this.loadedPlugins.delete(pluginId);
-      
+
       this.logger.log(`Plugin unloaded successfully: ${pluginId}`);
     } catch (error) {
-      this.logger.error(`Failed to unload plugin ${pluginId}: ${error.message}`);
+      this.logger.error(
+        `Failed to unload plugin ${pluginId}: ${error.message}`,
+      );
       throw error;
     }
   }
 
   async reloadPlugin(pluginId: string): Promise<LoadedPlugin> {
     this.logger.log(`Reloading plugin: ${pluginId}`);
-    
+
     // Unload if already loaded
     if (this.loadedPlugins.has(pluginId)) {
       await this.unloadPlugin(pluginId);
     }
-    
+
     // Load again
     return this.loadPlugin(pluginId);
   }

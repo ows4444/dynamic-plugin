@@ -4,11 +4,7 @@ import { DownloadService } from './download.service';
 import { MetadataService } from './metadata.service';
 
 @Module({
-  providers: [
-    RegistryClientService,
-    DownloadService,
-    MetadataService,
-  ],
+  providers: [RegistryClientService, DownloadService, MetadataService],
   exports: [RegistryClientService],
 })
 export class PluginRegistryModule {}

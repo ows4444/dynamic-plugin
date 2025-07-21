@@ -50,7 +50,7 @@ export class PluginInstallerService {
 
     fs.writeFileSync(
       path.join(pluginDir, 'manifest.json'),
-      JSON.stringify(manifest, null, 2)
+      JSON.stringify(manifest, null, 2),
     );
 
     this.logger.log(`Plugin installed to: ${pluginDir}`);
@@ -61,7 +61,7 @@ export class PluginInstallerService {
     this.logger.log(`Uninstalling plugin: ${pluginId}`);
 
     const pluginDir = path.join(this.pluginsDir, pluginId);
-    
+
     if (fs.existsSync(pluginDir)) {
       fs.rmSync(pluginDir, { recursive: true, force: true });
       this.logger.log(`Plugin directory removed: ${pluginDir}`);

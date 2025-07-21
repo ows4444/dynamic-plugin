@@ -11,10 +11,15 @@ export class PluginSdkService {
 
   registerPlugin(metadata: PluginMetadata, config?: any): void {
     this.pluginContext.setPlugin(metadata);
-    LoggerUtil.log(metadata.id, 'Plugin registered', this.pluginContext.getExecutionContext(), {
-      name: metadata.name,
-      version: metadata.version,
-    });
+    LoggerUtil.log(
+      metadata.id,
+      'Plugin registered',
+      this.pluginContext.getExecutionContext(),
+      {
+        name: metadata.name,
+        version: metadata.version,
+      },
+    );
   }
 
   getPluginContext(): PluginContext {
@@ -30,18 +35,38 @@ export class PluginSdkService {
   }
 
   log(pluginId: string, message: string, data?: any): void {
-    LoggerUtil.log(pluginId, message, this.pluginContext.getExecutionContext(), data);
+    LoggerUtil.log(
+      pluginId,
+      message,
+      this.pluginContext.getExecutionContext(),
+      data,
+    );
   }
 
   logError(pluginId: string, message: string, error?: Error): void {
-    LoggerUtil.error(pluginId, message, error, this.pluginContext.getExecutionContext());
+    LoggerUtil.error(
+      pluginId,
+      message,
+      error,
+      this.pluginContext.getExecutionContext(),
+    );
   }
 
   logPerformance(pluginId: string, operation: string, duration: number): void {
-    LoggerUtil.performance(pluginId, operation, duration, this.pluginContext.getExecutionContext());
+    LoggerUtil.performance(
+      pluginId,
+      operation,
+      duration,
+      this.pluginContext.getExecutionContext(),
+    );
   }
 
   audit(pluginId: string, action: string, data?: any): void {
-    LoggerUtil.audit(pluginId, action, this.pluginContext.getExecutionContext(), data);
+    LoggerUtil.audit(
+      pluginId,
+      action,
+      this.pluginContext.getExecutionContext(),
+      data,
+    );
   }
 }

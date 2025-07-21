@@ -46,7 +46,7 @@ export class PluginValidatorService {
       }
 
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-      
+
       // Check required fields
       const requiredFields = ['id', 'name', 'version'];
       for (const field of requiredFields) {
@@ -71,7 +71,8 @@ export class PluginValidatorService {
 
   private isValidVersion(version: string): boolean {
     // Basic semver validation
-    const semverRegex = /^\d+\.\d+\.\d+(-[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?(\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$/;
+    const semverRegex =
+      /^\d+\.\d+\.\d+(-[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?(\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$/;
     return semverRegex.test(version);
   }
 

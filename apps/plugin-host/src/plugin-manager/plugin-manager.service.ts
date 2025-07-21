@@ -22,7 +22,7 @@ export class PluginManagerService {
 
   async installPlugin(pluginPackage: string): Promise<Plugin> {
     this.logger.log(`Installing plugin: ${pluginPackage}`);
-    
+
     // Validate plugin package
     const isValid = await this.validator.validatePackage(pluginPackage);
     if (!isValid) {
@@ -31,7 +31,7 @@ export class PluginManagerService {
 
     // Install plugin
     const plugin = await this.installer.install(pluginPackage);
-    
+
     // Store plugin info
     this.plugins.set(plugin.id, {
       ...plugin,
@@ -44,7 +44,7 @@ export class PluginManagerService {
 
   async uninstallPlugin(pluginId: string): Promise<void> {
     this.logger.log(`Uninstalling plugin: ${pluginId}`);
-    
+
     const plugin = this.plugins.get(pluginId);
     if (!plugin) {
       throw new Error('Plugin not found');
@@ -58,7 +58,7 @@ export class PluginManagerService {
 
   async startPlugin(pluginId: string): Promise<void> {
     this.logger.log(`Starting plugin: ${pluginId}`);
-    
+
     const plugin = this.plugins.get(pluginId);
     if (!plugin) {
       throw new Error('Plugin not found');
@@ -66,13 +66,13 @@ export class PluginManagerService {
 
     // Plugin startup logic would go here
     plugin.status = 'running';
-    
+
     this.logger.log(`Plugin started successfully: ${pluginId}`);
   }
 
   async stopPlugin(pluginId: string): Promise<void> {
     this.logger.log(`Stopping plugin: ${pluginId}`);
-    
+
     const plugin = this.plugins.get(pluginId);
     if (!plugin) {
       throw new Error('Plugin not found');
@@ -80,7 +80,7 @@ export class PluginManagerService {
 
     // Plugin shutdown logic would go here
     plugin.status = 'stopped';
-    
+
     this.logger.log(`Plugin stopped successfully: ${pluginId}`);
   }
 
