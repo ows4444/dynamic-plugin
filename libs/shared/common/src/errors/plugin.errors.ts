@@ -3,11 +3,11 @@ export class PluginError extends Error {
     message: string,
     public readonly code: string,
     public readonly pluginId?: string,
-    public readonly details?: Record<string, any>
+    public readonly details?: Record<string, any>,
   ) {
     super(message);
     this.name = 'PluginError';
-    
+
     if ((Error as any).captureStackTrace) {
       (Error as any).captureStackTrace(this, PluginError);
     }
@@ -26,140 +26,220 @@ export class PluginError extends Error {
 }
 
 export class PluginInstallationError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_INSTALLATION_ERROR', pluginId, details);
     this.name = 'PluginInstallationError';
   }
 }
 
 export class PluginLoadError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_LOAD_ERROR', pluginId, details);
     this.name = 'PluginLoadError';
   }
 }
 
 export class PluginValidationError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_VALIDATION_ERROR', pluginId, details);
     this.name = 'PluginValidationError';
   }
 }
 
 export class PluginDependencyError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_DEPENDENCY_ERROR', pluginId, details);
     this.name = 'PluginDependencyError';
   }
 }
 
 export class PluginSecurityError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_SECURITY_ERROR', pluginId, details);
     this.name = 'PluginSecurityError';
   }
 }
 
 export class PluginPermissionError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_PERMISSION_ERROR', pluginId, details);
     this.name = 'PluginPermissionError';
   }
 }
 
 export class PluginConfigurationError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_CONFIGURATION_ERROR', pluginId, details);
     this.name = 'PluginConfigurationError';
   }
 }
 
 export class PluginRuntimeError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_RUNTIME_ERROR', pluginId, details);
     this.name = 'PluginRuntimeError';
   }
 }
 
 export class PluginTimeoutError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_TIMEOUT_ERROR', pluginId, details);
     this.name = 'PluginTimeoutError';
   }
 }
 
 export class PluginCommunicationError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_COMMUNICATION_ERROR', pluginId, details);
     this.name = 'PluginCommunicationError';
   }
 }
 
 export class PluginStorageError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_STORAGE_ERROR', pluginId, details);
     this.name = 'PluginStorageError';
   }
 }
 
 export class PluginRegistryError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_REGISTRY_ERROR', pluginId, details);
     this.name = 'PluginRegistryError';
   }
 }
 
 export class PluginVersionError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_VERSION_ERROR', pluginId, details);
     this.name = 'PluginVersionError';
   }
 }
 
 export class PluginCompatibilityError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_COMPATIBILITY_ERROR', pluginId, details);
     this.name = 'PluginCompatibilityError';
   }
 }
 
 export class PluginManifestError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_MANIFEST_ERROR', pluginId, details);
     this.name = 'PluginManifestError';
   }
 }
 
 export class PluginExecutionError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_EXECUTION_ERROR', pluginId, details);
     this.name = 'PluginExecutionError';
   }
 }
 
 export class PluginResourceError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_RESOURCE_ERROR', pluginId, details);
     this.name = 'PluginResourceError';
   }
 }
 
 export class PluginHealthCheckError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_HEALTH_CHECK_ERROR', pluginId, details);
     this.name = 'PluginHealthCheckError';
   }
 }
 
 export class PluginNotFoundError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_NOT_FOUND', pluginId, details);
     this.name = 'PluginNotFoundError';
   }
 }
 
 export class PluginAlreadyExistsError extends PluginError {
-  constructor(message: string, pluginId?: string, details?: Record<string, any>) {
+  constructor(
+    message: string,
+    pluginId?: string,
+    details?: Record<string, any>,
+  ) {
     super(message, 'PLUGIN_ALREADY_EXISTS', pluginId, details);
     this.name = 'PluginAlreadyExistsError';
   }
@@ -188,13 +268,13 @@ export const ERROR_CODES = {
   PLUGIN_ALREADY_EXISTS: 'PLUGIN_ALREADY_EXISTS',
 } as const;
 
-export type ErrorCode = typeof ERROR_CODES[keyof typeof ERROR_CODES];
+export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
 
 export function createPluginError(
   code: ErrorCode,
   message: string,
   pluginId?: string,
-  details?: Record<string, any>
+  details?: Record<string, any>,
 ): PluginError {
   const errorMap = {
     [ERROR_CODES.PLUGIN_INSTALLATION_ERROR]: PluginInstallationError,

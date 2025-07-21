@@ -11,7 +11,9 @@ describe('PluginRegistryController', () => {
       providers: [PluginRegistryService],
     }).compile();
 
-    pluginRegistryController = app.get<PluginRegistryController>(PluginRegistryController);
+    pluginRegistryController = app.get<PluginRegistryController>(
+      PluginRegistryController,
+    );
   });
 
   describe('root', () => {

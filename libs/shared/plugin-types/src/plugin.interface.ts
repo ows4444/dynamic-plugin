@@ -112,7 +112,10 @@ export interface RouteRequestBody {
 export interface RouteResponse {
   description: string;
   content?: Record<string, { schema: ConfigPropertySchema }>;
-  headers?: Record<string, { description?: string; schema: ConfigPropertySchema }>;
+  headers?: Record<
+    string,
+    { description?: string; schema: ConfigPropertySchema }
+  >;
 }
 
 export interface PluginHook {
@@ -224,10 +227,25 @@ export interface IPluginStorage {
 
 export interface IPluginHttpClient {
   get<T = any>(url: string, config?: RequestConfig): Promise<HttpResponse<T>>;
-  post<T = any>(url: string, data?: any, config?: RequestConfig): Promise<HttpResponse<T>>;
-  put<T = any>(url: string, data?: any, config?: RequestConfig): Promise<HttpResponse<T>>;
-  delete<T = any>(url: string, config?: RequestConfig): Promise<HttpResponse<T>>;
-  patch<T = any>(url: string, data?: any, config?: RequestConfig): Promise<HttpResponse<T>>;
+  post<T = any>(
+    url: string,
+    data?: any,
+    config?: RequestConfig,
+  ): Promise<HttpResponse<T>>;
+  put<T = any>(
+    url: string,
+    data?: any,
+    config?: RequestConfig,
+  ): Promise<HttpResponse<T>>;
+  delete<T = any>(
+    url: string,
+    config?: RequestConfig,
+  ): Promise<HttpResponse<T>>;
+  patch<T = any>(
+    url: string,
+    data?: any,
+    config?: RequestConfig,
+  ): Promise<HttpResponse<T>>;
 }
 
 export interface RequestConfig {
@@ -256,7 +274,11 @@ export interface IPluginCache {
 }
 
 export interface IPluginScheduler {
-  schedule(name: string, cron: string, handler: () => void | Promise<void>): Promise<void>;
+  schedule(
+    name: string,
+    cron: string,
+    handler: () => void | Promise<void>,
+  ): Promise<void>;
   unschedule(name: string): Promise<boolean>;
   listJobs(): Promise<ScheduledJob[]>;
   isScheduled(name: string): Promise<boolean>;

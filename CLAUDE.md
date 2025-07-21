@@ -292,4 +292,3 @@ nizaami-plugins-monorepo/
 └── package.json                                            # Root package.json with workspaces
 ```
 
-read @CLAUDE.md  and update properly @libs/shared/plugin-sdk/src/  properly

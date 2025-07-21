@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { Shared/pluginSdkService } from './shared/plugin-sdk.service';
+import { PluginSdkService } from './plugin-sdk.service';
+import { PluginContext } from '../context/plugin-context';
 
 @Module({
-  providers: [Shared/pluginSdkService],
-  exports: [Shared/pluginSdkService],
+  providers: [PluginSdkService, PluginContext],
+  exports: [PluginSdkService, PluginContext],
 })
-export class Shared/pluginSdkModule {}
+export class PluginSdkModule {}

@@ -1,10 +1,30 @@
 export interface IPermissionSystem {
-  checkPermission(pluginId: string, permission: string, context?: PermissionContext): Promise<PermissionResult>;
-  checkPermissions(pluginId: string, permissions: string[], context?: PermissionContext): Promise<PermissionResult[]>;
-  grantPermission(pluginId: string, permission: string, context?: PermissionContext): Promise<void>;
-  revokePermission(pluginId: string, permission: string, context?: PermissionContext): Promise<void>;
+  checkPermission(
+    pluginId: string,
+    permission: string,
+    context?: PermissionContext,
+  ): Promise<PermissionResult>;
+  checkPermissions(
+    pluginId: string,
+    permissions: string[],
+    context?: PermissionContext,
+  ): Promise<PermissionResult[]>;
+  grantPermission(
+    pluginId: string,
+    permission: string,
+    context?: PermissionContext,
+  ): Promise<void>;
+  revokePermission(
+    pluginId: string,
+    permission: string,
+    context?: PermissionContext,
+  ): Promise<void>;
   getPermissions(pluginId: string): Promise<PluginPermissions>;
-  hasPermission(pluginId: string, permission: string, context?: PermissionContext): Promise<boolean>;
+  hasPermission(
+    pluginId: string,
+    permission: string,
+    context?: PermissionContext,
+  ): Promise<boolean>;
   createRole(role: PermissionRole): Promise<void>;
   deleteRole(roleId: string): Promise<void>;
   assignRole(pluginId: string, roleId: string): Promise<void>;
@@ -12,8 +32,16 @@ export interface IPermissionSystem {
   getRoles(pluginId?: string): Promise<PermissionRole[]>;
   createPolicy(policy: PermissionPolicy): Promise<void>;
   deletePolicy(policyId: string): Promise<void>;
-  evaluatePolicy(pluginId: string, action: string, resource: string, context?: PermissionContext): Promise<PolicyResult>;
-  getAuditLog(pluginId?: string, limit?: number): Promise<PermissionAuditEntry[]>;
+  evaluatePolicy(
+    pluginId: string,
+    action: string,
+    resource: string,
+    context?: PermissionContext,
+  ): Promise<PolicyResult>;
+  getAuditLog(
+    pluginId?: string,
+    limit?: number,
+  ): Promise<PermissionAuditEntry[]>;
 }
 
 export interface PermissionResult {
@@ -112,7 +140,20 @@ export interface PolicyAdvice {
 
 export interface PermissionCondition {
   type: 'time' | 'ip' | 'environment' | 'resource' | 'attribute' | 'custom';
-  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'between' | 'in' | 'not_in' | 'exists' | 'not_exists' | 'matches' | 'not_matches';
+  operator:
+    | 'equals'
+    | 'not_equals'
+    | 'contains'
+    | 'not_contains'
+    | 'greater_than'
+    | 'less_than'
+    | 'between'
+    | 'in'
+    | 'not_in'
+    | 'exists'
+    | 'not_exists'
+    | 'matches'
+    | 'not_matches';
   key: string;
   value?: any;
   values?: any[];
@@ -121,7 +162,13 @@ export interface PermissionCondition {
 }
 
 export interface PermissionRestriction {
-  type: 'rate_limit' | 'time_window' | 'resource_quota' | 'ip_whitelist' | 'ip_blacklist' | 'custom';
+  type:
+    | 'rate_limit'
+    | 'time_window'
+    | 'resource_quota'
+    | 'ip_whitelist'
+    | 'ip_blacklist'
+    | 'custom';
   parameters: Record<string, any>;
   enabled: boolean;
   expiresAt?: Date;
@@ -144,15 +191,25 @@ export interface PermissionAuditEntry {
 }
 
 export interface ISecurityManager {
-  validatePlugin(pluginId: string, manifest: any): Promise<SecurityValidationResult>;
+  validatePlugin(
+    pluginId: string,
+    manifest: any,
+  ): Promise<SecurityValidationResult>;
   createSecurityContext(pluginId: string): Promise<SecurityContext>;
   destroySecurityContext(pluginId: string): Promise<void>;
   getSecurityContext(pluginId: string): Promise<SecurityContext | null>;
   scanForVulnerabilities(pluginId: string): Promise<VulnerabilityReport>;
-  enforceSecurityPolicy(pluginId: string, action: string, resource: string): Promise<SecurityEnforcementResult>;
+  enforceSecurityPolicy(
+    pluginId: string,
+    action: string,
+    resource: string,
+  ): Promise<SecurityEnforcementResult>;
   getSecurityMetrics(pluginId?: string): Promise<SecurityMetrics>;
   reportSecurityIncident(incident: SecurityIncident): Promise<void>;
-  getSecurityIncidents(pluginId?: string, limit?: number): Promise<SecurityIncident[]>;
+  getSecurityIncidents(
+    pluginId?: string,
+    limit?: number,
+  ): Promise<SecurityIncident[]>;
 }
 
 export interface SecurityValidationResult {
@@ -405,7 +462,13 @@ export interface SecurityIncidentResponse {
 
 export interface SecurityArtifact {
   id: string;
-  type: 'log' | 'file' | 'network_trace' | 'memory_dump' | 'screenshot' | 'other';
+  type:
+    | 'log'
+    | 'file'
+    | 'network_trace'
+    | 'memory_dump'
+    | 'screenshot'
+    | 'other';
   name: string;
   path?: string;
   hash?: string;

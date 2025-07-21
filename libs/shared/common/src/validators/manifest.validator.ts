@@ -39,7 +39,8 @@ export class ManifestValidator {
     'minHostVersion',
   ];
 
-  private static readonly VERSION_REGEX = /^\d+\.\d+\.\d+(-[\w\d\-]+)?(\+[\w\d\-]+)?$/;
+  private static readonly VERSION_REGEX =
+    /^\d+\.\d+\.\d+(-[\w\d\-]+)?(\+[\w\d\-]+)?$/;
   private static readonly NAME_REGEX = /^[a-z]([a-z0-9\-])*[a-z0-9]$/;
 
   static validate(manifest: any): { valid: boolean; errors: string[] } {
@@ -70,7 +71,11 @@ export class ManifestValidator {
 
   private static validateRequiredFields(manifest: any, errors: string[]): void {
     for (const field of this.REQUIRED_FIELDS) {
-      if (!(field in manifest) || manifest[field] === null || manifest[field] === undefined) {
+      if (
+        !(field in manifest) ||
+        manifest[field] === null ||
+        manifest[field] === undefined
+      ) {
         errors.push(`Missing required field: ${field}`);
       }
     }
@@ -83,7 +88,9 @@ export class ManifestValidator {
     }
 
     if (!this.NAME_REGEX.test(name)) {
-      errors.push('Plugin name must be lowercase, alphanumeric with hyphens, and cannot start or end with a hyphen');
+      errors.push(
+        'Plugin name must be lowercase, alphanumeric with hyphens, and cannot start or end with a hyphen',
+      );
     }
 
     if (name.length < 3 || name.length > 50) {
@@ -98,19 +105,25 @@ export class ManifestValidator {
     }
 
     if (!this.VERSION_REGEX.test(version)) {
-      errors.push('Version must follow semantic versioning (e.g., 1.0.0, 1.0.0-beta.1)');
+      errors.push(
+        'Version must follow semantic versioning (e.g., 1.0.0, 1.0.0-beta.1)',
+      );
     }
   }
 
   private static validateType(type: any, errors: string[]): void {
     if (!Object.values(PluginType).includes(type)) {
-      errors.push(`Invalid plugin type. Must be one of: ${Object.values(PluginType).join(', ')}`);
+      errors.push(
+        `Invalid plugin type. Must be one of: ${Object.values(PluginType).join(', ')}`,
+      );
     }
   }
 
   private static validateCategory(category: any, errors: string[]): void {
     if (!Object.values(PluginCategory).includes(category)) {
-      errors.push(`Invalid plugin category. Must be one of: ${Object.values(PluginCategory).join(', ')}`);
+      errors.push(
+        `Invalid plugin category. Must be one of: ${Object.values(PluginCategory).join(', ')}`,
+      );
     }
   }
 
@@ -122,18 +135,28 @@ export class ManifestValidator {
 
     for (const permission of permissions) {
       if (!Object.values(PluginPermission).includes(permission)) {
-        errors.push(`Invalid permission: ${permission}. Must be one of: ${Object.values(PluginPermission).join(', ')}`);
+        errors.push(
+          `Invalid permission: ${permission}. Must be one of: ${Object.values(PluginPermission).join(', ')}`,
+        );
       }
     }
   }
 
-  private static validateSecurityLevel(securityLevel: any, errors: string[]): void {
+  private static validateSecurityLevel(
+    securityLevel: any,
+    errors: string[],
+  ): void {
     if (!Object.values(SecurityLevel).includes(securityLevel)) {
-      errors.push(`Invalid security level. Must be one of: ${Object.values(SecurityLevel).join(', ')}`);
+      errors.push(
+        `Invalid security level. Must be one of: ${Object.values(SecurityLevel).join(', ')}`,
+      );
     }
   }
 
-  private static validateSupportedVersions(supportedVersions: any, errors: string[]): void {
+  private static validateSupportedVersions(
+    supportedVersions: any,
+    errors: string[],
+  ): void {
     if (!Array.isArray(supportedVersions)) {
       errors.push('Supported versions must be an array');
       return;
@@ -145,12 +168,17 @@ export class ManifestValidator {
 
     for (const version of supportedVersions) {
       if (typeof version !== 'string' || !this.VERSION_REGEX.test(version)) {
-        errors.push(`Invalid supported version: ${version}. Must follow semantic versioning`);
+        errors.push(
+          `Invalid supported version: ${version}. Must follow semantic versioning`,
+        );
       }
     }
   }
 
-  private static validateDependencies(dependencies: any, errors: string[]): void {
+  private static validateDependencies(
+    dependencies: any,
+    errors: string[],
+  ): void {
     if (dependencies !== undefined && typeof dependencies !== 'object') {
       errors.push('Dependencies must be an object');
       return;
@@ -165,8 +193,14 @@ export class ManifestValidator {
     }
   }
 
-  private static validatePeerDependencies(peerDependencies: any, errors: string[]): void {
-    if (peerDependencies !== undefined && typeof peerDependencies !== 'object') {
+  private static validatePeerDependencies(
+    peerDependencies: any,
+    errors: string[],
+  ): void {
+    if (
+      peerDependencies !== undefined &&
+      typeof peerDependencies !== 'object'
+    ) {
       errors.push('Peer dependencies must be an object');
       return;
     }

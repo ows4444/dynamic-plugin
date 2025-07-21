@@ -24,7 +24,7 @@ export interface LifecycleHook {
   metadata?: Record<string, any>;
 }
 
-export type LifecyclePhase = 
+export type LifecyclePhase =
   | 'beforeInit'
   | 'afterInit'
   | 'beforeStart'
@@ -64,7 +64,15 @@ export interface LifecycleParameter {
 export interface LifecycleCondition {
   type: 'config' | 'environment' | 'state' | 'dependency' | 'custom';
   key: string;
-  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'exists' | 'not_exists' | 'greater_than' | 'less_than';
+  operator:
+    | 'equals'
+    | 'not_equals'
+    | 'contains'
+    | 'not_contains'
+    | 'exists'
+    | 'not_exists'
+    | 'greater_than'
+    | 'less_than';
   value?: any;
   handler?: string;
 }
@@ -97,7 +105,7 @@ export interface LifecycleState {
   metadata?: Record<string, any>;
 }
 
-export type LifecycleStatus = 
+export type LifecycleStatus =
   | 'uninitialized'
   | 'initializing'
   | 'initialized'
@@ -129,8 +137,16 @@ export interface LifecycleManager {
   getState(pluginId: string): Promise<LifecycleState>;
   setState(pluginId: string, status: LifecycleStatus): Promise<void>;
   canTransition(pluginId: string, to: LifecycleStatus): Promise<boolean>;
-  transition(pluginId: string, to: LifecycleStatus, trigger: string): Promise<LifecycleTransition>;
-  executeHooks(pluginId: string, phase: LifecyclePhase, context?: any): Promise<LifecycleHookResult[]>;
+  transition(
+    pluginId: string,
+    to: LifecycleStatus,
+    trigger: string,
+  ): Promise<LifecycleTransition>;
+  executeHooks(
+    pluginId: string,
+    phase: LifecyclePhase,
+    context?: any,
+  ): Promise<LifecycleHookResult[]>;
   registerHook(pluginId: string, hook: LifecycleHook): Promise<void>;
   unregisterHook(pluginId: string, hookName: string): Promise<boolean>;
   getHooks(pluginId: string, phase?: LifecyclePhase): Promise<LifecycleHook[]>;

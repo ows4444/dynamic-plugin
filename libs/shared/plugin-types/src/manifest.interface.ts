@@ -96,7 +96,15 @@ export interface ManifestPlugin {
 }
 
 export interface ManifestRoute {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD' | 'ALL';
+  method:
+    | 'GET'
+    | 'POST'
+    | 'PUT'
+    | 'DELETE'
+    | 'PATCH'
+    | 'OPTIONS'
+    | 'HEAD'
+    | 'ALL';
   path: string;
   handler: string;
   description?: string;
@@ -404,7 +412,15 @@ export interface ManifestModule {
 
 export interface ManifestCondition {
   type: 'environment' | 'config' | 'feature' | 'custom';
-  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'exists' | 'not_exists';
+  operator:
+    | 'equals'
+    | 'not_equals'
+    | 'contains'
+    | 'not_contains'
+    | 'greater_than'
+    | 'less_than'
+    | 'exists'
+    | 'not_exists';
   key: string;
   value?: any;
   handler?: string;
@@ -429,7 +445,12 @@ export interface ManifestOptimization {
 
 export interface ManifestSecurity {
   permissions: string[];
-  securityLevel: 'public' | 'internal' | 'restricted' | 'confidential' | 'secret';
+  securityLevel:
+    | 'public'
+    | 'internal'
+    | 'restricted'
+    | 'confidential'
+    | 'secret';
   sandbox?: ManifestSandbox;
   csp?: ManifestCSP;
   allowedHosts?: string[];

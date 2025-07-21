@@ -1,9 +1,13 @@
 export interface IPluginCommunication {
-  sendMessage<T = any>(message: PluginMessage<T>): Promise<PluginMessageResponse<T>>;
+  sendMessage<T = any>(
+    message: PluginMessage<T>,
+  ): Promise<PluginMessageResponse<T>>;
   onMessage<T = any>(handler: PluginMessageHandler<T>): void;
   offMessage<T = any>(handler: PluginMessageHandler<T>): void;
   broadcast<T = any>(message: PluginBroadcastMessage<T>): Promise<void>;
-  request<TRequest = any, TResponse = any>(request: PluginRequest<TRequest>): Promise<PluginResponse<TResponse>>;
+  request<TRequest = any, TResponse = any>(
+    request: PluginRequest<TRequest>,
+  ): Promise<PluginResponse<TResponse>>;
   subscribe(channel: string, handler: PluginChannelHandler): Promise<void>;
   unsubscribe(channel: string, handler?: PluginChannelHandler): Promise<void>;
   publish(channel: string, data: any): Promise<void>;
@@ -77,7 +81,7 @@ export interface PluginResponse<T = any> {
   metadata?: Record<string, any>;
 }
 
-export type MessageType = 
+export type MessageType =
   | 'command'
   | 'event'
   | 'request'
@@ -100,9 +104,14 @@ export interface MessageError {
   stack?: string;
 }
 
-export type PluginMessageHandler<T = any> = (message: PluginMessage<T>) => Promise<PluginMessageResponse<T>> | PluginMessageResponse<T> | void;
+export type PluginMessageHandler<T = any> = (
+  message: PluginMessage<T>,
+) => Promise<PluginMessageResponse<T>> | PluginMessageResponse<T> | void;
 
-export type PluginChannelHandler = (data: any, metadata?: Record<string, any>) => Promise<void> | void;
+export type PluginChannelHandler = (
+  data: any,
+  metadata?: Record<string, any>,
+) => Promise<void> | void;
 
 export interface ChannelOptions {
   persistent?: boolean;
@@ -117,12 +126,21 @@ export interface ChannelOptions {
 }
 
 export interface ICommunicationManager {
-  registerPlugin(pluginId: string, communication: IPluginCommunication): Promise<void>;
+  registerPlugin(
+    pluginId: string,
+    communication: IPluginCommunication,
+  ): Promise<void>;
   unregisterPlugin(pluginId: string): Promise<void>;
-  getPluginCommunication(pluginId: string): Promise<IPluginCommunication | null>;
+  getPluginCommunication(
+    pluginId: string,
+  ): Promise<IPluginCommunication | null>;
   routeMessage(message: PluginMessage): Promise<PluginMessageResponse>;
   broadcastMessage(message: PluginBroadcastMessage): Promise<BroadcastResult>;
-  createBridge(pluginId1: string, pluginId2: string, options?: BridgeOptions): Promise<PluginBridge>;
+  createBridge(
+    pluginId1: string,
+    pluginId2: string,
+    options?: BridgeOptions,
+  ): Promise<PluginBridge>;
   destroyBridge(bridgeId: string): Promise<void>;
   getBridges(pluginId?: string): Promise<PluginBridge[]>;
   getMetrics(pluginId?: string): Promise<CommunicationMetrics>;
@@ -193,8 +211,14 @@ export interface CommunicationMetrics {
 
 export interface IMessageBus {
   send<T = any>(message: PluginMessage<T>): Promise<PluginMessageResponse<T>>;
-  broadcast<T = any>(message: PluginBroadcastMessage<T>): Promise<BroadcastResult>;
-  subscribe(channel: string, handler: PluginChannelHandler, options?: SubscriptionOptions): Promise<string>;
+  broadcast<T = any>(
+    message: PluginBroadcastMessage<T>,
+  ): Promise<BroadcastResult>;
+  subscribe(
+    channel: string,
+    handler: PluginChannelHandler,
+    options?: SubscriptionOptions,
+  ): Promise<string>;
   unsubscribe(subscriptionId: string): Promise<void>;
   publish(channel: string, data: any, options?: PublishOptions): Promise<void>;
   createChannel(channel: string, options?: ChannelOptions): Promise<void>;
@@ -253,7 +277,10 @@ export interface MessageBusStats {
 }
 
 export interface IPluginProxy {
-  createProxy<T = any>(targetPluginId: string, contract: ProxyContract): Promise<T>;
+  createProxy<T = any>(
+    targetPluginId: string,
+    contract: ProxyContract,
+  ): Promise<T>;
   destroyProxy(proxyId: string): Promise<void>;
   getProxies(pluginId?: string): Promise<PluginProxy[]>;
   enableMethodTracing(enabled: boolean): void;

@@ -11,7 +11,9 @@ describe('PluginTemplateController', () => {
       providers: [PluginTemplateService],
     }).compile();
 
-    pluginTemplateController = app.get<PluginTemplateController>(PluginTemplateController);
+    pluginTemplateController = app.get<PluginTemplateController>(
+      PluginTemplateController,
+    );
   });
 
   describe('root', () => {
