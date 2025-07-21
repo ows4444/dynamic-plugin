@@ -7,7 +7,7 @@ export const PLUGIN_PERMISSIONS_KEY = 'plugin:permissions';
 
 export interface PluginDecoratorOptions {
   metadata: PluginMetadata;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   permissions: string[];
 }
 
@@ -45,9 +45,9 @@ export function PluginProvider(options: PluginProviderOptions) {
 
 export interface PluginConfigOptions {
   required?: boolean;
-  defaultValue?: any;
-  validate?: (value: any) => boolean;
-  transform?: (value: any) => any;
+  defaultValue?: unknown;
+  validate?: (value: unknown) => boolean;
+  transform?: (value: unknown) => unknown;
 }
 
 export function PluginConfig(key: string, options?: PluginConfigOptions) {

@@ -16,6 +16,7 @@
   "typescript.updateImportsOnFileMove.enabled": "always",
   "typescript.suggest.autoImports": true,
   "typescript.preferences.includePackageJsonAutoImports": "on",
+  "prettier.requireConfig": true,
   "files.exclude": {
     "**/node_modules": true,
     "**/dist": true,

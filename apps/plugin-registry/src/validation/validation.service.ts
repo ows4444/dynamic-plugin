@@ -348,7 +348,7 @@ export class ValidationService {
     let match;
 
     while ((match = importPattern.exec(content)) !== null) {
-      const moduleName = String(match[1]);
+      const moduleName = match[1] ? String(match[1]) : '';
       if (
         suspiciousImports.includes(moduleName) ||
         moduleName.startsWith('.')

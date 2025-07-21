@@ -6,17 +6,17 @@ export interface PluginRequest {
   method: string;
   url: string;
   headers: Record<string, string>;
-  query: Record<string, any>;
-  params: Record<string, any>;
-  body?: any;
-  user?: any;
+  query: Record<string, unknown>;
+  params: Record<string, unknown>;
+  body?: unknown;
+  user?: PluginUser;
   timestamp: Date;
 }
 
 export interface PluginResponse {
   statusCode: number;
   headers: Record<string, string>;
-  body?: any;
+  body?: unknown;
   timestamp: Date;
 }
 
@@ -26,7 +26,7 @@ export interface PluginUser {
   email?: string;
   roles: string[];
   permissions: string[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PluginHost {
@@ -45,18 +45,18 @@ export interface PluginExecutionContext {
   startTime: Date;
   timeout?: number;
   retries?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 @Injectable({ scope: Scope.REQUEST })
 export class PluginContext {
-  private _plugin: PluginMetadata;
-  private _request: PluginRequest;
-  private _response: PluginResponse;
+  private _plugin!: PluginMetadata;
+  private _request!: PluginRequest;
+  private _response!: PluginResponse;
   private _user: PluginUser | null = null;
-  private _host: PluginHost;
+  private _host!: PluginHost;
   private _executionContext: PluginExecutionContext;
-  private _data: Map<string, any> = new Map();
+  private _data: Map<string, unknown> = new Map();
 
   constructor() {
     this._executionContext = {
@@ -172,7 +172,7 @@ export class PluginContext {
     this._data.clear();
   }
 
-  getAllData(): Record<string, any> {
+  getAllData(): Record<string, unknown> {
     return Object.fromEntries(this._data);
   }
 
@@ -189,7 +189,7 @@ export class PluginContext {
     return childContext;
   }
 
-  toJSON(): Record<string, any> {
+  toJSON(): Record<string, unknown> {
     return {
       plugin: this._plugin,
       request: this._request
@@ -214,6 +214,6 @@ export class PluginContext {
   }
 
   private generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
 }

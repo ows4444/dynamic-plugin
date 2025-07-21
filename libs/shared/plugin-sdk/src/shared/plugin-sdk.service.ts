@@ -9,7 +9,7 @@ import { ValidationData, ValidationSchema, ValidationUtil } from '../utilities/v
 export class PluginSdkService {
   constructor(private readonly pluginContext: PluginContext) {}
 
-  registerPlugin(metadata: PluginMetadata, _config: any): void {
+  registerPlugin(metadata: PluginMetadata, _config: unknown): void {
     this.pluginContext.setPlugin(metadata);
     LoggerUtil.log(
       metadata.id,
@@ -26,15 +26,15 @@ export class PluginSdkService {
     return this.pluginContext;
   }
 
-  validateConfig(config: any, schema: any): boolean {
+  validateConfig(config: unknown, schema: unknown): boolean {
     return ConfigUtil.validateConfig(config as PluginConfigOptions, schema);
   }
 
-  validateInput(data: any, schema: any): any {
+  validateInput(data: unknown, schema: unknown): unknown {
     return ValidationUtil.validate(data as ValidationData, schema as ValidationSchema);
   }
 
-  log(pluginId: string, message: string, data?: any): void {
+  log(pluginId: string, message: string, data?: unknown): void {
     LoggerUtil.log(
       pluginId,
       message,
@@ -61,7 +61,7 @@ export class PluginSdkService {
     );
   }
 
-  audit(pluginId: string, action: string, data?: any): void {
+  audit(pluginId: string, action: string, data?: unknown): void {
     LoggerUtil.audit(
       pluginId,
       action,

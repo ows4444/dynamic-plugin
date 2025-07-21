@@ -136,8 +136,8 @@ export function PluginEndpoint(options: PluginEndpointOptions) {
 export interface PluginResponseOptions {
   status: number;
   description?: string;
-  type?: any;
-  schema?: any;
+  type?: unknown;
+  schema?: unknown;
 }
 
 export function PluginResponse(options: PluginResponseOptions) {
@@ -149,7 +149,7 @@ export interface PluginParameterOptions {
   type: 'query' | 'path' | 'header' | 'body';
   required?: boolean;
   description?: string;
-  schema?: any;
+  schema?: unknown;
 }
 
 export function PluginParameter(options: PluginParameterOptions) {

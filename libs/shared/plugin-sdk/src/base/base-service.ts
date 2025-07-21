@@ -107,7 +107,7 @@ export abstract class BaseService {
     return ConfigUtil.getConfigValue(this.config, key, defaultValue);
   }
 
-  protected log(message: string, data?: any): void {
+  protected log(message: string, data?: unknown): void {
     LoggerUtil.log(this.pluginId, message, this.logContext, data);
   }
 
@@ -115,15 +115,15 @@ export abstract class BaseService {
     LoggerUtil.error(this.pluginId, message, error, this.logContext);
   }
 
-  protected logWarn(message: string, data?: any): void {
+  protected logWarn(message: string, data?: unknown): void {
     LoggerUtil.warn(this.pluginId, message, this.logContext, data);
   }
 
-  protected logDebug(message: string, data?: any): void {
+  protected logDebug(message: string, data?: unknown): void {
     LoggerUtil.debug(this.pluginId, message, this.logContext, data);
   }
 
-  protected audit(action: string, data?: any): void {
+  protected audit(action: string, data?: unknown): void {
     LoggerUtil.audit(this.pluginId, action, this.logContext, data);
   }
 
@@ -131,11 +131,11 @@ export abstract class BaseService {
     LoggerUtil.performance(this.pluginId, operation, duration, this.logContext);
   }
 
-  protected logSecurity(event: string, data?: any): void {
+  protected logSecurity(event: string, data?: unknown): void {
     LoggerUtil.security(this.pluginId, event, this.logContext, data);
   }
 
-  protected validateInput(_data: any, _schema: any): boolean {
+  protected validateInput(_data: unknown, _schema: unknown): boolean {
     // Implement validation logic using ValidationUtil if needed
     return true;
   }

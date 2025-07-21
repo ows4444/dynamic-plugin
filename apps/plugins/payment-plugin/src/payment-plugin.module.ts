@@ -1,5 +1,5 @@
 import { CacheModule } from '@nestjs/cache-manager';
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -10,6 +10,11 @@ import { TransactionEntity } from './entities/transaction.entity';
 import { PaymentService } from './services/payment.service';
 import { PayPalService } from './services/paypal.service';
 import { StripeService } from './services/stripe.service';
+
+interface PaymentServiceInterface {
+  initializeProviders?(): Promise<void>;
+  cleanupProviders?(): Promise<void>;
+}
 
 @Module({
   imports: [
@@ -28,24 +33,22 @@ import { StripeService } from './services/stripe.service';
   exports: [PaymentService],
 })
 export class PaymentPluginModule {
+  private readonly logger = new Logger(PaymentPluginModule.name);
+  
   constructor(private readonly paymentService: PaymentService) {}
 
   async onModuleInit() {
-    console.log('Payment Plugin initialized');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const service = this.paymentService as any;
+    this.logger.log('Payment Plugin initialized');
+    const service = this.paymentService as PaymentServiceInterface;
     if (typeof service.initializeProviders === 'function') {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       await service.initializeProviders();
     }
   }
 
   async onModuleDestroy() {
-    console.log('Payment Plugin destroyed');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const service = this.paymentService as any;
+    this.logger.log('Payment Plugin destroyed');
+    const service = this.paymentService as PaymentServiceInterface;
     if (typeof service.cleanupProviders === 'function') {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       await service.cleanupProviders();
     }
   }
@@ -108,8 +111,8 @@ export const PluginMetadata = {
     'events.listen',
   ],
   hooks: {
-    onLoad: () => console.log('Payment plugin loaded'),
-    onUnload: () => console.log('Payment plugin unloaded'),
+    onLoad: () => Logger.log('Payment plugin loaded', 'PaymentPlugin'),
+    onUnload: () => Logger.log('Payment plugin unloaded', 'PaymentPlugin'),
   },
 };
 
