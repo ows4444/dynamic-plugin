@@ -115,7 +115,11 @@ export class LoggerUtil {
 
     if (data) {
       const dataStr =
-        typeof data === 'object' && data !== null ? JSON.stringify(data) : String(data);
+        typeof data === 'object' && data !== null 
+          ? JSON.stringify(data) 
+          : typeof data === 'string' 
+          ? data 
+          : JSON.stringify(data);
       formatted += ` ${dataStr}`;
     }
 
