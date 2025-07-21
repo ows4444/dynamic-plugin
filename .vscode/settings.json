@@ -45,10 +45,7 @@
   "npm.enableRunFromFolder": true,
   "jest.rootPath": "./",
   "jest.jestCommandLine": "npm test",
-  "jest.autoRun": {
-    "watch": false,
-    "onSave": "test-src-file"
-  },
+  "jest.runMode": "on-demand",
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.tabSize": 2,
