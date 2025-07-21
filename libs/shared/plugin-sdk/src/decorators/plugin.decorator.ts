@@ -1,4 +1,4 @@
-import { SetMetadata, applyDecorators } from '@nestjs/common';
+import { applyDecorators, SetMetadata } from '@nestjs/common';
 import { PluginMetadata } from '../base/base-plugin';
 
 export const PLUGIN_METADATA_KEY = 'plugin:metadata';
@@ -7,15 +7,15 @@ export const PLUGIN_PERMISSIONS_KEY = 'plugin:permissions';
 
 export interface PluginDecoratorOptions {
   metadata: PluginMetadata;
-  config?: Record<string, any>;
-  permissions?: string[];
+  config: Record<string, any>;
+  permissions: string[];
 }
 
 export function Plugin(options: PluginDecoratorOptions) {
   return applyDecorators(
     SetMetadata(PLUGIN_METADATA_KEY, options.metadata),
-    SetMetadata(PLUGIN_CONFIG_KEY, options.config || {}),
-    SetMetadata(PLUGIN_PERMISSIONS_KEY, options.permissions || []),
+    SetMetadata(PLUGIN_CONFIG_KEY, options.config),
+    SetMetadata(PLUGIN_PERMISSIONS_KEY, options.permissions),
   );
 }
 

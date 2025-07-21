@@ -1,14 +1,14 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Param,
   Body,
+  Controller,
+  Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Post,
 } from '@nestjs/common';
-import { PluginManagerService, Plugin } from './plugin-manager.service';
+import { Plugin, PluginManagerService } from './plugin-manager.service';
 
 @Controller('plugins')
 export class PluginManagerController {

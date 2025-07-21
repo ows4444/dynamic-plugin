@@ -45,7 +45,7 @@ export class RouteManagerService {
       this.logger.log(
         `Registered ${routes.length} routes for plugin: ${pluginId}`,
       );
-      return routes;
+      return Promise.resolve(routes);
     } catch (error) {
       this.logger.error(
         `Failed to register routes for plugin ${pluginId}: ${error.message}`,
@@ -85,6 +85,7 @@ export class RouteManagerService {
       this.logger.log(
         `Unregistered ${routes.length} routes for plugin: ${pluginId}`,
       );
+      await Promise.resolve();
     } catch (error) {
       this.logger.error(
         `Failed to unregister routes for plugin ${pluginId}: ${error.message}`,
@@ -94,7 +95,7 @@ export class RouteManagerService {
   }
 
   getPluginRoutes(pluginId: string): PluginRoute[] {
-    return this.pluginRoutes.get(pluginId) || [];
+    return this.pluginRoutes.get(pluginId) ?? [];
   }
 
   getAllRoutes(): Map<string, PluginRoute[]> {
@@ -109,7 +110,7 @@ export class RouteManagerService {
       // In a real system, you would use reflection to extract
       // routes from NestJS controllers with decorators
 
-      const prototype = controller.prototype || controller;
+      const prototype = controller.prototype ?? controller;
       const methods = Object.getOwnPropertyNames(prototype);
 
       for (const methodName of methods) {
@@ -139,7 +140,7 @@ export class RouteManagerService {
     return routes;
   }
 
-  private getRouteMetadata(controller: any, methodName: string): any {
+  private getRouteMetadata(_controller: any, _methodName: string): any {
     // This would extract metadata from decorators
     // For now, return null as this requires reflection metadata
     return null;

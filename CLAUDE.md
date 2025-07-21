@@ -145,55 +145,56 @@ nizaami-plugins-monorepo/
 │   │   ├── webpack.config.js                               # Build configuration
 │   │   ├── .gitignore                                      # Git ignore template
 │   │   └── README.md                                       # Plugin development guide
-│   ├── plugins/
-│   │   └── payment-plugin/
-│   │       ├── src/
-│   │       │   ├── controllers/
-│   │       │   │   ├── payment.controller.ts               # Payment API endpoints
-│   │       │   │   └── webhook.controller.ts               # Payment webhooks
-│   │       │   ├── services/
-│   │       │   │   ├── payment.service.ts                  # Core payment logic
-│   │       │   │   ├── stripe.service.ts                   # Stripe integration
-│   │       │   │   └── paypal.service.ts                   # PayPal integration
-│   │       │   ├── entities/
-│   │       │   │   ├── payment.entity.ts                   # Payment data model
-│   │       │   │   └── transaction.entity.ts               # Transaction records
-│   │       │   ├── dto/
-│   │       │   │   ├── create-payment.dto.ts               # Payment request validation
-│   │       │   │   └── payment-response.dto.ts             # Payment response format
-│   │       │   ├── interfaces/
-│   │       │   │   └── payment-provider.interface.ts       # Payment provider contract
-│   │       │   ├── guards/
-│   │       │   │   └── payment.guard.ts                    # access control
-│   │       │   ├── middleware/
-│   │       │   │   └── payment-logging.middleware.ts       # Payment audit logging
-│   │       │   └── payment-plugin.module.ts                # Main plugin module
-│   │       │
-│   │       ├── config/
-│   │       │   ├── payment.config.ts                       # Plugin configuration
-│   │       │   └── providers.config.ts                     # Payment providers setup
-│   │       │
-│   │       ├── migrations/
-│   │       │   └── 001-create-payment-tables.ts            # Database schema
-│   │       │
-│   │       ├── tests/
-│   │       │   ├── unit/
-│   │       │   │   └── payment.service.spec.ts
-│   │       │   └── e2e/
-│   │       │       └── payment.e2e-spec.ts
-│   │       │
-│   │       ├── dist/                                       # Built plugin bundle
-│   │       │   ├── payment-plugin.bundle.js                # Webpack bundled code
-│   │       │   └── assets/
-│   │       │
-│   │       ├── plugin.manifest.json                        # Plugin metadata
-│   │       ├── plugin.routes.json                          # API routes definition
-│   │       ├── plugin.permissions.json                     # Required permissions
-│   │       ├── plugin.dependencies.json                    # External dependencies
-│   │       ├── package.json                                # Plugin package info
-│   │       ├── tsconfig.json                               # TypeScript config
-│   │       ├── webpack.config.js                           # Bundle configuration
-│   │       └── README.md                                   # Plugin documentation
+│   └── plugins/
+│       └── payment-plugin/
+│           ├── src/
+│           │   ├── controllers/
+│           │   │   ├── payment.controller.ts               # Payment API endpoints
+│           │   │   └── webhook.controller.ts               # Payment webhooks
+│           │   ├── services/
+│           │   │   ├── payment.service.ts                  # Core payment logic
+│           │   │   ├── stripe.service.ts                   # Stripe integration
+│           │   │   └── paypal.service.ts                   # PayPal integration
+│           │   ├── entities/
+│           │   │   ├── payment.entity.ts                   # Payment data model
+│           │   │   └── transaction.entity.ts               # Transaction records
+│           │   ├── dto/
+│           │   │   ├── create-payment.dto.ts               # Payment request validation
+│           │   │   └── payment-response.dto.ts             # Payment response format
+│           │   ├── interfaces/
+│           │   │   └── payment-provider.interface.ts       # Payment provider contract
+│           │   ├── guards/
+│           │   │   └── payment.guard.ts                    # access control
+│           │   ├── middleware/
+│           │   │   └── payment-logging.middleware.ts       # Payment audit logging
+│           │   └── payment-plugin.module.ts                # Main plugin module
+│           │
+│           ├── config/
+│           │   ├── payment.config.ts                       # Plugin configuration
+│           │   └── providers.config.ts                     # Payment providers setup
+│           │
+│           ├── migrations/
+│           │   └── 001-create-payment-tables.ts            # Database schema
+│           │
+│           ├── tests/
+│           │   ├── unit/
+│           │   │   └── payment.service.spec.ts
+│           │   └── e2e/
+│           │       └── payment.e2e-spec.ts
+│           │
+│           ├── dist/                                       # Built plugin bundle
+│           │   ├── payment-plugin.bundle.js                # Webpack bundled code
+│           │   └── assets/
+│           │
+│           ├── plugin.manifest.json                        # Plugin metadata
+│           ├── plugin.routes.json                          # API routes definition
+│           ├── plugin.permissions.json                     # Required permissions
+│           ├── plugin.dependencies.json                    # External dependencies
+│           ├── package.json                                # Plugin package info
+│           ├── tsconfig.json                               # TypeScript config
+│           ├── webpack.config.js                           # Bundle configuration
+│           └── README.md                                   # Plugin documentation
+├── libs/
 │   └── shared/
 │          ├── plugin-types/                                # TypeScript interfaces & types
 │          │   ├── src/

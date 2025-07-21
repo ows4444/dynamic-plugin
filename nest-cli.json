@@ -66,11 +66,20 @@
     },
     "tools/plugin-builder": {
       "type": "application",
-      "root": "apps/tools/plugin-builder",
+      "root": "tools/plugin-builder",
       "entryFile": "main",
-      "sourceRoot": "apps/tools/plugin-builder/src",
+      "sourceRoot": "tools/plugin-builder/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/tools/plugin-builder/tsconfig.app.json"
+        "tsConfigPath": "tools/plugin-builder/tsconfig.app.json"
+      }
+    },
+    "plugins/payment-plugin": {
+      "type": "application",
+      "root": "apps/plugins/payment-plugin",
+      "entryFile": "payment-plugin.module",
+      "sourceRoot": "apps/plugins/payment-plugin/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/plugins/payment-plugin/tsconfig.json"
       }
     }
   }

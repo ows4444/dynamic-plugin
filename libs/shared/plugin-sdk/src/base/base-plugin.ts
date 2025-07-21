@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { LoggerUtil, PluginLogContext } from '../utilities/logger.util';
 import { ConfigUtil, PluginConfigOptions } from '../utilities/config.util';
 
@@ -29,7 +29,7 @@ export abstract class BasePlugin
   protected readonly metadata: PluginMetadata;
   protected readonly config: PluginConfigOptions;
   protected readonly logContext: PluginLogContext;
-  protected isEnabled: boolean = false;
+  protected isEnabled = false;
 
   constructor(metadata: PluginMetadata, config: PluginConfigOptions = {}) {
     this.metadata = metadata;

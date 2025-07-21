@@ -36,7 +36,7 @@ export class ValidationUtil {
   static validate(data: any, schema: ValidationSchema): ValidationResult {
     const errors: ValidationError[] = [];
 
-    for (const [field, rules] in Object.entries(schema)) {
+    for (const [field, rules] of Object.entries(schema)) {
       const fieldRules = Array.isArray(rules) ? rules : [rules];
       const value = data[field];
 
@@ -64,7 +64,7 @@ export class ValidationUtil {
         if (value === undefined || value === null || value === '') {
           return {
             field,
-            message: rule.message || `${field} is required`,
+            message: rule.message ?? `${field} is required`,
             value,
           };
         }
@@ -74,7 +74,7 @@ export class ValidationUtil {
         if (typeof value !== 'string') {
           return {
             field,
-            message: rule.message || `${field} must be a string`,
+            message: rule.message ?? `${field} must be a string`,
             value,
           };
         }
@@ -82,7 +82,7 @@ export class ValidationUtil {
           return {
             field,
             message:
-              rule.message ||
+              rule.message ??
               `${field} must be at least ${rule.min} characters`,
             value,
           };
@@ -91,14 +91,14 @@ export class ValidationUtil {
           return {
             field,
             message:
-              rule.message || `${field} must be at most ${rule.max} characters`,
+              rule.message ?? `${field} must be at most ${rule.max} characters`,
             value,
           };
         }
         if (rule.pattern && !rule.pattern.test(value)) {
           return {
             field,
-            message: rule.message || `${field} format is invalid`,
+            message: rule.message ?? `${field} format is invalid`,
             value,
           };
         }
@@ -108,21 +108,21 @@ export class ValidationUtil {
         if (typeof value !== 'number' || isNaN(value)) {
           return {
             field,
-            message: rule.message || `${field} must be a number`,
+            message: rule.message ?? `${field} must be a number`,
             value,
           };
         }
         if (rule.min && value < rule.min) {
           return {
             field,
-            message: rule.message || `${field} must be at least ${rule.min}`,
+            message: rule.message ?? `${field} must be at least ${rule.min}`,
             value,
           };
         }
         if (rule.max && value > rule.max) {
           return {
             field,
-            message: rule.message || `${field} must be at most ${rule.max}`,
+            message: rule.message ?? `${field} must be at most ${rule.max}`,
             value,
           };
         }
@@ -132,7 +132,7 @@ export class ValidationUtil {
         if (typeof value !== 'boolean') {
           return {
             field,
-            message: rule.message || `${field} must be a boolean`,
+            message: rule.message ?? `${field} must be a boolean`,
             value,
           };
         }
@@ -142,7 +142,7 @@ export class ValidationUtil {
         if (!Array.isArray(value)) {
           return {
             field,
-            message: rule.message || `${field} must be an array`,
+            message: rule.message ?? `${field} must be an array`,
             value,
           };
         }
@@ -150,7 +150,7 @@ export class ValidationUtil {
           return {
             field,
             message:
-              rule.message || `${field} must have at least ${rule.min} items`,
+              rule.message ?? `${field} must have at least ${rule.min} items`,
             value,
           };
         }
@@ -158,7 +158,7 @@ export class ValidationUtil {
           return {
             field,
             message:
-              rule.message || `${field} must have at most ${rule.max} items`,
+              rule.message ?? `${field} must have at most ${rule.max} items`,
             value,
           };
         }
@@ -172,7 +172,7 @@ export class ValidationUtil {
         ) {
           return {
             field,
-            message: rule.message || `${field} must be an object`,
+            message: rule.message ?? `${field} must be an object`,
             value,
           };
         }
@@ -185,7 +185,7 @@ export class ValidationUtil {
         ) {
           return {
             field,
-            message: rule.message || `${field} must be a valid email address`,
+            message: rule.message ?? `${field} must be a valid email address`,
             value,
           };
         }
@@ -195,7 +195,7 @@ export class ValidationUtil {
         if (typeof value !== 'string') {
           return {
             field,
-            message: rule.message || `${field} must be a valid URL`,
+            message: rule.message ?? `${field} must be a valid URL`,
             value,
           };
         }
@@ -204,7 +204,7 @@ export class ValidationUtil {
         } catch {
           return {
             field,
-            message: rule.message || `${field} must be a valid URL`,
+            message: rule.message ?? `${field} must be a valid URL`,
             value,
           };
         }

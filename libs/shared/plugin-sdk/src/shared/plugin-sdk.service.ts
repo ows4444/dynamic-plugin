@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PluginMetadata } from '../base/base-plugin';
 import { PluginContext } from '../context/plugin-context';
-import { LoggerUtil } from '../utilities/logger.util';
 import { ConfigUtil } from '../utilities/config.util';
+import { LoggerUtil } from '../utilities/logger.util';
 import { ValidationUtil } from '../utilities/validation.util';
 
 @Injectable()
 export class PluginSdkService {
   constructor(private readonly pluginContext: PluginContext) {}
 
-  registerPlugin(metadata: PluginMetadata, config?: any): void {
+  registerPlugin(metadata: PluginMetadata, _config: any): void {
     this.pluginContext.setPlugin(metadata);
     LoggerUtil.log(
       metadata.id,

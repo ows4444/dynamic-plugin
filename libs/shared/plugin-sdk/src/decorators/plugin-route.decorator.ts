@@ -1,13 +1,11 @@
-import { SetMetadata, applyDecorators } from '@nestjs/common';
 import {
+  All, applyDecorators, Delete,
   Get,
-  Post,
-  Put,
-  Delete,
-  Patch,
-  Options,
   Head,
-  All,
+  Options,
+  Patch,
+  Post,
+  Put, SetMetadata
 } from '@nestjs/common';
 
 export const PLUGIN_ROUTE_METADATA_KEY = 'plugin:route';
@@ -50,7 +48,7 @@ export function PluginRoute(path?: string, options?: PluginRouteOptions) {
 
   const decorators = [
     SetMetadata(PLUGIN_ROUTE_METADATA_KEY, routeOptions),
-    SetMetadata(PLUGIN_ROUTE_PERMISSIONS_KEY, routeOptions.permissions || []),
+    SetMetadata(PLUGIN_ROUTE_PERMISSIONS_KEY, routeOptions.permissions ?? []),
     SetMetadata(PLUGIN_ROUTE_CONFIG_KEY, routeOptions),
   ];
 
@@ -158,11 +156,11 @@ export function PluginParameter(options: PluginParameterOptions) {
   return SetMetadata('plugin:parameter', options);
 }
 
-export function PluginAuth(required: boolean = true) {
+export function PluginAuth(required = true) {
   return SetMetadata('plugin:auth', required);
 }
 
-export function PluginRateLimit(max: number, windowMs: number = 60000) {
+export function PluginRateLimit(max: number, windowMs = 60000) {
   return SetMetadata('plugin:rateLimit', { max, windowMs });
 }
 

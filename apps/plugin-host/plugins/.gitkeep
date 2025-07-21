@@ -1,0 +1,25 @@
+# Runtime Plugin Storage Directory
+
+This directory contains the runtime plugin storage for the plugin host.
+
+## Structure
+```
+plugins/
+├── {organization}/
+│   ├── {plugin-name}@{version}/
+│   │   ├── plugin-bundle.js
+│   │   ├── plugin.manifest.json
+│   │   ├── package.json
+│   │   └── assets/
+│   └── {another-plugin}@{version}/
+└── .cache/
+    ├── manifests/
+    └── metadata/
+```
+
+## Important Notes
+- This directory is managed by the plugin host runtime
+- Plugins are organized by organization/namespace
+- Each plugin version is stored separately
+- Do not manually modify files in this directory
+- The .cache directory contains runtime metadata

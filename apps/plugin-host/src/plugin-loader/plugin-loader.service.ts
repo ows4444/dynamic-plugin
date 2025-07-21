@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as path from 'path';
 import { ModuleResolverService } from './module-resolver.service';
 import { RouteManagerService } from './route-manager.service';
-import * as path from 'path';
 
 export interface LoadedPlugin {
   id: string;
@@ -113,7 +113,7 @@ export class PluginLoaderService {
       const manifestPath = path.join(pluginPath, 'manifest.json');
       const manifest = await import(manifestPath);
       return manifest;
-    } catch (error) {
+    } catch (_error) {
       this.logger.warn(`Could not load manifest for plugin at ${pluginPath}`);
       return {};
     }

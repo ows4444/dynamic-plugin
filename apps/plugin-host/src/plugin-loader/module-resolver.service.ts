@@ -78,7 +78,7 @@ export class ModuleResolverService {
     delete require.cache[resolvedPath];
 
     // Clear from our internal cache
-    for (const [key, value] of this.moduleCache.entries()) {
+    for (const [key, _value] of this.moduleCache.entries()) {
       if (key.includes(modulePath)) {
         this.moduleCache.delete(key);
       }

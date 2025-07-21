@@ -16,7 +16,7 @@ export interface RegistryPlugin {
 export class RegistryClientService {
   private readonly logger = new Logger(RegistryClientService.name);
   private readonly registryUrl =
-    process.env.PLUGIN_REGISTRY_URL || 'http://localhost:3001';
+    process.env.PLUGIN_REGISTRY_URL ?? 'http://localhost:3001';
 
   constructor(
     private readonly downloadService: DownloadService,
@@ -24,7 +24,7 @@ export class RegistryClientService {
   ) {}
 
   async searchPlugins(query?: string): Promise<RegistryPlugin[]> {
-    this.logger.log(`Searching plugins in registry: ${query || 'all'}`);
+    this.logger.log(`Searching plugins in registry: ${query ?? 'all'}`);
 
     try {
       // For now, return mock data since we don't have HTTP client setup
@@ -41,7 +41,7 @@ export class RegistryClientService {
       ];
 
       this.logger.log(`Found ${mockPlugins.length} plugins in registry`);
-      return mockPlugins;
+      return Promise.resolve(mockPlugins);
     } catch (error) {
       this.logger.error(`Failed to search plugins: ${error.message}`);
       throw error;
@@ -64,7 +64,7 @@ export class RegistryClientService {
       };
 
       this.logger.log(`Retrieved plugin: ${plugin.name}@${plugin.version}`);
-      return plugin;
+      return Promise.resolve(plugin);
     } catch (error) {
       this.logger.error(`Failed to get plugin ${pluginId}: ${error.message}`);
       throw error;
@@ -72,14 +72,14 @@ export class RegistryClientService {
   }
 
   async downloadPlugin(pluginId: string, version?: string): Promise<string> {
-    this.logger.log(`Downloading plugin: ${pluginId}@${version || 'latest'}`);
+    this.logger.log(`Downloading plugin: ${pluginId}@${version ?? 'latest'}`);
 
     try {
       // Get plugin metadata
       const plugin = await this.getPlugin(pluginId);
 
       // Use specific version if provided
-      const targetVersion = version || plugin.version;
+      const targetVersion = version ?? plugin.version;
       const downloadUrl = `${this.registryUrl}/api/plugins/${pluginId}/download?version=${targetVersion}`;
 
       // Download the plugin package

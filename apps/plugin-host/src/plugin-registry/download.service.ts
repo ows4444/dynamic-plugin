@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { pipeline } from 'stream/promises';
 
 @Injectable()
 export class DownloadService {
@@ -31,7 +30,7 @@ export class DownloadService {
       fs.writeFileSync(filePath, mockContent);
 
       this.logger.log(`Package downloaded successfully: ${filePath}`);
-      return filePath;
+      return Promise.resolve(filePath);
     } catch (error) {
       this.logger.error(`Failed to download package: ${error.message}`);
       throw error;
@@ -53,7 +52,7 @@ export class DownloadService {
       }
 
       const contentLength = parseInt(
-        response.headers.get('content-length') || '0',
+        response.headers.get('content-length') ?? '0',
       );
       const filename = `${pluginId}-${version}.tgz`;
       const filePath = path.join(this.downloadDir, filename);
@@ -123,7 +122,7 @@ export class DownloadService {
     }
   }
 
-  async cleanupDownloads(olderThanDays: number = 7): Promise<void> {
+  async cleanupDownloads(olderThanDays = 7): Promise<void> {
     this.logger.log(`Cleaning up downloads older than ${olderThanDays} days`);
 
     try {
@@ -139,6 +138,8 @@ export class DownloadService {
           this.logger.log(`Deleted old download: ${file}`);
         }
       }
+      this.logger.log('Download cleanup complete');
+      await Promise.resolve();
     } catch (error) {
       this.logger.error(`Failed to cleanup downloads: ${error.message}`);
     }

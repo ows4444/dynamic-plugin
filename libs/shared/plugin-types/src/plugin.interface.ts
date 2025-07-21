@@ -26,6 +26,18 @@ export interface IPlugin {
   validateConfig(config: PluginConfig): Promise<ValidationResult>;
   onEvent(event: PluginEvent): Promise<void>;
   cleanup(): Promise<void>;
+
+  // Lifecycle hooks - optional
+  onInit?(): Promise<void>;
+  onDestroy?(): Promise<void>;
+  healthCheck?(): Promise<boolean>;
+
+  // Request handling - optional
+  handleRequest?<T = unknown, R = unknown>(requestData: T): Promise<R>;
+  onWebSocketConnection?<T = unknown>(
+    socket: WebSocket,
+    data: T,
+  ): Promise<void>;
 }
 
 export interface IPluginManifest {
@@ -47,7 +59,7 @@ export interface IPluginManifest {
   routes?: PluginRoute[];
   hooks?: PluginHook[];
   configuration?: PluginConfigSchema;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   assets?: string[];
   tags?: string[];
   keywords?: string[];
@@ -57,7 +69,7 @@ export interface IPluginManifest {
 }
 
 export interface PluginConfig {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface PluginConfigSchema {
@@ -70,8 +82,8 @@ export interface PluginConfigSchema {
 export interface ConfigPropertySchema {
   type: 'string' | 'number' | 'boolean' | 'object' | 'array';
   description?: string;
-  default?: any;
-  enum?: any[];
+  default?: unknown;
+  enum?: unknown[];
   minimum?: number;
   maximum?: number;
   minLength?: number;
@@ -132,7 +144,7 @@ export interface PluginHealthCheck {
   timestamp: Date;
   uptime: number;
   checks: HealthCheckResult[];
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface HealthCheckResult {
@@ -140,7 +152,7 @@ export interface HealthCheckResult {
   status: 'pass' | 'fail' | 'warn';
   message?: string;
   duration?: number;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface PluginMetrics {
@@ -164,14 +176,14 @@ export interface ValidationError {
   field: string;
   message: string;
   code: string;
-  value?: any;
+  value?: unknown;
 }
 
 export interface ValidationWarning {
   field: string;
   message: string;
   code: string;
-  value?: any;
+  value?: unknown;
 }
 
 export interface PluginEvent {
@@ -179,7 +191,7 @@ export interface PluginEvent {
   type: string;
   source: string;
   timestamp: Date;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   pluginId?: string;
   correlationId?: string;
 }
@@ -201,24 +213,24 @@ export interface PluginContext {
 }
 
 export interface IPluginLogger {
-  debug(message: string, ...args: any[]): void;
-  info(message: string, ...args: any[]): void;
-  warn(message: string, ...args: any[]): void;
-  error(message: string, error?: Error, ...args: any[]): void;
+  debug(message: string, ...args: unknown[]): void;
+  info(message: string, ...args: unknown[]): void;
+  warn(message: string, ...args: unknown[]): void;
+  error(message: string, error?: Error, ...args: unknown[]): void;
   setLevel(level: 'debug' | 'info' | 'warn' | 'error'): void;
-  child(context: Record<string, any>): IPluginLogger;
+  child(context: Record<string, unknown>): IPluginLogger;
 }
 
 export interface IPluginEventBus {
-  emit(event: string, data: any): Promise<void>;
-  on(event: string, handler: (data: any) => void | Promise<void>): void;
-  off(event: string, handler: (data: any) => void | Promise<void>): void;
-  once(event: string, handler: (data: any) => void | Promise<void>): void;
+  emit(event: string, data: unknown): Promise<void>;
+  on(event: string, handler: (data: unknown) => void | Promise<void>): void;
+  off(event: string, handler: (data: unknown) => void | Promise<void>): void;
+  once(event: string, handler: (data: unknown) => void | Promise<void>): void;
 }
 
 export interface IPluginStorage {
-  get<T = any>(key: string): Promise<T | null>;
-  set(key: string, value: any, ttl?: number): Promise<void>;
+  get<T = unknown>(key: string): Promise<T | null>;
+  set(key: string, value: unknown, ttl?: number): Promise<void>;
   delete(key: string): Promise<boolean>;
   exists(key: string): Promise<boolean>;
   keys(pattern?: string): Promise<string[]>;
@@ -226,24 +238,27 @@ export interface IPluginStorage {
 }
 
 export interface IPluginHttpClient {
-  get<T = any>(url: string, config?: RequestConfig): Promise<HttpResponse<T>>;
-  post<T = any>(
-    url: string,
-    data?: any,
-    config?: RequestConfig,
-  ): Promise<HttpResponse<T>>;
-  put<T = any>(
-    url: string,
-    data?: any,
-    config?: RequestConfig,
-  ): Promise<HttpResponse<T>>;
-  delete<T = any>(
+  get<T = unknown>(
     url: string,
     config?: RequestConfig,
   ): Promise<HttpResponse<T>>;
-  patch<T = any>(
+  post<T = unknown>(
     url: string,
-    data?: any,
+    data?: unknown,
+    config?: RequestConfig,
+  ): Promise<HttpResponse<T>>;
+  put<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: RequestConfig,
+  ): Promise<HttpResponse<T>>;
+  delete<T = unknown>(
+    url: string,
+    config?: RequestConfig,
+  ): Promise<HttpResponse<T>>;
+  patch<T = unknown>(
+    url: string,
+    data?: unknown,
     config?: RequestConfig,
   ): Promise<HttpResponse<T>>;
 }
@@ -251,12 +266,12 @@ export interface IPluginHttpClient {
 export interface RequestConfig {
   headers?: Record<string, string>;
   timeout?: number;
-  params?: Record<string, any>;
+  params?: Record<string, unknown>;
   auth?: { username: string; password: string };
   retry?: number;
 }
 
-export interface HttpResponse<T = any> {
+export interface HttpResponse<T = unknown> {
   data: T;
   status: number;
   statusText: string;
@@ -265,8 +280,8 @@ export interface HttpResponse<T = any> {
 }
 
 export interface IPluginCache {
-  get<T = any>(key: string): Promise<T | null>;
-  set(key: string, value: any, ttl?: number): Promise<void>;
+  get<T = unknown>(key: string): Promise<T | null>;
+  set(key: string, value: unknown, ttl?: number): Promise<void>;
   delete(key: string): Promise<boolean>;
   clear(): Promise<void>;
   keys(pattern?: string): Promise<string[]>;

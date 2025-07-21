@@ -54,7 +54,7 @@ export class PluginInstallerService {
     );
 
     this.logger.log(`Plugin installed to: ${pluginDir}`);
-    return manifest;
+    return Promise.resolve(manifest);
   }
 
   async uninstall(pluginId: string): Promise<void> {
@@ -66,16 +66,19 @@ export class PluginInstallerService {
       fs.rmSync(pluginDir, { recursive: true, force: true });
       this.logger.log(`Plugin directory removed: ${pluginDir}`);
     }
+   await Promise.resolve()
   }
 
   async extract(packagePath: string, targetDir: string): Promise<void> {
     // Implementation for extracting plugin packages
     // This would use libraries like tar or node-tar for .tgz files
     this.logger.log(`Extracting ${packagePath} to ${targetDir}`);
+    await Promise.resolve()
   }
 
   async downloadDependencies(pluginDir: string): Promise<void> {
     // Implementation for downloading and installing plugin dependencies
     this.logger.log(`Installing dependencies for plugin in ${pluginDir}`);
+    await Promise.resolve()
   }
 }

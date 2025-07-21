@@ -40,7 +40,7 @@ export class MetadataService {
       this.logger.log(
         `Extracted metadata: ${metadata.name}@${metadata.version}`,
       );
-      return metadata;
+      return Promise.resolve(metadata);
     } catch (error) {
       this.logger.error(`Failed to extract metadata: ${error.message}`);
       throw error;
@@ -93,7 +93,7 @@ export class MetadataService {
       this.logger.log(
         `Extracted metadata: ${metadata.name}@${metadata.version}`,
       );
-      return metadata as PluginMetadata;
+      return Promise.resolve(metadata as PluginMetadata);
     } catch (error) {
       this.logger.error(
         `Failed to extract metadata from directory: ${error.message}`,
@@ -113,29 +113,29 @@ export class MetadataService {
       for (const field of requiredFields) {
         if (!metadata[field]) {
           this.logger.error(`Missing required field: ${field}`);
-          return false;
+          return Promise.resolve(false);
         }
       }
 
       // Validate version format
       if (!this.isValidVersion(metadata.version)) {
         this.logger.error(`Invalid version format: ${metadata.version}`);
-        return false;
+        return Promise.resolve(false);
       }
 
       // Validate name format
       if (!this.isValidName(metadata.name)) {
         this.logger.error(`Invalid name format: ${metadata.name}`);
-        return false;
+        return Promise.resolve(false);
       }
 
       this.logger.log(
         `Metadata validation passed: ${metadata.name}@${metadata.version}`,
       );
-      return true;
+      return Promise.resolve(true);
     } catch (error) {
       this.logger.error(`Metadata validation failed: ${error.message}`);
-      return false;
+      return Promise.resolve(false);
     }
   }
 

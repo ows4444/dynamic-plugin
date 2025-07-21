@@ -1,5 +1,5 @@
-import { PluginType, PluginCategory } from '../enums/plugin-status.enum';
 import { PluginPermission, SecurityLevel } from '../enums/permission.enum';
+import { PluginCategory, PluginType } from '../enums/plugin-status.enum';
 
 export interface PluginManifest {
   name: string;
@@ -40,8 +40,8 @@ export class ManifestValidator {
   ];
 
   private static readonly VERSION_REGEX =
-    /^\d+\.\d+\.\d+(-[\w\d\-]+)?(\+[\w\d\-]+)?$/;
-  private static readonly NAME_REGEX = /^[a-z]([a-z0-9\-])*[a-z0-9]$/;
+    /^\d+\.\d+\.\d+(-[\w\d-]+)?(\+[\w\d-]+)?$/;
+  private static readonly NAME_REGEX = /^[a-z]([a-z0-9-])*[a-z0-9]$/;
 
   static validate(manifest: any): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
@@ -187,7 +187,7 @@ export class ManifestValidator {
     if (dependencies) {
       for (const [name, version] of Object.entries(dependencies)) {
         if (typeof name !== 'string' || typeof version !== 'string') {
-          errors.push(`Invalid dependency: ${name}@${version}`);
+          errors.push(`Invalid dependency: ${name}@${String(version)}`);
         }
       }
     }
@@ -208,7 +208,7 @@ export class ManifestValidator {
     if (peerDependencies) {
       for (const [name, version] of Object.entries(peerDependencies)) {
         if (typeof name !== 'string' || typeof version !== 'string') {
-          errors.push(`Invalid peer dependency: ${name}@${version}`);
+          errors.push(`Invalid peer dependency: ${name}@${String(version)}`);
         }
       }
     }

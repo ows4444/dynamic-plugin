@@ -6,7 +6,7 @@ export interface PluginConfigOptions {
 
 @Injectable()
 export class ConfigUtil {
-  static validateConfig(config: PluginConfigOptions, schema: any): boolean {
+  static validateConfig(config: PluginConfigOptions, _schema: any): boolean {
     // Basic validation logic
     if (!config || typeof config !== 'object') {
       return false;

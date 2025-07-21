@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { BasePlugin, PluginMetadata } from './base-plugin';
-import { LoggerUtil, PluginLogContext } from '../utilities/logger.util';
 import { ConfigUtil, PluginConfigOptions } from '../utilities/config.util';
+import { LoggerUtil, PluginLogContext } from '../utilities/logger.util';
+import { BasePlugin, PluginMetadata } from './base-plugin';
 
 export interface ServiceOptions {
   timeout?: number;
@@ -133,7 +133,7 @@ export abstract class BaseService {
     LoggerUtil.security(this.pluginId, event, this.logContext, data);
   }
 
-  protected validateInput(data: any, schema: any): boolean {
+  protected validateInput(_data: any, _schema: any): boolean {
     // Implement validation logic using ValidationUtil if needed
     return true;
   }

@@ -1,0 +1,132 @@
+{
+  "name": "payment-plugin",
+  "version": "1.0.0",
+  "description": "A comprehensive payment processing plugin that supports multiple payment providers including Stripe, PayPal, and custom payment gateways",
+  "author": {
+    "name": "Plugin Developer",
+    "email": "developer@example.com"
+  },
+  "license": "MIT",
+  "pluginType": "integration",
+  "apiVersion": "1.0.0",
+  "main": "dist/payment-plugin.module.js",
+  "permissions": [
+    "network.request",
+    "database.read",
+    "database.write",
+    "cache.read",
+    "cache.write",
+    "events.emit",
+    "events.listen"
+  ],
+  "engines": {
+    "host": ">=1.0.0",
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "payment",
+    "stripe",
+    "paypal",
+    "gateway",
+    "transaction",
+    "billing"
+  ],
+  "routes": [
+    {
+      "path": "/payment/providers",
+      "method": "GET",
+      "handler": "getProviders",
+      "description": "Get available payment providers"
+    },
+    {
+      "path": "/payment/intent",
+      "method": "POST",
+      "handler": "createPaymentIntent",
+      "description": "Create a payment intent"
+    },
+    {
+      "path": "/payment/intent/:id/confirm",
+      "method": "POST",
+      "handler": "confirmPayment",
+      "description": "Confirm a payment"
+    },
+    {
+      "path": "/payment/intent/:id/cancel",
+      "method": "POST",
+      "handler": "cancelPayment",
+      "description": "Cancel a payment"
+    },
+    {
+      "path": "/payment/webhooks/:provider",
+      "method": "POST",
+      "handler": "handleWebhook",
+      "description": "Handle payment provider webhooks"
+    },
+    {
+      "path": "/payment/transactions",
+      "method": "GET",
+      "handler": "getTransactions",
+      "description": "Get transaction history"
+    },
+    {
+      "path": "/payment/transactions/:id",
+      "method": "GET",
+      "handler": "getTransaction",
+      "description": "Get specific transaction"
+    },
+    {
+      "path": "/payment/refund",
+      "method": "POST",
+      "handler": "createRefund",
+      "description": "Create a refund"
+    },
+    {
+      "path": "/payment/health",
+      "method": "GET",
+      "handler": "healthCheck",
+      "description": "Payment system health check"
+    }
+  ],
+  "config": {
+    "stripe": {
+      "enabled": true,
+      "publicKey": "${STRIPE_PUBLIC_KEY}",
+      "secretKey": "${STRIPE_SECRET_KEY}",
+      "webhookSecret": "${STRIPE_WEBHOOK_SECRET}"
+    },
+    "paypal": {
+      "enabled": false,
+      "clientId": "${PAYPAL_CLIENT_ID}",
+      "clientSecret": "${PAYPAL_CLIENT_SECRET}",
+      "sandbox": true
+    },
+    "database": {
+      "table": "plugin_payments",
+      "indexes": ["status", "provider", "created_at"]
+    },
+    "cache": {
+      "ttl": 3600,
+      "prefix": "payment:"
+    },
+    "security": {
+      "validateWebhooks": true,
+      "requireHttps": true,
+      "maxRefundDays": 30
+    }
+  },
+  "hooks": {
+    "onLoad": "initializeProviders",
+    "onUnload": "cleanupProviders",
+    "beforeRequest": "validateApiKey",
+    "afterResponse": "logTransaction"
+  },
+  "dependencies": {
+    "stripe": "^13.0.0",
+    "@paypal/checkout-server-sdk": "^1.0.0",
+    "crypto": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/stripe": "^13.0.0",
+    "nock": "^13.0.0"
+  }
+}

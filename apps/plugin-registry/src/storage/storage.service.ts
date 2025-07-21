@@ -1,0 +1,277 @@
+import { Injectable, Logger } from '@nestjs/common';
+import * as crypto from 'crypto';
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import { Readable } from 'stream';
+
+export interface FileStats {
+  size: number;
+  createdAt: Date;
+  updatedAt: Date;
+  checksum: string;
+}
+
+export interface ReadStreamOptions {
+  start?: number;
+  end?: number;
+}
+
+@Injectable()
+export class StorageService {
+  private readonly logger = new Logger(StorageService.name);
+  private readonly basePath: string;
+
+  constructor() {
+    this.basePath = process.env.REGISTRY_STORAGE_PATH ?? './storage';
+    void this.ensureBaseDirectory();
+  }
+
+  async write(filePath: string, data: Buffer): Promise<void> {
+    try {
+      const fullPath = this.getFullPath(filePath);
+      const directory = path.dirname(fullPath);
+
+      await this.createDirectory(directory);
+      await fs.writeFile(fullPath, data);
+
+      this.logger.debug(`Written file: ${filePath}`);
+    } catch (error) {
+      this.logger.error(`Failed to write file ${filePath}: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async read(filePath: string): Promise<Buffer | null> {
+    try {
+      const fullPath = this.getFullPath(filePath);
+      const data = await fs.readFile(fullPath);
+      this.logger.debug(`Read file: ${filePath}`);
+      return data;
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        return null;
+      }
+      this.logger.error(`Failed to read file ${filePath}: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async exists(filePath: string): Promise<boolean> {
+    try {
+      const fullPath = this.getFullPath(filePath);
+      await fs.access(fullPath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async delete(filePath: string): Promise<void> {
+    try {
+      const fullPath = this.getFullPath(filePath);
+      await fs.unlink(fullPath);
+      this.logger.debug(`Deleted file: ${filePath}`);
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        this.logger.error(
+          `Failed to delete file ${filePath}: ${error.message}`,
+        );
+        throw error;
+      }
+    }
+  }
+
+  async createDirectory(directoryPath: string): Promise<void> {
+    try {
+      const fullPath = this.getFullPath(directoryPath);
+      await fs.mkdir(fullPath, { recursive: true });
+      this.logger.debug(`Created directory: ${directoryPath}`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to create directory ${directoryPath}: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  async deleteDirectory(directoryPath: string): Promise<void> {
+    try {
+      const fullPath = this.getFullPath(directoryPath);
+      await fs.rmdir(fullPath, { recursive: true });
+      this.logger.debug(`Deleted directory: ${directoryPath}`);
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        this.logger.error(
+          `Failed to delete directory ${directoryPath}: ${error.message}`,
+        );
+        throw error;
+      }
+    }
+  }
+
+  async list(directoryPath: string): Promise<string[]> {
+    try {
+      const fullPath = this.getFullPath(directoryPath);
+      const entries = await fs.readdir(fullPath, { withFileTypes: true });
+      return entries.map((entry) => entry.name);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        return [];
+      }
+      this.logger.error(
+        `Failed to list directory ${directoryPath}: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  async getFileStats(filePath: string): Promise<FileStats | null> {
+    try {
+      const fullPath = this.getFullPath(filePath);
+      const stats = await fs.stat(fullPath);
+      const data = await fs.readFile(fullPath);
+      const checksum = crypto.createHash('sha256').update(data).digest('hex');
+
+      return {
+        size: stats.size,
+        createdAt: stats.birthtime,
+        updatedAt: stats.mtime,
+        checksum,
+      };
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        return null;
+      }
+      this.logger.error(
+        `Failed to get file stats ${filePath}: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  createReadStream(filePath: string, options?: ReadStreamOptions): Readable {
+    const fullPath = this.getFullPath(filePath);
+
+    const streamOptions: any = {};
+    if (options?.start !== undefined) {
+      streamOptions.start = options.start;
+    }
+    if (options?.end !== undefined) {
+      streamOptions.end = options.end;
+    }
+
+    return require('fs').createReadStream(fullPath, streamOptions);
+  }
+
+  async calculateDirectorySize(directoryPath: string): Promise<number> {
+    try {
+      const fullPath = this.getFullPath(directoryPath);
+      let totalSize = 0;
+
+      const entries = await fs.readdir(fullPath, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const entryPath = path.join(fullPath, entry.name);
+        if (entry.isDirectory()) {
+          totalSize += await this.calculateDirectorySize(
+            path.relative(this.basePath, entryPath),
+          );
+        } else {
+          const stats = await fs.stat(entryPath);
+          totalSize += stats.size;
+        }
+      }
+
+      return totalSize;
+    } catch (error) {
+      this.logger.error(
+        `Failed to calculate directory size ${directoryPath}: ${error.message}`,
+      );
+      return 0;
+    }
+  }
+
+  async cleanupOldFiles(maxAge: number, pattern?: string): Promise<number> {
+    const cutoffDate = new Date(Date.now() - maxAge);
+    const cleanedCount = 0;
+
+    try {
+      await this.cleanupDirectory('', cutoffDate, pattern, cleanedCount);
+      this.logger.log(`Cleaned up ${cleanedCount} old files`);
+      return cleanedCount;
+    } catch (error) {
+      this.logger.error(`Failed to cleanup old files: ${error.message}`);
+      return cleanedCount;
+    }
+  }
+
+  getBasePath(): string {
+    return this.basePath;
+  }
+
+  private async ensureBaseDirectory(): Promise<void> {
+    try {
+      await fs.mkdir(this.basePath, { recursive: true });
+
+      // Create standard subdirectories
+      await fs.mkdir(path.join(this.basePath, 'plugins'), { recursive: true });
+      await fs.mkdir(path.join(this.basePath, 'temp'), { recursive: true });
+    } catch (error) {
+      this.logger.error(`Failed to create base directory: ${error.message}`);
+    }
+  }
+
+  private getFullPath(relativePath: string): string {
+    const normalizedPath = path.normalize(relativePath);
+    if (normalizedPath.includes('..')) {
+      throw new Error('Path traversal not allowed');
+    }
+    return path.join(this.basePath, normalizedPath);
+  }
+
+  private async cleanupDirectory(
+    directoryPath: string,
+    cutoffDate: Date,
+    pattern: string | undefined,
+    cleanedCount: number,
+  ): Promise<void> {
+    const fullPath = this.getFullPath(directoryPath);
+    const entries = await fs.readdir(fullPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const entryPath = path.join(fullPath, entry.name);
+      const relativePath = path.relative(this.basePath, entryPath);
+
+      if (entry.isDirectory()) {
+        await this.cleanupDirectory(
+          relativePath,
+          cutoffDate,
+          pattern,
+          cleanedCount,
+        );
+
+        // Remove empty directories
+        try {
+          const remainingEntries = await fs.readdir(entryPath);
+          if (remainingEntries.length === 0) {
+            await fs.rmdir(entryPath);
+            cleanedCount++;
+          }
+        } catch {
+          // Directory not empty or other error, ignore
+        }
+      } else {
+        // Check if file matches pattern (if specified)
+        if (pattern && !entry.name.match(new RegExp(pattern))) {
+          continue;
+        }
+
+        const stats = await fs.stat(entryPath);
+        if (stats.mtime < cutoffDate) {
+          await fs.unlink(entryPath);
+          cleanedCount++;
+        }
+      }
+    }
+  }
+}

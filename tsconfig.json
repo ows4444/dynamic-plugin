@@ -18,22 +18,22 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@app/shared/common": [
+      "@lib/shared/common": [
         "libs/shared/common/src"
       ],
-      "@app/shared/common/*": [
+      "@lib/shared/common/*": [
         "libs/shared/common/src/*"
       ],
-      "@app/shared/plugin-sdk": [
+      "@lib/shared/plugin-sdk": [
         "libs/shared/plugin-sdk/src"
       ],
-      "@app/shared/plugin-sdk/*": [
+      "@lib/shared/plugin-sdk/*": [
         "libs/shared/plugin-sdk/src/*"
       ],
-      "@app/shared/plugin-types": [
+      "@lib/shared/plugin-types": [
         "libs/shared/plugin-types/src"
       ],
-      "@app/shared/plugin-types/*": [
+      "@lib/shared/plugin-types/*": [
         "libs/shared/plugin-types/src/*"
       ]
     }

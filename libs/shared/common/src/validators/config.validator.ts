@@ -58,13 +58,13 @@ export class ConfigValidator {
 
     if (value === null || value === undefined) {
       if (schema.required) {
-        errors.push(`Missing required field at ${path || 'root'}`);
+        errors.push(`Missing required field at ${path ?? 'root'}`);
       }
       return;
     }
 
     if (!this.TYPE_VALIDATORS.object(value)) {
-      errors.push(`Expected object at ${path || 'root'}, got ${typeof value}`);
+      errors.push(`Expected object at ${path ?? 'root'}, got ${typeof value}`);
       return;
     }
 
@@ -120,7 +120,7 @@ export class ConfigValidator {
     errors: string[],
   ): void {
     const validator = this.TYPE_VALIDATORS[schema.type];
-    if (!validator || !validator(value)) {
+    if (!validator?.(value)) {
       errors.push(`Expected ${schema.type} at ${path}, got ${typeof value}`);
     }
   }

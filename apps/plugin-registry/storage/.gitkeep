@@ -1,0 +1,29 @@
+# Plugin Registry Storage Directory
+
+This directory contains the file storage for the plugin registry.
+
+## Structure
+```
+storage/
+├── plugins/
+│   ├── {plugin-name}/
+│   │   ├── v1.0.0/
+│   │   │   ├── {plugin-name}.tar.gz
+│   │   │   └── manifest.json
+│   │   └── v1.1.0/
+│   └── {another-plugin}/
+├── temp/
+│   └── uploads/
+├── quarantine/
+│   └── suspicious-files/
+└── backups/
+    └── {date}/
+```
+
+## Important Notes
+- This directory is managed by the plugin registry
+- Plugins are stored as compressed archives (.tar.gz)
+- The temp directory is used for upload processing
+- Quarantine directory contains files flagged by security scans
+- Backups are created according to backup configuration
+- Do not manually modify files in active plugin directories

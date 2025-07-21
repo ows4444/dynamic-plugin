@@ -30,10 +30,10 @@ export class PluginValidatorService {
       // - Dependency validation
 
       this.logger.log(`Package validation passed: ${packagePath}`);
-      return true;
+      return await Promise.resolve(true) ;
     } catch (error) {
       this.logger.error(`Package validation failed: ${error.message}`);
-      return false;
+      return await Promise.resolve(false) ;
     }
   }
 
@@ -62,10 +62,10 @@ export class PluginValidatorService {
         return false;
       }
 
-      return true;
+      return Promise.resolve(true)
     } catch (error) {
       this.logger.error(`Manifest validation failed: ${error.message}`);
-      return false;
+      return Promise.resolve(false)
     }
   }
 
@@ -85,6 +85,6 @@ export class PluginValidatorService {
     // - Scan for malicious code patterns
     // - Validate dependencies
 
-    return true;
+    return Promise.resolve(true) ;
   }
 }

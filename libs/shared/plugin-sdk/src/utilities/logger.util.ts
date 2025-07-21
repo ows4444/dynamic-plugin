@@ -47,7 +47,7 @@ export class LoggerUtil {
   ): void {
     const logger = this.getLogger(pluginId);
     const logMessage = this.formatMessage(message, context, {
-      error: error?.stack || error?.message,
+      error: error?.stack ?? error?.message,
     });
     logger.error(logMessage);
   }

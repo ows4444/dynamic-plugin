@@ -3,6 +3,7 @@ export enum PluginStatus {
   DOWNLOADING = 'downloading',
   INSTALLING = 'installing',
   INSTALLED = 'installed',
+  INITIALIZING = 'initializing',
   STARTING = 'starting',
   RUNNING = 'running',
   STOPPING = 'stopping',

@@ -1,6 +1,6 @@
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './core/app.module';
-import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const logger = new Logger('PluginHost');
@@ -16,9 +16,9 @@ async function bootstrap() {
   // Global prefix for all routes
   app.setGlobalPrefix('api');
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT ?? 3000;
   await app.listen(port);
 
   logger.log(`Plugin Host is running on: http://localhost:${port}`);
 }
-bootstrap();
+void bootstrap();

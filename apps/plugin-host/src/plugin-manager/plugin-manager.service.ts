@@ -68,6 +68,7 @@ export class PluginManagerService {
     plugin.status = 'running';
 
     this.logger.log(`Plugin started successfully: ${pluginId}`);
+    await Promise.resolve();
   }
 
   async stopPlugin(pluginId: string): Promise<void> {
@@ -82,6 +83,7 @@ export class PluginManagerService {
     plugin.status = 'stopped';
 
     this.logger.log(`Plugin stopped successfully: ${pluginId}`);
+    await Promise.resolve();
   }
 
   getPlugins(): Plugin[] {
