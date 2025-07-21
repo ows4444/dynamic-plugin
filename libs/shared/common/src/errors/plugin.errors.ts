@@ -17,7 +17,7 @@ export interface PluginErrorDetails {
 }
 
 export interface NodeErrorCapture {
-  captureStackTrace?: (targetObject: Error, constructorOpt?: Function) => void;
+  captureStackTrace?: (targetObject: Error, constructorOpt?: new (...args: any[]) => any) => void;
 }
 
 export class PluginError extends Error {
