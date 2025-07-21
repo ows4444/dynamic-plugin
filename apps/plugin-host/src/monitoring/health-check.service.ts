@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as os from 'os';
 import { PluginInstanceService } from '../plugin-runtime/plugin-instance.service';
 
 export interface HealthStatus {
@@ -180,8 +181,8 @@ export class HealthCheckService {
     const uptime = process.uptime();
 
     // Memory usage
-    const totalMemory = require('os').totalmem();
-    const freeMemory = require('os').freemem();
+    const totalMemory = os.totalmem();
+    const freeMemory = os.freemem();
     const usedMemory = totalMemory - freeMemory;
 
     const memory: MemoryUsage = {
@@ -192,7 +193,7 @@ export class HealthCheckService {
     };
 
     // CPU usage
-    const loadAverage = require('os').loadavg();
+    const loadAverage = os.loadavg();
     const cpu: CpuUsage = {
       percentage: (cpuUsage.user + cpuUsage.system) / 1000, // Convert to percentage
       loadAverage,

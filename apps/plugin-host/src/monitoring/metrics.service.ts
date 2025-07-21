@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as os from 'os';
 
 export interface Metric {
   name: string;
@@ -204,8 +205,8 @@ export class MetricsService {
   getSystemMetrics(): SystemMetrics {
     const now = new Date();
     const _memUsage = process.memoryUsage();
-    const totalMemory = require('os').totalmem();
-    const freeMemory = require('os').freemem();
+    const totalMemory = os.totalmem();
+    const freeMemory = os.freemem();
     const usedMemory = totalMemory - freeMemory;
 
     const pluginMetrics = Array.from(this.pluginMetrics.values());
@@ -233,7 +234,7 @@ export class MetricsService {
       timestamp: now,
       cpu: {
         usage: 0, // Would need CPU monitoring implementation
-        loadAverage: require('os').loadavg(),
+        loadAverage: os.loadavg(),
       },
       memory: {
         used: usedMemory,

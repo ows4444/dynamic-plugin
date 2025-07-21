@@ -3,8 +3,8 @@ import { Injectable, Logger } from '@nestjs/common';
 export interface PluginRoute {
   path: string;
   method: string;
-  handler: Function;
-  middleware?: Function[];
+  handler: (...args: any[]) => any;
+  middleware?: ((...args: any[]) => any)[];
 }
 
 @Injectable()

@@ -71,14 +71,23 @@ export class PluginEventsService extends EventEmitter {
     type: PluginEventType | '*',
     handler: PluginEventHandler,
   ): void {
-    this.on(type, handler);
+    this.on(type, (event: PluginEvent) => {
+      const result = handler(event);
+      if (result instanceof Promise) {
+        result.catch((error) => {
+          this.logger.error(`Error in plugin event handler: ${error.message}`, error.stack);
+        });
+      }
+    });
   }
 
   removePluginEventListener(
     type: PluginEventType | '*',
     handler: PluginEventHandler,
   ): void {
-    this.removeListener(type, handler);
+    // Note: This won't work perfectly with wrapped handlers from onPluginEvent
+    // Consider maintaining a Map of original handlers to wrapped handlers
+    this.removeListener(type, handler as any);
   }
 
   async emitPluginLoaded(

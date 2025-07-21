@@ -132,7 +132,7 @@ export class PluginProxyService {
     pluginInstance: any,
     method: string,
     route: string,
-  ): Function | null {
+  ): ((...args: any[]) => any) | null {
     const methodName = `handle${method.toUpperCase()}`;
 
     if (typeof pluginInstance[methodName] === 'function') {

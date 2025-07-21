@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
-import { promises as fs } from 'fs';
+import { createReadStream, promises as fs } from 'fs';
 import * as path from 'path';
 import { Readable } from 'stream';
 
@@ -160,7 +160,7 @@ export class StorageService {
       streamOptions.end = options.end;
     }
 
-    return require('fs').createReadStream(fullPath, streamOptions);
+    return createReadStream(fullPath, streamOptions);
   }
 
   async calculateDirectorySize(directoryPath: string): Promise<number> {
