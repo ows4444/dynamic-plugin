@@ -20,6 +20,10 @@ export interface ValidationSchema {
   [field: string]: ValidationRule | ValidationRule[];
 }
 
+export interface ValidationData {
+  [key: string]: unknown;
+}
+
 export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
@@ -28,12 +32,12 @@ export interface ValidationResult {
 export interface ValidationError {
   field: string;
   message: string;
-  value?: any;
+  value?: unknown;
 }
 
 @Injectable()
 export class ValidationUtil {
-  static validate(data: any, schema: ValidationSchema): ValidationResult {
+  static validate(data: ValidationData, schema: ValidationSchema): ValidationResult {
     const errors: ValidationError[] = [];
 
     for (const [field, rules] of Object.entries(schema)) {
@@ -56,7 +60,7 @@ export class ValidationUtil {
 
   private static validateField(
     field: string,
-    value: any,
+    value: unknown,
     rule: ValidationRule,
   ): ValidationError | null {
     switch (rule.type) {

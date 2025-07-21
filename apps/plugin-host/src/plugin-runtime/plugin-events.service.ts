@@ -1,12 +1,28 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter } from 'events';
+import { IPluginManifest } from '@lib/shared/plugin-types';
+
+export interface PluginEventData {
+  [key: string]: unknown;
+}
+
+export interface PluginLoadedData extends PluginEventData {
+  metadata: IPluginManifest | Record<string, unknown>;
+  loadTime: Date;
+}
+
+export interface PluginHealthCheckData extends PluginEventData {
+  healthy: boolean;
+  details?: Record<string, unknown>;
+  checkTime: Date;
+}
 
 export interface PluginEvent {
   id: string;
   type: string;
   pluginId: string;
   instanceId: string;
-  data: any;
+  data: PluginEventData;
   timestamp: Date;
   source: 'plugin' | 'host';
 }
@@ -41,7 +57,7 @@ export class PluginEventsService extends EventEmitter {
     type: PluginEventType,
     pluginId: string,
     instanceId: string,
-    data: any = {},
+    data: PluginEventData = {},
     source: 'plugin' | 'host' = 'host',
   ): Promise<void> {
     const event: PluginEvent = {
@@ -93,12 +109,13 @@ export class PluginEventsService extends EventEmitter {
   async emitPluginLoaded(
     pluginId: string,
     instanceId: string,
-    metadata: any,
+    metadata: IPluginManifest | Record<string, unknown>,
   ): Promise<void> {
-    await this.emitPluginEvent('plugin.loaded', pluginId, instanceId, {
+    const eventData: PluginLoadedData = {
       metadata,
       loadTime: new Date(),
-    });
+    };
+    await this.emitPluginEvent('plugin.loaded', pluginId, instanceId, eventData);
   }
 
   async emitPluginUnloaded(
@@ -148,13 +165,14 @@ export class PluginEventsService extends EventEmitter {
     pluginId: string,
     instanceId: string,
     healthy: boolean,
-    details?: any,
+    details?: Record<string, unknown>,
   ): Promise<void> {
-    await this.emitPluginEvent('plugin.healthcheck', pluginId, instanceId, {
+    const eventData: PluginHealthCheckData = {
       healthy,
       details,
       checkTime: new Date(),
-    });
+    };
+    await this.emitPluginEvent('plugin.healthcheck', pluginId, instanceId, eventData);
   }
 
   async emitPluginRequest(
@@ -195,16 +213,17 @@ export class PluginEventsService extends EventEmitter {
     pluginId: string,
     instanceId: string,
     eventName: string,
-    data: any,
+    data: Record<string, unknown>,
   ): Promise<void> {
+    const eventData: PluginEventData = {
+      eventName,
+      ...data,
+    };
     await this.emitPluginEvent(
       'plugin.custom',
       pluginId,
       instanceId,
-      {
-        eventName,
-        ...data,
-      },
+      eventData,
       'plugin',
     );
   }

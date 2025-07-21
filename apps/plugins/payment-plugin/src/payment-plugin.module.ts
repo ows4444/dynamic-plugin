@@ -42,9 +42,9 @@ export class PaymentPluginModule {
 }
 
 // Plugin-specific exports for dynamic loading
-export const PluginModule = PaymentPluginModule;
-export const PluginController = PaymentController;
-export const PluginService = PaymentService;
+export const PluginModule = PaymentPluginModule as unknown;
+export const PluginController = PaymentController as unknown;
+export const PluginService = PaymentService as unknown;
 
 // Plugin metadata for the host system
 export const PluginMetadata = {

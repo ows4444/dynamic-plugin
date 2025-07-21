@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { PluginCategory, PluginStatus } from './metadata.entity';
-import { MetadataService, PluginSearchQuery } from './metadata.service';
+import { MetadataService, PluginSearchQuery, PluginSortBy } from './metadata.service';
 
 @Controller('plugins')
 export class MetadataController {
@@ -43,7 +43,7 @@ export class MetadataController {
         search,
         limit,
         offset,
-        sortBy: sortBy as any,
+        sortBy: sortBy as PluginSortBy,
         sortOrder,
       };
 

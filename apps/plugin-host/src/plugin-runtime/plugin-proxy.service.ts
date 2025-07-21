@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { WebSocket } from 'ws';
+import { IPlugin } from '@lib/shared/plugin-types';
 import {
   PluginInstance,
   PluginInstanceService,
@@ -15,9 +16,22 @@ export interface ProxyContext {
   route: string;
   method: string;
   headers: Record<string, string>;
-  body?: any;
-  query?: any;
-  params?: any;
+  body?: unknown;
+  query?: Record<string, unknown>;
+  params?: Record<string, unknown>;
+}
+
+export interface PluginRequestData {
+  route: string;
+  method: string;
+  body?: unknown;
+  query?: Record<string, unknown>;
+  params?: Record<string, unknown>;
+  headers: Record<string, string>;
+}
+
+export interface PluginMethodHandler {
+  (requestData: PluginRequestData): Promise<unknown>;
 }
 
 @Injectable()
@@ -29,7 +43,7 @@ export class PluginProxyService {
     private readonly securityService: PluginSecurityService,
   ) {}
 
-  async proxyRequest(context: ProxyContext): Promise<any> {
+  async proxyRequest(context: ProxyContext): Promise<unknown> {
     const { instanceId, route, method } = context;
 
     try {
@@ -42,7 +56,7 @@ export class PluginProxyService {
 
       await this.validateRequest(context, instance);
 
-      const result = await this.executePluginMethod(context, instance);
+      const result: unknown = await this.executePluginMethod(context, instance);
 
       this.logger.debug(
         `Proxied ${method} ${route} to plugin ${instance.name}`,
@@ -57,8 +71,8 @@ export class PluginProxyService {
 
   async proxyWebSocketConnection(
     instanceId: string,
-    socket: any,
-    data: any,
+    socket: unknown,
+    data: unknown,
   ): Promise<void> {
     const instance = this.instanceService.getInstance(instanceId);
     if (!instance) {
@@ -97,10 +111,10 @@ export class PluginProxyService {
   private async executePluginMethod(
     context: ProxyContext,
     instance: PluginInstance,
-  ): Promise<any> {
+  ): Promise<unknown> {
     const { route, method, body, query, params, headers } = context;
 
-    const requestData = {
+    const requestData: PluginRequestData = {
       route,
       method: method.toUpperCase(),
       body,
@@ -131,10 +145,10 @@ export class PluginProxyService {
   }
 
   private getMethodHandler(
-    pluginInstance: any,
+    pluginInstance: IPlugin,
     method: string,
     route: string,
-  ): ((...args: any[]) => any) | null {
+  ): PluginMethodHandler | null {
     const methodName = `handle${method.toUpperCase()}`;
 
     if (typeof pluginInstance[methodName] === 'function') {

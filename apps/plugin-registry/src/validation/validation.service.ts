@@ -11,11 +11,44 @@ export interface ExtractedFile {
   content: Buffer;
 }
 
+export interface PackageJsonData {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  [key: string]: unknown;
+}
+
+export interface PluginManifestData {
+  name?: string;
+  version?: string;
+  description?: string;
+  main?: string;
+  pluginType?: string;
+  apiVersion?: string;
+  permissions?: string[];
+  dependencies?: Record<string, string>;
+  engines?: {
+    host?: string;
+    [key: string]: unknown;
+  };
+  config?: Record<string, unknown>;
+  routes?: PluginRouteData[];
+  hooks?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface PluginRouteData {
+  path?: string;
+  method?: string;
+  handler?: string;
+  [key: string]: unknown;
+}
+
 @Injectable()
 export class ValidationService {
   private readonly logger = new Logger(ValidationService.name);
 
-  async validateManifest(manifest: any): Promise<ValidationResult> {
+  async validateManifest(manifest: PluginManifestData): Promise<ValidationResult> {
     const result: ValidationResult = {
       valid: true,
       errors: [],
@@ -124,7 +157,7 @@ export class ValidationService {
 
       // Validate routes (if specified)
       if (manifest.routes && Array.isArray(manifest.routes)) {
-        this.validateRoutes(manifest.routes as any[], result);
+        this.validateRoutes(manifest.routes, result);
       }
 
       // Validate hooks (if specified)
@@ -165,8 +198,9 @@ export class ValidationService {
       }
 
       // Check for required security files
-         this.checkSecurityFiles(files, result) ;
-        return Promise.resolve(result);
+      this.checkSecurityFiles(files, result);
+      
+      return Promise.resolve(result);
     } catch (error) {
       result.errors.push(`Security validation failed: ${error.message}`);
       result.valid = false;
@@ -175,7 +209,7 @@ export class ValidationService {
     return result;
   }
 
-  async validateDependencies(packageJson: any): Promise<ValidationResult> {
+  async validateDependencies(packageJson: PackageJsonData): Promise<ValidationResult> {
     const result: ValidationResult = {
       valid: true,
       errors: [],
@@ -183,10 +217,10 @@ export class ValidationService {
     };
 
     try {
-      const dependencies = {
-        ...packageJson.dependencies,
-        ...packageJson.devDependencies,
-        ...packageJson.peerDependencies,
+      const dependencies: Record<string, string> = {
+        ...(packageJson.dependencies ?? {}),
+        ...(packageJson.devDependencies ?? {}),
+        ...(packageJson.peerDependencies ?? {}),
       };
 
       // Check for known vulnerable packages
@@ -221,7 +255,7 @@ export class ValidationService {
       }
 
       // Check for conflicting versions
-      this.checkVersionConflicts(dependencies as Record<string, string>, result);
+      this.checkVersionConflicts(dependencies, result);
     } catch (error) {
       result.warnings.push(`Dependency validation failed: ${error.message}`);
     }
@@ -372,7 +406,7 @@ export class ValidationService {
     }
   }
 
-  private validateRoutes(routes: any[], result: ValidationResult): void {
+  private validateRoutes(routes: PluginRouteData[], result: ValidationResult): void {
     for (const route of routes) {
       if (!route.path || !route.method) {
         result.errors.push('Route must have path and method');

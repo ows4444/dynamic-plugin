@@ -10,9 +10,46 @@ export interface ValidationResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
-  manifest?: any;
+  manifest?: PluginManifest;
   size: number;
   checksum: string;
+}
+
+export interface PluginManifest {
+  name: string;
+  version: string;
+  description?: string;
+  main: string;
+  pluginType: string;
+  apiVersion: string;
+  permissions?: string[];
+  dependencies?: Record<string, string>;
+  engines?: {
+    host?: string;
+    [key: string]: unknown;
+  };
+  config?: Record<string, unknown>;
+  routes?: PluginRoute[];
+  hooks?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface PluginRoute {
+  path: string;
+  method: string;
+  handler?: string;
+  [key: string]: unknown;
+}
+
+export interface PackageJsonContent {
+  name?: string;
+  version?: string;
+  description?: string;
+  main?: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  [key: string]: unknown;
 }
 
 @Injectable()
@@ -77,7 +114,7 @@ export class UploadService {
         filePath: pluginPath,
         fileSize: file.size,
         checksum,
-        manifest: validation.manifest,
+        manifest: validation.manifest as PluginManifest,
       });
 
       // Clean up temporary file
@@ -151,7 +188,7 @@ export class UploadService {
 
       // Parse and validate manifest
       try {
-        const manifest = JSON.parse(manifestFile.content.toString());
+        const manifest = JSON.parse(manifestFile.content.toString()) as PluginManifest;
         result.manifest = manifest;
 
         const manifestValidation =
@@ -189,7 +226,7 @@ export class UploadService {
       );
       if (packageJsonFile) {
         try {
-          const packageJson = JSON.parse(packageJsonFile.content.toString());
+          const packageJson = JSON.parse(packageJsonFile.content.toString()) as PackageJsonContent;
           const depValidation =
             await this.validationService.validateDependencies(packageJson);
           if (!depValidation.valid) {

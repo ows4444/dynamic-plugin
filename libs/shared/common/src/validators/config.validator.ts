@@ -1,8 +1,16 @@
+export type ConfigValue = string | number | boolean | ConfigObject | ConfigArray | null | undefined;
+
+export interface ConfigObject {
+  [key: string]: ConfigValue;
+}
+
+export type ConfigArray = ConfigValue[];
+
 export interface ConfigSchema {
   type: 'string' | 'number' | 'boolean' | 'object' | 'array';
   required?: boolean;
-  default?: any;
-  enum?: any[];
+  default?: ConfigValue;
+  enum?: ConfigValue[];
   minimum?: number;
   maximum?: number;
   minLength?: number;
@@ -14,23 +22,30 @@ export interface ConfigSchema {
 }
 
 export interface PluginConfig {
-  [key: string]: any;
+  [key: string]: ConfigValue;
 }
 
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+}
+
+type TypeValidator = (value: unknown) => boolean;
+
 export class ConfigValidator {
-  private static readonly TYPE_VALIDATORS = {
-    string: (value: any) => typeof value === 'string',
-    number: (value: any) => typeof value === 'number' && !isNaN(value),
-    boolean: (value: any) => typeof value === 'boolean',
-    object: (value: any) =>
+  private static readonly TYPE_VALIDATORS: Record<string, TypeValidator> = {
+    string: (value: unknown): value is string => typeof value === 'string',
+    number: (value: unknown): value is number => typeof value === 'number' && !isNaN(value),
+    boolean: (value: unknown): value is boolean => typeof value === 'boolean',
+    object: (value: unknown): value is ConfigObject =>
       typeof value === 'object' && value !== null && !Array.isArray(value),
-    array: (value: any) => Array.isArray(value),
+    array: (value: unknown): value is ConfigArray => Array.isArray(value),
   };
 
   static validate(
     config: PluginConfig,
     schema: Record<string, ConfigSchema>,
-  ): { valid: boolean; errors: string[] } {
+  ): ValidationResult {
     const errors: string[] = [];
 
     this.validateObject(
@@ -47,7 +62,7 @@ export class ConfigValidator {
   }
 
   private static validateObject(
-    value: any,
+    value: unknown,
     schema: ConfigSchema,
     path: string,
     errors: string[],
@@ -70,7 +85,7 @@ export class ConfigValidator {
 
     for (const [key, propertySchema] of Object.entries(schema.properties)) {
       const propertyPath = path ? `${path}.${key}` : key;
-      const propertyValue = value[key];
+      const propertyValue = this.getPropertyValue(value as ConfigObject, key);
 
       if (propertyValue === undefined || propertyValue === null) {
         if (propertySchema.required) {
@@ -84,7 +99,7 @@ export class ConfigValidator {
   }
 
   private static validateValue(
-    value: any,
+    value: unknown,
     schema: ConfigSchema,
     path: string,
     errors: string[],
@@ -108,13 +123,13 @@ export class ConfigValidator {
       this.validateObject(value, schema, path, errors);
     }
 
-    if (schema.type === 'array' && schema.items) {
-      this.validateArray(value as any[], schema, path, errors);
+    if (schema.type === 'array' && schema.items && Array.isArray(value)) {
+      this.validateArray(value as ConfigArray, schema, path, errors);
     }
   }
 
   private static validateType(
-    value: any,
+    value: unknown,
     schema: ConfigSchema,
     path: string,
     errors: string[],
@@ -126,13 +141,26 @@ export class ConfigValidator {
   }
 
   private static validateConstraints(
-    value: any,
+    value: unknown,
     schema: ConfigSchema,
     path: string,
     errors: string[],
   ): void {
     if (schema.enum && !schema.enum.includes(value)) {
-      errors.push(`Value at ${path} must be one of: ${schema.enum.join(', ')}`);
+      const enumValues = schema.enum.map(v => {
+        if (typeof v === 'string') {
+          return `"${v}"`;
+        } else if (typeof v === 'number' || typeof v === 'boolean') {
+          return String(v);
+        } else if (v === null) {
+          return 'null';
+        } else if (v === undefined) {
+          return 'undefined';
+        } else {
+          return JSON.stringify(v);
+        }
+      }).join(', ');
+      errors.push(`Value at ${path} must be one of: ${enumValues}`);
     }
 
     if (schema.type === 'string') {
@@ -143,8 +171,8 @@ export class ConfigValidator {
       this.validateNumberConstraints(value as number, schema, path, errors);
     }
 
-    if (schema.type === 'array') {
-      this.validateArrayConstraints(value as any[], schema, path, errors);
+    if (schema.type === 'array' && Array.isArray(value)) {
+      this.validateArrayConstraints(value as ConfigArray, schema, path, errors);
     }
   }
 
@@ -192,7 +220,7 @@ export class ConfigValidator {
   }
 
   private static validateArrayConstraints(
-    value: any[],
+    value: ConfigArray,
     schema: ConfigSchema,
     path: string,
     errors: string[],
@@ -211,7 +239,7 @@ export class ConfigValidator {
   }
 
   private static validateArray(
-    value: any[],
+    value: ConfigArray,
     schema: ConfigSchema,
     path: string,
     errors: string[],
@@ -252,8 +280,8 @@ export class ConfigValidator {
     return result;
   }
 
-  private static cloneValue(value: any): any {
-    if (value === null || typeof value !== 'object') {
+  private static cloneValue(value: ConfigValue): ConfigValue {
+    if (value === null || value === undefined || typeof value !== 'object') {
       return value;
     }
 
@@ -261,9 +289,9 @@ export class ConfigValidator {
       return value.map((item) => this.cloneValue(item));
     }
 
-    const cloned: any = {};
-    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
-      cloned[key] = this.cloneValue(val as any);
+    const cloned: ConfigObject = {};
+    for (const [key, val] of Object.entries(value)) {
+      cloned[key] = this.cloneValue(val);
     }
     return cloned;
   }
@@ -278,7 +306,7 @@ export class ConfigValidator {
     return schema;
   }
 
-  private static inferSchemaFromValue(value: any): ConfigSchema {
+  private static inferSchemaFromValue(value: ConfigValue): ConfigSchema {
     if (typeof value === 'string') {
       return { type: 'string', default: value };
     }
@@ -299,14 +327,18 @@ export class ConfigValidator {
       return { type: 'array', items: itemSchema, default: value };
     }
 
-    if (typeof value === 'object' && value !== null) {
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       const properties: Record<string, ConfigSchema> = {};
-      for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
-        properties[key] = this.inferSchemaFromValue(val as any);
+      for (const [key, val] of Object.entries(value)) {
+        properties[key] = this.inferSchemaFromValue(val);
       }
       return { type: 'object', properties, default: value };
     }
 
     return { type: 'string' };
+  }
+
+  private static getPropertyValue(obj: ConfigObject, key: string): ConfigValue {
+    return obj[key];
   }
 }

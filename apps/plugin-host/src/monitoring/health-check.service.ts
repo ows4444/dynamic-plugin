@@ -149,7 +149,7 @@ export class HealthCheckService {
           version: instance.version,
           status: 'unhealthy' as const,
           lastCheck: new Date(),
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
         };
       }
     });
@@ -178,7 +178,7 @@ export class HealthCheckService {
           version: 'unknown',
           status: 'unhealthy',
           lastCheck: new Date(),
-          error: result.reason?.message ?? 'Unknown error',
+          error: result.reason instanceof Error ? result.reason.message : 'Unknown error',
         });
       }
     }
@@ -243,7 +243,7 @@ export class HealthCheckService {
         name: 'database',
         status: 'unhealthy',
         lastCheck: new Date(),
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Database error',
       });
     }
 
@@ -255,7 +255,7 @@ export class HealthCheckService {
         name: 'cache',
         status: 'unhealthy',
         lastCheck: new Date(),
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Cache error',
       });
     }
 

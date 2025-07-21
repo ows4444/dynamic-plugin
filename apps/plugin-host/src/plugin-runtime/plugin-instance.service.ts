@@ -2,6 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PluginStatus } from '@lib/shared/common';
 import { IPlugin } from '@lib/shared/plugin-types';
 
+export interface PluginModuleConstructor {
+  new (): IPlugin;
+}
+
+export interface PluginModule {
+  default: PluginModuleConstructor;
+}
+
 export interface PluginInstance {
   id: string;
   name: string;
@@ -19,14 +27,14 @@ export class PluginInstanceService {
   private readonly instances = new Map<string, PluginInstance>();
 
   async createInstance(
-    pluginModule: any,
+    pluginModule: PluginModule,
     name: string,
     version: string,
   ): Promise<string> {
     const id = this.generateInstanceId(name, version);
 
     try {
-      const instance = new pluginModule.default();
+      const instance: IPlugin = new pluginModule.default();
 
       const pluginInstance: PluginInstance = {
         id,

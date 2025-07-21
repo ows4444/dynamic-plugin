@@ -19,7 +19,7 @@ export interface CreatePluginDto {
   filePath: string;
   fileSize: number;
   checksum: string;
-  manifest?: any;
+  manifest?: Record<string, unknown>;
   readme?: string;
 }
 
@@ -33,7 +33,7 @@ export interface PluginSearchQuery {
   search?: string;
   limit?: number;
   offset?: number;
-  sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'downloads' | 'rating';
+  sortBy?: PluginSortBy;
   sortOrder?: 'ASC' | 'DESC';
 }
 
@@ -41,6 +41,33 @@ export interface PluginSearchResult {
   plugins: PluginEntity[];
   total: number;
   hasMore: boolean;
+}
+
+export type PluginSortBy = 'name' | 'createdAt' | 'updatedAt' | 'downloadCount' | 'rating';
+
+export interface ValidationResults {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+  [key: string]: unknown;
+}
+
+export interface DatabaseQueryResult {
+  status: string;
+  count: string;
+}
+
+export interface DatabaseCategoryResult {
+  category: string;
+  count: string;
+}
+
+export interface DatabaseDownloadResult {
+  totalDownloads?: string | null;
+}
+
+export interface DatabaseRatingResult {
+  averageRating?: string | null;
 }
 
 @Injectable()
@@ -211,7 +238,7 @@ export class MetadataService {
       plugin.updatedAt = new Date();
 
       if (validationResults) {
-        plugin.validationResults = validationResults;
+        plugin.validationResults = validationResults as ValidationResults;
       }
 
       if (status === PluginStatus.PUBLISHED && !plugin.publishedAt) {
@@ -313,8 +340,13 @@ export class MetadataService {
     averageRating: number;
   }> {
     try {
-      const [total, statusStats, categoryStats, downloadStats, ratingStats] =
-        await Promise.all([
+      const [
+        total, 
+        statusStats, 
+        categoryStats, 
+        downloadStats, 
+        ratingStats
+      ] = await Promise.all([
           this.pluginRepository.count(),
           this.pluginRepository
             .createQueryBuilder('plugin')
@@ -331,21 +363,21 @@ export class MetadataService {
           this.pluginRepository
             .createQueryBuilder('plugin')
             .select('SUM(plugin.downloadCount)', 'totalDownloads')
-            .getRawOne(),
+            .getRawOne() as Promise<DatabaseDownloadResult>,
           this.pluginRepository
             .createQueryBuilder('plugin')
             .select('AVG(plugin.rating)', 'averageRating')
             .where('plugin.ratingCount > 0')
-            .getRawOne(),
+            .getRawOne() as Promise<DatabaseRatingResult>,
         ]);
 
       const byStatus = {} as Record<PluginStatus, number>;
-      statusStats.forEach((stat) => {
+      statusStats.forEach((stat: DatabaseQueryResult) => {
         byStatus[stat.status as PluginStatus] = parseInt(String(stat.count), 10);
       });
 
       const byCategory = {} as Record<PluginCategory, number>;
-      categoryStats.forEach((stat) => {
+      categoryStats.forEach((stat: DatabaseCategoryResult) => {
         byCategory[stat.category as PluginCategory] = parseInt(String(stat.count), 10);
       });
 

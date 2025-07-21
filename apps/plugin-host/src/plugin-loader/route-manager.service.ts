@@ -7,6 +7,17 @@ export interface PluginRoute {
   middleware?: ((...args: any[]) => any)[];
 }
 
+interface RouteMetadata {
+  path: string;
+  method: string;
+  middleware?: ((...args: any[]) => any)[];
+}
+
+interface ControllerPrototype {
+  [key: string]: any;
+  constructor: any;
+}
+
 @Injectable()
 export class RouteManagerService {
   private readonly logger = new Logger(RouteManagerService.name);
@@ -110,22 +121,22 @@ export class RouteManagerService {
       // In a real system, you would use reflection to extract
       // routes from NestJS controllers with decorators
 
-      const prototype = controller.prototype ?? controller;
+      const prototype = (controller.prototype ?? controller) as ControllerPrototype;
       const methods = Object.getOwnPropertyNames(prototype);
 
       for (const methodName of methods) {
         if (methodName === 'constructor') continue;
 
-        const method = prototype[methodName];
+        const method = prototype[methodName] as unknown;
         if (typeof method === 'function') {
           // Check for route metadata (this would be extracted from decorators)
-          const routeMetadata = this.getRouteMetadata(controller, methodName);
+          const routeMetadata = this.getRouteMetadata(controller, methodName) as RouteMetadata | null;
 
           if (routeMetadata) {
             routes.push({
               path: routeMetadata.path,
               method: routeMetadata.method,
-              handler: method.bind(controller),
+              handler: (method as (...args: any[]) => any).bind(controller) as (...args: any[]) => any,
               middleware: routeMetadata.middleware,
             });
           }

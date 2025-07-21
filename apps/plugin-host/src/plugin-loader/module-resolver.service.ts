@@ -1,12 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as path from 'path';
 
+interface PluginModule {
+  default?: any;
+  PluginModule?: any;
+  [key: string]: any;
+}
+
 @Injectable()
 export class ModuleResolverService {
   private readonly logger = new Logger(ModuleResolverService.name);
-  private moduleCache: Map<string, any> = new Map();
+  private moduleCache: Map<string, PluginModule> = new Map();
 
-  async resolveModule(pluginPath: string): Promise<any> {
+  async resolveModule(pluginPath: string): Promise<PluginModule> {
     this.logger.log(`Resolving module at: ${pluginPath}`);
 
     try {
@@ -41,7 +47,7 @@ export class ModuleResolverService {
       this.clearModuleFromCache(modulePath);
 
       // Dynamically import the module
-      const module = await import(modulePath);
+      const module = await import(modulePath) as PluginModule;
 
       // Cache the module
       this.moduleCache.set(pluginPath, module);

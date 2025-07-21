@@ -9,7 +9,7 @@ export interface RegistryPlugin {
   description: string;
   author: string;
   downloadUrl: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
 }
 
 @Injectable()
@@ -110,7 +110,7 @@ export class RegistryClientService {
         throw new Error(`Failed to get versions for plugin: ${pluginId}`);
       }
 
-      const versions: string[] = await response.json();
+      const versions = await response.json() as string[];
       this.logger.log(
         `Found ${versions.length} versions for plugin: ${pluginId}`,
       );

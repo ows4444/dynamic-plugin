@@ -19,6 +19,41 @@ export interface PluginMetadata {
   files?: string[];
 }
 
+export interface PackageJsonData {
+  name?: string;
+  version?: string;
+  description?: string;
+  author?: string | { name?: string; email?: string; url?: string };
+  license?: string;
+  repository?: string | { url?: string; type?: string };
+  homepage?: string;
+  keywords?: string[];
+  dependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  engines?: Record<string, string>;
+  main?: string;
+  files?: string[];
+  [key: string]: unknown;
+}
+
+export interface PluginManifestData {
+  id?: string;
+  name?: string;
+  version?: string;
+  description?: string;
+  author?: string;
+  license?: string;
+  repository?: string;
+  homepage?: string;
+  keywords?: string[];
+  dependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  engines?: Record<string, string>;
+  main?: string;
+  files?: string[];
+  [key: string]: unknown;
+}
+
 @Injectable()
 export class MetadataService {
   private readonly logger = new Logger(MetadataService.name);
@@ -60,15 +95,26 @@ export class MetadataService {
       if (fs.existsSync(packageJsonPath)) {
         const packageJson = JSON.parse(
           fs.readFileSync(packageJsonPath, 'utf8'),
-        );
+        ) as PackageJsonData;
+        
+        // Extract author string if it's an object
+        const authorString = typeof packageJson.author === 'object' 
+          ? packageJson.author?.name ?? 'Unknown'
+          : packageJson.author;
+        
+        // Extract repository URL if it's an object
+        const repositoryUrl = typeof packageJson.repository === 'object'
+          ? packageJson.repository?.url
+          : packageJson.repository;
+        
         metadata = {
           id: packageJson.name,
           name: packageJson.name,
           version: packageJson.version,
           description: packageJson.description,
-          author: packageJson.author,
+          author: authorString,
           license: packageJson.license,
-          repository: packageJson.repository?.url,
+          repository: repositoryUrl,
           homepage: packageJson.homepage,
           keywords: packageJson.keywords,
           dependencies: packageJson.dependencies,
@@ -81,7 +127,7 @@ export class MetadataService {
 
       // Read plugin manifest if it exists (override package.json values)
       if (fs.existsSync(manifestPath)) {
-        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as PluginManifestData;
         metadata = { ...metadata, ...manifest };
       }
 

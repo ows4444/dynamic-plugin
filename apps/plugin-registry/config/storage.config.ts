@@ -24,12 +24,7 @@ export interface StorageConfig {
     projectId: string;
     bucket: string;
     keyFilename?: string;
-    credentials?: {
-      client_email?: string;
-      private_key?: string;
-      project_id?: string;
-      [key: string]: unknown;
-    };
+    credentials?: GcsCredentials;
     signedUrlExpiration: number;
   };
   azure?: {
@@ -62,6 +57,20 @@ export interface StorageConfig {
     compressionLevel: number;
     destination?: string;
   };
+}
+
+export interface GcsCredentials {
+  client_email?: string;
+  private_key?: string;
+  project_id?: string;
+  type?: string;
+  private_key_id?: string;
+  client_id?: string;
+  auth_uri?: string;
+  token_uri?: string;
+  auth_provider_x509_cert_url?: string;
+  client_x509_cert_url?: string;
+  [key: string]: unknown;
 }
 
 export default registerAs(
@@ -108,7 +117,7 @@ export default registerAs(
       bucket: process.env.GCS_BUCKET ?? '',
       keyFilename: process.env.GCS_KEY_FILENAME,
       credentials: process.env.GCS_CREDENTIALS
-        ? JSON.parse(process.env.GCS_CREDENTIALS)
+        ? (JSON.parse(process.env.GCS_CREDENTIALS) as GcsCredentials)
         : undefined,
       signedUrlExpiration: parseInt(
         process.env.GCS_SIGNED_URL_EXPIRATION ?? '3600',

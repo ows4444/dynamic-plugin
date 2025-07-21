@@ -45,7 +45,7 @@ export class PluginValidatorService {
         return false;
       }
 
-      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as Record<string, unknown>;
 
       // Check required fields
       const requiredFields = ['id', 'name', 'version'];

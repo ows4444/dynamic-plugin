@@ -3,7 +3,7 @@ import { PluginMetadata } from '../base/base-plugin';
 import { PluginContext } from '../context/plugin-context';
 import { ConfigUtil, PluginConfigOptions } from '../utilities/config.util';
 import { LoggerUtil } from '../utilities/logger.util';
-import { ValidationSchema, ValidationUtil } from '../utilities/validation.util';
+import { ValidationData, ValidationSchema, ValidationUtil } from '../utilities/validation.util';
 
 @Injectable()
 export class PluginSdkService {
@@ -31,7 +31,7 @@ export class PluginSdkService {
   }
 
   validateInput(data: any, schema: any): any {
-    return ValidationUtil.validate(data, schema as ValidationSchema);
+    return ValidationUtil.validate(data as ValidationData, schema as ValidationSchema);
   }
 
   log(pluginId: string, message: string, data?: any): void {

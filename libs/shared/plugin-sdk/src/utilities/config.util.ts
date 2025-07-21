@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 export interface PluginConfigOptions {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 @Injectable()
@@ -36,7 +36,7 @@ export class ConfigUtil {
 
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
-        value = value[k];
+        value = (value as Record<string, unknown>)[k];
       } else {
         return defaultValue;
       }
@@ -60,9 +60,9 @@ export class ConfigUtil {
       if (!(k in current) || typeof current[k] !== 'object') {
         current[k] = {};
       }
-      current = current[k];
+      current = current[k] as Record<string, unknown>;
     }
 
-    current[lastKey] = value;
+    (current as Record<string, unknown>)[lastKey] = value;
   }
 }
