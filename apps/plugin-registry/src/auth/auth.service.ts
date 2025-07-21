@@ -52,7 +52,8 @@ export class AuthService {
       return Promise.resolve(true);
 
     } catch (error) {
-      this.logger.error(`Token validation failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown token validation error';
+      this.logger.error(`Token validation failed: ${errorMessage}`);
       return Promise.resolve(false);
     }
   }

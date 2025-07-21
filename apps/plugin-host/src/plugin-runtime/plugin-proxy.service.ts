@@ -8,7 +8,7 @@ import {
 } from './plugin-instance.service';
 import { PluginSecurityService } from './plugin-security.service';
 
-interface WebSocketLike {
+interface _WebSocketLike {
   readyState: number;
   send(data: string | Buffer): void;
   close(code?: number, reason?: string): void;

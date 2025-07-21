@@ -1,13 +1,30 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PluginInstallerService } from './plugin-installer.service';
+import { PluginInstallationMetadata, PluginInstallerService } from './plugin-installer.service';
 import { PluginValidatorService } from './plugin-validator.service';
+
+export interface PluginRuntimeMetadata {
+  lastStarted?: Date;
+  lastStopped?: Date;
+  restartCount?: number;
+  errorCount?: number;
+  lastError?: {
+    message: string;
+    timestamp: Date;
+    stack?: string;
+  };
+  performance?: {
+    avgResponseTime?: number;
+    requestCount?: number;
+    uptime?: number;
+  };
+}
 
 export interface Plugin {
   id: string;
   name: string;
   version: string;
   status: 'installed' | 'running' | 'stopped' | 'error';
-  metadata?: any;
+  metadata?: PluginInstallationMetadata & PluginRuntimeMetadata;
 }
 
 @Injectable()

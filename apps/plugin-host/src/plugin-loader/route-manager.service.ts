@@ -1,27 +1,75 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, type Type } from '@nestjs/common';
 import { getErrorMessage } from '@lib/shared/common';
 
+// HTTP methods supported by the plugin system
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD';
+
+// Generic request/response types for route handlers
+export interface RouteRequest {
+  params?: Record<string, string>;
+  query?: Record<string, unknown>;
+  body?: unknown;
+  headers?: Record<string, string>;
+  [key: string]: unknown;
+}
+
+export interface RouteResponse<T = unknown> {
+  statusCode?: number;
+  data?: T;
+  headers?: Record<string, string>;
+  [key: string]: unknown;
+}
+
+// Route handler function type with proper typing
+export type RouteHandler<TRequest = RouteRequest, TResponse = unknown> = (
+  request: TRequest,
+  ...args: unknown[]
+) => Promise<TResponse> | TResponse;
+
+// Middleware function type with cleanup capability
+export interface MiddlewareFunction {
+  (request: RouteRequest, response: RouteResponse, next: () => void): Promise<void> | void;
+  cleanup?(): void | Promise<void>;
+}
+
+// Plugin route definition used by the route manager
 export interface PluginRoute {
   path: string;
-  method: string;
-  handler: (...args: any[]) => any;
-  middleware?: ((...args: any[]) => any)[];
+  method: HttpMethod;
+  handler: RouteHandler;
+  middleware?: MiddlewareFunction[];
+  guards?: string[];
+  description?: string;
+  tags?: string[];
 }
 
-interface MiddlewareWithCleanup {
-  (...args: any[]): any;
-  cleanup?: () => void;
-}
-
+// Route metadata extracted from decorators
 interface RouteMetadata {
   path: string;
-  method: string;
-  middleware?: MiddlewareWithCleanup[];
+  method: HttpMethod;
+  middleware?: MiddlewareFunction[];
+  guards?: string[];
+  description?: string;
+  tags?: string[];
 }
 
+// NestJS controller constructor type
+export interface ControllerConstructor extends Type<unknown> {
+  prototype: ControllerPrototype;
+}
+
+// Controller prototype with method definitions
 interface ControllerPrototype {
-  [key: string]: any;
-  constructor: any;
+  [methodName: string]: unknown;
+  constructor: ControllerConstructor;
+}
+
+// Plugin module structure that can contain routes and controllers
+export interface PluginModuleWithRoutes {
+  routes?: PluginRoute[];
+  controllers?: ControllerConstructor[];
+  default?: ControllerConstructor | Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 @Injectable()
@@ -29,7 +77,7 @@ export class RouteManagerService {
   private readonly logger = new Logger(RouteManagerService.name);
   private pluginRoutes: Map<string, PluginRoute[]> = new Map();
 
-  async registerRoutes(pluginId: string, module: any): Promise<PluginRoute[]> {
+  async registerRoutes(pluginId: string, module: PluginModuleWithRoutes): Promise<PluginRoute[]> {
     this.logger.log(`Registering routes for plugin: ${pluginId}`);
 
     try {
@@ -37,7 +85,7 @@ export class RouteManagerService {
 
       // Extract routes from the plugin module
       if (module.routes && Array.isArray(module.routes)) {
-        routes.push(...(module.routes as PluginRoute[]));
+        routes.push(...(module.routes));
       }
 
       // Extract routes from controllers
@@ -86,11 +134,16 @@ export class RouteManagerService {
         // Perform any necessary cleanup
         if (route.middleware) {
           route.middleware.forEach((middleware) => {
-            if (
-              middleware &&
-              typeof (middleware as any).cleanup === 'function'
-            ) {
-              (middleware as MiddlewareWithCleanup).cleanup!();
+            if (middleware && typeof middleware.cleanup === 'function') {
+              // Call cleanup method - could be async or sync
+              const cleanupResult = middleware.cleanup();
+              if (cleanupResult instanceof Promise) {
+                cleanupResult.catch((error) => {
+                  this.logger.warn(
+                    `Middleware cleanup failed for plugin ${pluginId}: ${getErrorMessage(error)}`,
+                  );
+                });
+              }
             }
           });
         }
@@ -119,7 +172,7 @@ export class RouteManagerService {
     return new Map(this.pluginRoutes);
   }
 
-  private extractRoutesFromController(controller: any): PluginRoute[] {
+  private extractRoutesFromController(controller: ControllerConstructor): PluginRoute[] {
     const routes: PluginRoute[] = [];
 
     try {
@@ -127,23 +180,29 @@ export class RouteManagerService {
       // In a real system, you would use reflection to extract
       // routes from NestJS controllers with decorators
 
-      const prototype = (controller.prototype ?? controller) as ControllerPrototype;
+      const prototype = (controller.prototype ?? controller);
       const methods = Object.getOwnPropertyNames(prototype);
 
       for (const methodName of methods) {
         if (methodName === 'constructor') continue;
 
-        const method = prototype[methodName] as unknown;
+        const method = prototype[methodName];
         if (typeof method === 'function') {
           // Check for route metadata (this would be extracted from decorators)
-          const routeMetadata = this.getRouteMetadata(controller, methodName) as RouteMetadata | null;
+          const routeMetadata = this.getRouteMetadata(controller, methodName);
 
           if (routeMetadata) {
+            // Create a properly typed route handler
+            const routeHandler: RouteHandler = (method as unknown as RouteHandler).bind(controller);
+            
             routes.push({
               path: routeMetadata.path,
               method: routeMetadata.method,
-              handler: (method as (...args: any[]) => any).bind(controller) as (...args: any[]) => any,
+              handler: routeHandler,
               middleware: routeMetadata.middleware,
+              guards: routeMetadata.guards,
+              description: routeMetadata.description,
+              tags: routeMetadata.tags,
             });
           }
         }
@@ -157,8 +216,13 @@ export class RouteManagerService {
     return routes;
   }
 
-  private getRouteMetadata(_controller: any, _methodName: string): any {
-    // This would extract metadata from decorators
+  private getRouteMetadata(
+    _controller: ControllerConstructor, 
+    _methodName: string
+  ): RouteMetadata | null {
+    // This would extract metadata from decorators using reflection
+    // In a real implementation, this would use Reflect.getMetadata() to extract
+    // decorator information like @Get(), @Post(), @Middleware(), etc.
     // For now, return null as this requires reflection metadata
     return null;
   }

@@ -165,7 +165,8 @@ export class ValidationService {
         this.validateHooks(manifest.hooks, result);
       }
     } catch (error) {
-      result.errors.push(`Manifest validation failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown manifest validation error';
+      result.errors.push(`Manifest validation failed: ${errorMessage}`);
       result.valid = false;
     }
 
@@ -202,7 +203,8 @@ export class ValidationService {
       
       return Promise.resolve(result);
     } catch (error) {
-      result.errors.push(`Security validation failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown security validation error';
+      result.errors.push(`Security validation failed: ${errorMessage}`);
       result.valid = false;
     }
 
@@ -257,7 +259,8 @@ export class ValidationService {
       // Check for conflicting versions
       this.checkVersionConflicts(dependencies, result);
     } catch (error) {
-      result.warnings.push(`Dependency validation failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown dependency validation error';
+      result.warnings.push(`Dependency validation failed: ${errorMessage}`);
     }
 
     return  Promise.resolve(result);
@@ -434,7 +437,7 @@ export class ValidationService {
     }
   }
 
-  private validateHooks(hooks: any, result: ValidationResult): void {
+  private validateHooks(hooks: Record<string, unknown>, result: ValidationResult): void {
     const validHooks = [
       'onLoad',
       'onUnload',
@@ -443,7 +446,7 @@ export class ValidationService {
       'onError',
     ];
 
-    for (const hookName of Object.keys(hooks as Record<string, unknown>)) {
+    for (const hookName of Object.keys(hooks)) {
       if (!validHooks.includes(hookName)) {
         result.warnings.push(`Unknown hook: ${hookName}`);
       }
@@ -451,21 +454,21 @@ export class ValidationService {
   }
 
   private checkForSensitiveData(
-    obj: any,
+    obj: Record<string, unknown>,
     sensitiveKeys: string[],
     result: ValidationResult,
   ): void {
-    for (const key of Object.keys(obj as Record<string, unknown>)) {
+    for (const key of Object.keys(obj)) {
       const lowerKey = key.toLowerCase();
 
       if (sensitiveKeys.some((sensitive) => lowerKey.includes(sensitive))) {
-        if (typeof obj[key] === 'string' && obj[key].length > 0) {
+        if (typeof obj[key] === 'string' && String(obj[key]).length > 0) {
           result.warnings.push(`Potential sensitive data in config: ${key}`);
         }
       }
 
       if (typeof obj[key] === 'object' && obj[key] !== null) {
-        this.checkForSensitiveData(obj[key], sensitiveKeys, result);
+        this.checkForSensitiveData(obj[key] as Record<string, unknown>, sensitiveKeys, result);
       }
     }
   }

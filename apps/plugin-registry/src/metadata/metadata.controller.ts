@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { getErrorMessage } from '@lib/shared/common';
 import { PluginCategory, PluginStatus } from './metadata.entity';
-import { MetadataService, PluginSearchQuery, PluginSortBy } from './metadata.service';
+import { MetadataService, PluginSearchQuery, PluginSortBy, ValidationResults } from './metadata.service';
 
 @Controller('plugins')
 export class MetadataController {
@@ -176,7 +176,7 @@ export class MetadataController {
   @Put(':id/status')
   async updatePluginStatus(
     @Param('id') id: string,
-    @Body() body: { status: PluginStatus; validationResults?: any },
+    @Body() body: { status: PluginStatus; validationResults?: ValidationResults },
   ) {
     try {
       const plugin = await this.metadataService.updatePluginStatus(

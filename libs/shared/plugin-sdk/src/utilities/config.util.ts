@@ -6,7 +6,7 @@ export interface PluginConfigOptions {
 
 @Injectable()
 export class ConfigUtil {
-  static validateConfig(config: PluginConfigOptions, _schema: any): boolean {
+  static validateConfig(config: PluginConfigOptions, _schema: Record<string, unknown>): boolean {
     // Basic validation logic
     if (!config || typeof config !== 'object') {
       return false;
@@ -48,7 +48,7 @@ export class ConfigUtil {
   static setConfigValue(
     config: PluginConfigOptions,
     key: string,
-    value: any,
+    value: unknown,
   ): void {
     const keys = key.split('.');
     const lastKey = keys.pop();

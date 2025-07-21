@@ -2,11 +2,21 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
+export interface PluginInstallationMetadata {
+  installedAt: string;
+  source: string;
+  size?: number;
+  checksum?: string;
+  dependencies?: string[];
+  installationPath?: string;
+  extractedFiles?: string[];
+}
+
 export interface PluginPackage {
   id: string;
   name: string;
   version: string;
-  metadata: any;
+  metadata: PluginInstallationMetadata;
 }
 
 @Injectable()
@@ -38,13 +48,14 @@ export class PluginInstallerService {
     fs.mkdirSync(pluginDir, { recursive: true });
 
     // Create a basic manifest
-    const manifest = {
+    const manifest: PluginPackage = {
       id: pluginId,
       name: path.basename(packagePath, '.tgz'),
       version: '1.0.0',
       metadata: {
         installedAt: new Date().toISOString(),
         source: packagePath,
+        installationPath: pluginDir,
       },
     };
 

@@ -1,3 +1,15 @@
+// Base types for schema values
+export type SchemaValue = 
+  | string 
+  | number 
+  | boolean 
+  | null 
+  | undefined 
+  | SchemaValue[] 
+  | { [key: string]: SchemaValue };
+
+export type ConfigValue = string | number | boolean | ConfigValue[] | { [key: string]: ConfigValue };
+
 export interface IManifest {
   schema: string;
   name: string;
@@ -44,7 +56,7 @@ export interface IManifest {
   extensions?: ManifestExtension[];
 
   // Metadata
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ManifestAuthor {
@@ -78,7 +90,7 @@ export interface ManifestRuntime {
 export interface ManifestPlugin {
   entryPoint: string;
   configSchema?: string;
-  defaultConfig?: Record<string, any>;
+  defaultConfig?: Record<string, unknown>;
   routes?: ManifestRoute[];
   hooks?: ManifestHook[];
   commands?: ManifestCommand[];
@@ -171,7 +183,7 @@ export interface ManifestHeader {
 export interface ManifestExample {
   summary?: string;
   description?: string;
-  value?: any;
+  value?: unknown;
   externalValue?: string;
 }
 
@@ -186,8 +198,8 @@ export interface ManifestEncoding {
 export interface ManifestLink {
   operationRef?: string;
   operationId?: string;
-  parameters?: Record<string, any>;
-  requestBody?: any;
+  parameters?: Record<string, unknown>;
+  requestBody?: unknown;
   description?: string;
   server?: ManifestServer;
 }
@@ -213,7 +225,7 @@ export interface ManifestSchema {
   format?: string;
   title?: string;
   description?: string;
-  default?: any;
+  default?: SchemaValue;
   multipleOf?: number;
   maximum?: number;
   exclusiveMaximum?: boolean;
@@ -228,7 +240,7 @@ export interface ManifestSchema {
   maxProperties?: number;
   minProperties?: number;
   required?: string[];
-  enum?: any[];
+  enum?: SchemaValue[];
   allOf?: ManifestSchema[];
   oneOf?: ManifestSchema[];
   anyOf?: ManifestSchema[];
@@ -242,7 +254,7 @@ export interface ManifestSchema {
   writeOnly?: boolean;
   xml?: ManifestXml;
   externalDocs?: ManifestExternalDocs;
-  example?: any;
+  example?: SchemaValue;
   deprecated?: boolean;
 }
 
@@ -291,8 +303,8 @@ export interface ManifestCommandOption {
   description?: string;
   type: 'string' | 'number' | 'boolean' | 'array';
   required?: boolean;
-  default?: any;
-  choices?: any[];
+  default?: SchemaValue;
+  choices?: ConfigValue[];
   alias?: string;
 }
 
@@ -382,7 +394,7 @@ export interface ManifestDecorator {
 export interface ManifestProvider {
   name: string;
   class?: string;
-  useValue?: any;
+  useValue?: unknown;
   useFactory?: string;
   useClass?: string;
   useExisting?: string;
@@ -422,7 +434,7 @@ export interface ManifestCondition {
     | 'exists'
     | 'not_exists';
   key: string;
-  value?: any;
+  value?: unknown;
   handler?: string;
 }
 
@@ -431,8 +443,8 @@ export interface ManifestBuild {
   assets?: string[];
   externals?: string[];
   optimization?: ManifestOptimization;
-  webpack?: Record<string, any>;
-  typescript?: Record<string, any>;
+  webpack?: Record<string, unknown>;
+  typescript?: Record<string, unknown>;
 }
 
 export interface ManifestOptimization {
@@ -543,5 +555,5 @@ export interface ManifestExtension {
   handler: string;
   priority?: number;
   conditions?: ManifestCondition[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }

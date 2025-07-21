@@ -3,7 +3,7 @@ export interface IPluginLifecycle {
   onStart?(): Promise<void> | void;
   onStop?(): Promise<void> | void;
   onDestroy?(): Promise<void> | void;
-  onConfigure?(config: any): Promise<void> | void;
+  onConfigure?<TConfig = Record<string, unknown>>(config: TConfig): Promise<void> | void;
   onHealthCheck?(): Promise<LifecycleHealthCheck> | LifecycleHealthCheck;
   onError?(error: Error): Promise<void> | void;
   onRestart?(): Promise<void> | void;
@@ -21,7 +21,7 @@ export interface LifecycleHook {
   retries?: number;
   async?: boolean;
   conditions?: LifecycleCondition[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export type LifecyclePhase =
@@ -57,7 +57,7 @@ export interface LifecycleParameter {
   name: string;
   type: string;
   required?: boolean;
-  default?: any;
+  default?: unknown;
   description?: string;
 }
 
@@ -73,7 +73,7 @@ export interface LifecycleCondition {
     | 'not_exists'
     | 'greater_than'
     | 'less_than';
-  value?: any;
+  value?: unknown;
   handler?: string;
 }
 
@@ -81,7 +81,7 @@ export interface LifecycleHealthCheck {
   status: 'healthy' | 'unhealthy' | 'degraded' | 'unknown';
   checks: LifecycleHealthCheckResult[];
   timestamp: Date;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface LifecycleHealthCheckResult {
@@ -89,7 +89,7 @@ export interface LifecycleHealthCheckResult {
   status: 'pass' | 'fail' | 'warn' | 'skip';
   message?: string;
   duration?: number;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface LifecycleState {
@@ -102,7 +102,7 @@ export interface LifecycleState {
   lastHealthCheck?: Date;
   errorCount: number;
   restartCount: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export type LifecycleStatus =
@@ -130,7 +130,7 @@ export interface LifecycleTransition {
   trigger: string;
   success: boolean;
   error?: Error;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface LifecycleManager {
@@ -145,7 +145,7 @@ export interface LifecycleManager {
   executeHooks(
     pluginId: string,
     phase: LifecyclePhase,
-    context?: any,
+    context?: LifecycleExecutionContext,
   ): Promise<LifecycleHookResult[]>;
   registerHook(pluginId: string, hook: LifecycleHook): Promise<void>;
   unregisterHook(pluginId: string, hookName: string): Promise<boolean>;
@@ -160,9 +160,9 @@ export interface LifecycleHookResult {
   phase: LifecyclePhase;
   success: boolean;
   duration: number;
-  result?: any;
+  result?: unknown;
   error?: Error;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface LifecycleEvent {
@@ -174,9 +174,9 @@ export interface LifecycleEvent {
   timestamp: Date;
   duration?: number;
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: Error;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface LifecycleConfig {
@@ -216,4 +216,13 @@ export interface LifecycleHealthStats {
   failedChecks: number;
   averageDuration: number;
   lastCheck?: LifecycleHealthCheck;
+}
+
+export interface LifecycleExecutionContext {
+  pluginId: string;
+  phase: LifecyclePhase;
+  timestamp: Date;
+  config?: Record<string, unknown>;
+  environment?: string;
+  metadata?: Record<string, unknown>;
 }

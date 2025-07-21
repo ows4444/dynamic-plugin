@@ -45,7 +45,8 @@ export class UploadController {
         message: 'Plugin uploaded successfully',
       };
     } catch (error) {
-      this.logger.error(`Failed to upload plugin: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown upload error';
+      this.logger.error(`Failed to upload plugin: ${errorMessage}`);
       throw error;
     }
   }
@@ -66,7 +67,8 @@ export class UploadController {
         message: 'Plugin validation completed',
       };
     } catch (error) {
-      this.logger.error(`Plugin validation failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown validation error';
+      this.logger.error(`Plugin validation failed: ${errorMessage}`);
       throw error;
     }
   }

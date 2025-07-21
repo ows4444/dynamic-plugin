@@ -18,7 +18,7 @@ export interface PluginStorageMetadata {
   path: string;
 }
 
-export interface CacheEntry<T = any> {
+export interface CacheEntry<T = unknown> {
   key: string;
   value: T;
   createdAt: Date;

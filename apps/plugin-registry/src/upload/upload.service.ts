@@ -137,16 +137,18 @@ export class UploadService {
       );
       return result;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown upload error';
       this.logger.error(
-        `Upload failed for ${uploadDto.name}@${uploadDto.version}: ${error.message}`,
+        `Upload failed for ${uploadDto.name}@${uploadDto.version}: ${errorMessage}`,
       );
 
       // Clean up any temporary files
       try {
         await this.storageService.deleteDirectory(`temp/${uploadId}`);
       } catch (cleanupError) {
+        const cleanupErrorMessage = cleanupError instanceof Error ? cleanupError.message : 'Unknown cleanup error';
         this.logger.warn(
-          `Failed to cleanup temp directory: ${cleanupError.message}`,
+          `Failed to cleanup temp directory: ${cleanupErrorMessage}`,
         );
       }
 
@@ -238,7 +240,8 @@ export class UploadService {
         }
       }
     } catch (error) {
-      result.errors.push(`Validation error: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown validation error';
+      result.errors.push(`Validation error: ${errorMessage}`);
       result.valid = false;
     }
 

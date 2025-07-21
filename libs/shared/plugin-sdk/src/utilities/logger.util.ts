@@ -6,7 +6,7 @@ export interface PluginLogContext {
   version: string;
   userId?: string;
   requestId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface LogEntry {
@@ -14,7 +14,7 @@ export interface LogEntry {
   message: string;
   context?: PluginLogContext;
   timestamp: Date;
-  data?: any;
+  data?: unknown;
 }
 
 @Injectable()
@@ -32,7 +32,7 @@ export class LoggerUtil {
     pluginId: string,
     message: string,
     context?: PluginLogContext,
-    data?: any,
+    data?: unknown,
   ): void {
     const logger = this.getLogger(pluginId);
     const logMessage = this.formatMessage(message, context, data);
@@ -56,7 +56,7 @@ export class LoggerUtil {
     pluginId: string,
     message: string,
     context?: PluginLogContext,
-    data?: any,
+    data?: unknown,
   ): void {
     const logger = this.getLogger(pluginId);
     const logMessage = this.formatMessage(message, context, data);
@@ -67,7 +67,7 @@ export class LoggerUtil {
     pluginId: string,
     message: string,
     context?: PluginLogContext,
-    data?: any,
+    data?: unknown,
   ): void {
     const logger = this.getLogger(pluginId);
     const logMessage = this.formatMessage(message, context, data);
@@ -78,7 +78,7 @@ export class LoggerUtil {
     pluginId: string,
     message: string,
     context?: PluginLogContext,
-    data?: any,
+    data?: unknown,
   ): void {
     const logger = this.getLogger(pluginId);
     const logMessage = this.formatMessage(message, context, data);
@@ -89,7 +89,7 @@ export class LoggerUtil {
     pluginId: string,
     pluginName: string,
     version: string,
-    additional?: Record<string, any>,
+    additional?: Record<string, unknown>,
   ): PluginLogContext {
     return {
       pluginId,
@@ -102,20 +102,20 @@ export class LoggerUtil {
   private static formatMessage(
     message: string,
     context?: PluginLogContext,
-    data?: any,
+    data?: unknown,
   ): string {
     let formatted = message;
 
     if (context) {
       const contextStr = Object.entries(context)
-        .map(([key, value]) => `${key}=${value}`)
+        .map(([key, value]) => `${key}=${String(value)}`)
         .join(' ');
       formatted += ` [${contextStr}]`;
     }
 
     if (data) {
       const dataStr =
-        typeof data === 'object' ? JSON.stringify(data) : String(data);
+        typeof data === 'object' && data !== null ? JSON.stringify(data) : String(data);
       formatted += ` ${dataStr}`;
     }
 
@@ -126,7 +126,7 @@ export class LoggerUtil {
     pluginId: string,
     action: string,
     context?: PluginLogContext,
-    data?: any,
+    data?: unknown,
   ): void {
     const logger = this.getLogger(pluginId);
     const auditMessage = `AUDIT: ${action}`;
@@ -150,7 +150,7 @@ export class LoggerUtil {
     pluginId: string,
     event: string,
     context?: PluginLogContext,
-    data?: any,
+    data?: unknown,
   ): void {
     const logger = this.getLogger(pluginId);
     const securityMessage = `SECURITY: ${event}`;

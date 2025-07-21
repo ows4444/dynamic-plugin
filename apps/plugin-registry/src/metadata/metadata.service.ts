@@ -226,7 +226,7 @@ export class MetadataService {
   async updatePluginStatus(
     id: string,
     status: PluginStatus,
-    validationResults?: any,
+    validationResults?: ValidationResults,
   ): Promise<PluginEntity> {
     try {
       const plugin = await this.findPluginById(id);
@@ -239,7 +239,7 @@ export class MetadataService {
       plugin.updatedAt = new Date();
 
       if (validationResults) {
-        plugin.validationResults = validationResults as ValidationResults;
+        plugin.validationResults = validationResults;
       }
 
       if (status === PluginStatus.PUBLISHED && !plugin.publishedAt) {

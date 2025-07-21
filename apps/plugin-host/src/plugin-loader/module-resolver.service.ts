@@ -73,13 +73,13 @@ export class ModuleResolverService {
     }
   }
 
-  async cleanupModule(module: PluginModule | unknown): Promise<void> {
+  async cleanupModule(module: PluginModule): Promise<void> {
     this.logger.log('Cleaning up module');
 
     try {
       // Call cleanup method if it exists
       if (module && typeof module === 'object' && 'cleanup' in module) {
-        const typedModule = module as PluginModule;
+        const typedModule = module;
         if (typeof typedModule.cleanup === 'function') {
           await typedModule.cleanup();
         }

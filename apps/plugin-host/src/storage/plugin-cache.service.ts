@@ -13,7 +13,7 @@ export class PluginCacheService {
     this.setupCleanupInterval();
   }
 
-  async get<T = any>(key: string): Promise<T | null> {
+  async get<T = unknown>(key: string): Promise<T | null> {
     const entry = this.cache.get(key);
 
     if (!entry) {
@@ -33,7 +33,7 @@ export class PluginCacheService {
     return Promise.resolve(entry.value as T) ;
   }
 
-  async set<T = any>(
+  async set<T = unknown>(
     key: string,
     value: T,
     options?: CacheOptions,
@@ -255,7 +255,7 @@ export class PluginCacheService {
     this.cleanupInterval = setInterval(
       () => {
         this.cleanupExpired().catch((error) => {
-          this.logger.error(`Cache cleanup failed: ${error.message}`);
+          this.logger.error(`Cache cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
         });
       },
       5 * 60 * 1000,

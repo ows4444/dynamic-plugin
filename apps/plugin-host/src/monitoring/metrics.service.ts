@@ -55,6 +55,17 @@ export interface ResourceMetrics {
   };
 }
 
+export interface MetricsSnapshot {
+  timestamp: Date;
+  system: SystemMetrics;
+  plugins: PluginMetrics[];
+  metrics: Record<string, Metric[]>;
+}
+
+export interface CSVExportData {
+  metrics: Record<string, Metric[]>;
+}
+
 export interface SystemMetrics {
   timestamp: Date;
   cpu: {
@@ -265,7 +276,7 @@ export class MetricsService {
     };
   }
 
-  getMetricsSnapshot(): Record<string, any> {
+  getMetricsSnapshot(): MetricsSnapshot {
     const systemMetrics = this.getSystemMetrics();
     const allPluginMetrics = this.getPluginMetrics();
     const recentMetrics: Record<string, Metric[]> = {};
@@ -286,10 +297,10 @@ export class MetricsService {
     const snapshot = this.getMetricsSnapshot();
 
     if (format === 'csv') {
-      return this.convertToCSV(snapshot);
+      return this.convertToCSV({ metrics: snapshot.metrics });
     }
 
-    return   Promise.resolve(JSON.stringify(snapshot, null, 2)) ;
+    return Promise.resolve(JSON.stringify(snapshot, null, 2));
   }
 
   clearMetrics(pluginName?: string, instanceId?: string): void {
@@ -374,14 +385,12 @@ export class MetricsService {
       (pluginMetric.errors.total / pluginMetric.requests.total) * 100;
   }
 
-  private convertToCSV(data: any): string {
+  private convertToCSV(data: CSVExportData): string {
     // Simplified CSV conversion
     const lines: string[] = [];
     lines.push('timestamp,metric,value,plugin,instance');
 
-    for (const [metricName, metrics] of Object.entries(
-      data.metrics as Record<string, Metric[]>,
-    )) {
+    for (const [metricName, metrics] of Object.entries(data.metrics)) {
       for (const metric of metrics) {
         const pluginTag = metric.tags?.plugin ?? '';
         const instanceTag = metric.tags?.instance ?? '';

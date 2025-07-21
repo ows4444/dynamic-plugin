@@ -1,3 +1,5 @@
+import type { IPluginManifest } from './plugin.interface';
+
 export interface IPermissionSystem {
   checkPermission(
     pluginId: string,
@@ -65,7 +67,7 @@ export interface PermissionContext {
   requestId?: string;
   resource?: string;
   action?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PluginPermissions {
@@ -76,7 +78,7 @@ export interface PluginPermissions {
   restrictions: PermissionRestriction[];
   lastUpdated: Date;
   expiresAt?: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PermissionRole {
@@ -89,7 +91,7 @@ export interface PermissionRole {
   restrictions?: PermissionRestriction[];
   createdAt: Date;
   updatedAt: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PermissionPolicy {
@@ -106,13 +108,13 @@ export interface PermissionPolicy {
   enabled: boolean;
   createdAt: Date;
   updatedAt: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PolicyPrincipal {
   type: 'plugin' | 'user' | 'role' | 'group' | 'service';
   id: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
 }
 
 export interface PolicyResult {
@@ -127,7 +129,7 @@ export interface PolicyResult {
 export interface PolicyObligation {
   id: string;
   type: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   fulfilled: boolean;
 }
 
@@ -135,7 +137,7 @@ export interface PolicyAdvice {
   id: string;
   type: string;
   message: string;
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
 }
 
 export interface PermissionCondition {
@@ -155,10 +157,10 @@ export interface PermissionCondition {
     | 'matches'
     | 'not_matches';
   key: string;
-  value?: any;
-  values?: any[];
+  value?: unknown;
+  values?: unknown[];
   handler?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PermissionRestriction {
@@ -169,10 +171,10 @@ export interface PermissionRestriction {
     | 'ip_whitelist'
     | 'ip_blacklist'
     | 'custom';
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   enabled: boolean;
   expiresAt?: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PermissionAuditEntry {
@@ -187,13 +189,13 @@ export interface PermissionAuditEntry {
   context?: PermissionContext;
   timestamp: Date;
   duration?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ISecurityManager {
   validatePlugin(
     pluginId: string,
-    manifest: any,
+    manifest: IPluginManifest,
   ): Promise<SecurityValidationResult>;
   createSecurityContext(pluginId: string): Promise<SecurityContext>;
   destroySecurityContext(pluginId: string): Promise<void>;
@@ -220,7 +222,7 @@ export interface SecurityValidationResult {
   recommendations: SecurityRecommendation[];
   score: number;
   maxScore: number;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface SecurityContext {
@@ -234,7 +236,7 @@ export interface SecurityContext {
   keys: SecurityKey[];
   createdAt: Date;
   expiresAt?: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SandboxConfig {
@@ -245,7 +247,7 @@ export interface SandboxConfig {
   blockedOperations: string[];
   networkAccess: NetworkAccessConfig;
   fileSystemAccess: FileSystemAccessConfig;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ResourceLimits {
@@ -292,10 +294,10 @@ export interface FileSystemAccessConfig {
 export interface SecurityRestriction {
   type: 'network' | 'filesystem' | 'resource' | 'api' | 'custom';
   action: 'allow' | 'deny' | 'limit';
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   enabled: boolean;
   priority: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityCertificate {
@@ -309,7 +311,7 @@ export interface SecurityCertificate {
   fingerprint: string;
   purposes: string[];
   revoked: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityKey {
@@ -322,7 +324,7 @@ export interface SecurityKey {
   purposes: string[];
   expiresAt?: Date;
   revoked: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface VulnerabilityReport {
@@ -332,7 +334,7 @@ export interface VulnerabilityReport {
   vulnerabilities: SecurityVulnerability[];
   summary: VulnerabilitySummary;
   recommendations: SecurityRecommendation[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityVulnerability {
@@ -349,7 +351,7 @@ export interface SecurityVulnerability {
   likelihood: string;
   mitigation?: string;
   references?: string[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface VulnerabilitySummary {
@@ -369,7 +371,7 @@ export interface SecurityWarning {
   message: string;
   location?: string;
   recommendation?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityRecommendation {
@@ -382,7 +384,7 @@ export interface SecurityRecommendation {
   impact: string;
   effort: string;
   references?: string[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityEnforcementResult {
@@ -394,7 +396,7 @@ export interface SecurityEnforcementResult {
   violations: SecurityViolation[];
   obligations: SecurityObligation[];
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityViolation {
@@ -404,16 +406,16 @@ export interface SecurityViolation {
   policy?: string;
   action: string;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityObligation {
   type: string;
   description: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   deadline?: Date;
   fulfilled: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityMetrics {
@@ -428,7 +430,7 @@ export interface SecurityMetrics {
   lastViolation?: Date;
   riskScore: number;
   complianceScore: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityIncident {
@@ -447,7 +449,7 @@ export interface SecurityIncident {
   impact: string;
   response: SecurityIncidentResponse[];
   artifacts: SecurityArtifact[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityIncidentResponse {
@@ -457,7 +459,7 @@ export interface SecurityIncidentResponse {
   description: string;
   actor: string;
   result?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SecurityArtifact {
@@ -474,5 +476,5 @@ export interface SecurityArtifact {
   hash?: string;
   size: number;
   createdAt: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }

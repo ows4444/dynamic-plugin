@@ -6,6 +6,7 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator';
+import { ValidationResults } from '../metadata/metadata.service';
 
 export enum PluginCategory {
   PAYMENT = 'payment',
@@ -77,7 +78,7 @@ export class PluginUploadResponseDto {
   version: string;
   status: 'uploaded' | 'validating' | 'validated' | 'published' | 'failed';
   uploadedAt: Date;
-  validationResults?: any;
+  validationResults?: ValidationResults;
   downloadUrl?: string;
   size: number;
   checksum: string;

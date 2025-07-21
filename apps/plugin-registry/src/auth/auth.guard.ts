@@ -36,7 +36,8 @@ export class AuthGuard implements CanActivate {
 
       return true;
     } catch (error) {
-      this.logger.warn(`Authentication failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown authentication error';
+      this.logger.warn(`Authentication failed: ${errorMessage}`);
       throw error;
     }
   }
