@@ -192,8 +192,8 @@ export class RouteManagerService {
           const routeMetadata = this.getRouteMetadata(controller, methodName);
 
           if (routeMetadata) {
-            // Create a properly typed route handler
-            const routeHandler: RouteHandler = (method as unknown as RouteHandler).bind(controller);
+            // Create a properly typed route handler with type guard
+            const routeHandler: RouteHandler = this.createTypedRouteHandler(method, controller);
             
             routes.push({
               path: routeMetadata.path,
@@ -225,5 +225,22 @@ export class RouteManagerService {
     // decorator information like @Get(), @Post(), @Middleware(), etc.
     // For now, return null as this requires reflection metadata
     return null;
+  }
+
+  /**
+   * Creates a type-safe route handler from a method with proper binding
+   */
+  private createTypedRouteHandler(method: unknown, controller: unknown): RouteHandler {
+    if (typeof method !== 'function') {
+      throw new Error('Method must be a function');
+    }
+    
+    // Type assertion with runtime validation
+    const boundMethod = method.bind(controller) as RouteHandler;
+    
+    // Wrap to ensure proper typing
+    return async (req: RouteRequest, res: RouteResponse) => {
+      return await boundMethod(req, res);
+    };
   }
 }

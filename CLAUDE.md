@@ -279,17 +279,19 @@ nizaami-plugins-monorepo/
 │       │   ├── build-all.sh                                # Build all plugins
 │       │   └── deploy-plugin.sh                            # Build + upload pipeline
 │       └── package.json
-├── .gitignore                                              # Git ignore rules
-├── README.md                                               # Project overview and setup guide
-├── CLAUDE.md                                               # Detailed architecture and design decisions
-├── tsconfig.json                                           # TypeScript configuration
-├── tsconfig.build.json                                     # TypeScript build configuration
-├── nest-cli.json                                           # NestJS CLI configuration
-├── jest.config.js                                          # Jest testing configuration
-├── eslint.config.mjs                                       # ESLint configuration
-├── .prettierrc                                             # Prettier configuration
 ├── .env                                                    # Environment variables
 ├── .env.example                                            # Example environment variables
-└── package.json                                            # Root package.json with workspaces
+├── .gitignore                                              # Git ignore rules
+├── .nvmrc                                                  # Node version manager config
+├── .prettierignore                                         # Prettier ignore rules
+├── .prettierrc                                             # Prettier configuration
+├── eslint.config.mjs                                       # ESLint configuration
+├── nest-cli.json                                           # NestJS CLI configuration
+├── package.json                                            # Root package.json with workspaces
+├── README.md                                               # Project overview and setup guide
+├── CLAUDE.md                                               # Detailed architecture and design decisions
+├── tsconfig.build.json                                     # TypeScript build configuration
+└── tsconfig.json                                           # TypeScript configuration
+
 ```
 
