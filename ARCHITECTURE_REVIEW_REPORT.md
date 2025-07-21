@@ -348,9 +348,10 @@ export const configSchema = Joi.object({
   - **Status**: COMPLETED - Added to both plugin-host and plugin-registry
   - **Effort**: 6 hours
 
-- [ ] **[CRITICAL-005]** Replace token system with JWT
-  - **File**: `apps/plugin-registry/src/auth/auth.service.ts`
-  - **Solution**: Implement JWT-based authentication with proper signing
+- [x] **[CRITICAL-005]** ✅ Replace token system with JWT
+  - **Files**: `apps/plugin-registry/src/auth/jwt-auth.service.ts`, `auth.module.ts`
+  - **Solution**: Implemented JWT-based authentication with NestJS JWT module, proper signing, and backward compatibility
+  - **Status**: COMPLETED - Created JwtAuthService with secure token management, refresh capability, and API endpoints
   - **Effort**: 12 hours
 
 ### ✅ **COMPLETED CRITICAL FIXES**

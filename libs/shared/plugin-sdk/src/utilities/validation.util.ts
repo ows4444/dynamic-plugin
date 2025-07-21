@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { 
   ValidationError, 
   ValidationResult 
-} from '../../plugin-types/src/validation.interface';
+} from '@lib/shared/plugin-types';
 
 export interface ValidationRule {
   type:

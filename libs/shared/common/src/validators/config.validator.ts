@@ -5,7 +5,7 @@ import type {
   ConfigSchema, 
   ConfigValue, 
   PluginConfig
-} from '../../plugin-types/src/config.interface';
+} from '@lib/shared/plugin-types';
 
 // Local simplified validation result for this validator
 interface SimpleValidationResult {

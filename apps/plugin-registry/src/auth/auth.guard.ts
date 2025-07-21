@@ -7,12 +7,16 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
+import { JwtAuthService } from './jwt-auth.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   private readonly logger = new Logger(AuthGuard.name);
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly jwtAuthService: JwtAuthService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -24,14 +28,21 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('Missing authentication token');
       }
 
-      const isValid = await this.authService.validateToken(token);
+      // Try JWT authentication first, fallback to legacy token auth
+      let isValid = await this.jwtAuthService.validateToken(token);
+      let tokenInfo = await this.jwtAuthService.getTokenInfo(token);
+
+      if (!isValid) {
+        // Fallback to legacy authentication for backward compatibility
+        isValid = await this.authService.validateToken(token);
+        tokenInfo = await this.authService.getTokenInfo(token);
+      }
 
       if (!isValid) {
         throw new UnauthorizedException('Invalid authentication token');
       }
 
       // Add token info to request for further processing
-      const tokenInfo = await this.authService.getTokenInfo(token);
       request['user'] = tokenInfo;
 
       return true;
