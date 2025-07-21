@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { PluginConfig } from '@lib/shared/plugin-types';
+import type { PluginConfig } from '../../plugin-types/src/config.interface';
 
 // Type alias for backward compatibility 
 export type PluginConfigOptions = PluginConfig;

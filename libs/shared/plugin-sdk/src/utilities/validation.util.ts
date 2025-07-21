@@ -1,4 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import type { 
+  ValidationError, 
+  ValidationResult 
+} from '../../plugin-types/src/validation.interface';
 
 export interface ValidationRule {
   type:
@@ -24,17 +28,6 @@ export interface ValidationData {
   [key: string]: unknown;
 }
 
-export interface ValidationResult {
-  valid: boolean;
-  errors: ValidationError[];
-}
-
-export interface ValidationError {
-  field: string;
-  message: string;
-  value?: unknown;
-}
-
 @Injectable()
 export class ValidationUtil {
   static validate(data: ValidationData, schema: ValidationSchema): ValidationResult {
@@ -55,6 +48,7 @@ export class ValidationUtil {
     return {
       valid: errors.length === 0,
       errors,
+      warnings: [],
     };
   }
 
@@ -69,6 +63,7 @@ export class ValidationUtil {
           return {
             field,
             message: rule.message ?? `${field} is required`,
+            code: 'MISSING_REQUIRED',
             value,
           };
         }
@@ -79,6 +74,7 @@ export class ValidationUtil {
           return {
             field,
             message: rule.message ?? `${field} must be a string`,
+            code: 'INVALID_TYPE',
             value,
           };
         }
@@ -88,6 +84,7 @@ export class ValidationUtil {
             message:
               rule.message ??
               `${field} must be at least ${rule.min} characters`,
+            code: 'INVALID_LENGTH',
             value,
           };
         }
@@ -96,6 +93,7 @@ export class ValidationUtil {
             field,
             message:
               rule.message ?? `${field} must be at most ${rule.max} characters`,
+            code: 'INVALID_LENGTH',
             value,
           };
         }
@@ -103,6 +101,7 @@ export class ValidationUtil {
           return {
             field,
             message: rule.message ?? `${field} format is invalid`,
+            code: 'INVALID_FORMAT',
             value,
           };
         }
@@ -113,6 +112,7 @@ export class ValidationUtil {
           return {
             field,
             message: rule.message ?? `${field} must be a number`,
+            code: 'INVALID_TYPE',
             value,
           };
         }
@@ -120,6 +120,7 @@ export class ValidationUtil {
           return {
             field,
             message: rule.message ?? `${field} must be at least ${rule.min}`,
+            code: 'INVALID_RANGE',
             value,
           };
         }
@@ -127,6 +128,7 @@ export class ValidationUtil {
           return {
             field,
             message: rule.message ?? `${field} must be at most ${rule.max}`,
+            code: 'INVALID_RANGE',
             value,
           };
         }
@@ -137,6 +139,7 @@ export class ValidationUtil {
           return {
             field,
             message: rule.message ?? `${field} must be a boolean`,
+            code: 'INVALID_TYPE',
             value,
           };
         }
@@ -147,6 +150,7 @@ export class ValidationUtil {
           return {
             field,
             message: rule.message ?? `${field} must be an array`,
+            code: 'INVALID_TYPE',
             value,
           };
         }
@@ -155,6 +159,7 @@ export class ValidationUtil {
             field,
             message:
               rule.message ?? `${field} must have at least ${rule.min} items`,
+            code: 'INVALID_LENGTH',
             value,
           };
         }
@@ -163,6 +168,7 @@ export class ValidationUtil {
             field,
             message:
               rule.message ?? `${field} must have at most ${rule.max} items`,
+            code: 'INVALID_LENGTH',
             value,
           };
         }
@@ -177,6 +183,7 @@ export class ValidationUtil {
           return {
             field,
             message: rule.message ?? `${field} must be an object`,
+            code: 'INVALID_TYPE',
             value,
           };
         }
@@ -190,6 +197,7 @@ export class ValidationUtil {
           return {
             field,
             message: rule.message ?? `${field} must be a valid email address`,
+            code: 'INVALID_FORMAT',
             value,
           };
         }
@@ -200,6 +208,7 @@ export class ValidationUtil {
           return {
             field,
             message: rule.message ?? `${field} must be a valid URL`,
+            code: 'INVALID_TYPE',
             value,
           };
         }
@@ -209,6 +218,7 @@ export class ValidationUtil {
           return {
             field,
             message: rule.message ?? `${field} must be a valid URL`,
+            code: 'INVALID_FORMAT',
             value,
           };
         }

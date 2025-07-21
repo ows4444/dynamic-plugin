@@ -9,4 +9,12 @@ export * from './validators/config.validator';
 
 export * from './errors/plugin.errors';
 
+export * from './filters/global-exception.filter';
+
+export * from './config/app.config';
+export * from './config/config.module';
+export * from './config/database.config';
+export * from './config/cache.config';
+export * from './config/validation.schema';
+
 export * from './utils/error.utils';

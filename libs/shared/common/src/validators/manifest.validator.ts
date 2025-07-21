@@ -1,5 +1,7 @@
 import { PluginPermission, SecurityLevel } from '../enums/permission.enum';
 import { PluginCategory, PluginType } from '../enums/plugin-status.enum';
+import type { IManifest as PluginManifest } from '../../plugin-types/src/manifest.interface';
+import type { ValidationError, ValidationResult } from '../../plugin-types/src/validation.interface';
 
 // Comprehensive type definitions for manifest components
 export interface PluginAuthor {
