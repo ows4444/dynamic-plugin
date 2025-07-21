@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { getErrorMessage } from '@lib/shared/common';
 
 export interface PluginRoute {
   path: string;
@@ -64,7 +65,7 @@ export class RouteManagerService {
       return Promise.resolve(routes);
     } catch (error) {
       this.logger.error(
-        `Failed to register routes for plugin ${pluginId}: ${error.message}`,
+        `Failed to register routes for plugin ${pluginId}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -104,7 +105,7 @@ export class RouteManagerService {
       await Promise.resolve();
     } catch (error) {
       this.logger.error(
-        `Failed to unregister routes for plugin ${pluginId}: ${error.message}`,
+        `Failed to unregister routes for plugin ${pluginId}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -149,7 +150,7 @@ export class RouteManagerService {
       }
     } catch (error) {
       this.logger.error(
-        `Failed to extract routes from controller: ${error.message}`,
+        `Failed to extract routes from controller: ${getErrorMessage(error)}`,
       );
     }
 

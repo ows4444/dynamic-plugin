@@ -8,3 +8,5 @@ export * from './validators/manifest.validator';
 export * from './validators/config.validator';
 
 export * from './errors/plugin.errors';
+
+export * from './utils/error.utils';

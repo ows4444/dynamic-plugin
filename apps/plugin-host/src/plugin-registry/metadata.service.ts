@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getErrorMessage } from '@lib/shared/common';
 
 export interface PluginMetadata {
   id: string;
@@ -77,7 +78,7 @@ export class MetadataService {
       );
       return Promise.resolve(metadata);
     } catch (error) {
-      this.logger.error(`Failed to extract metadata: ${error.message}`);
+      this.logger.error(`Failed to extract metadata: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -142,7 +143,7 @@ export class MetadataService {
       return Promise.resolve(metadata as PluginMetadata);
     } catch (error) {
       this.logger.error(
-        `Failed to extract metadata from directory: ${error.message}`,
+        `Failed to extract metadata from directory: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -180,7 +181,7 @@ export class MetadataService {
       );
       return Promise.resolve(true);
     } catch (error) {
-      this.logger.error(`Metadata validation failed: ${error.message}`);
+      this.logger.error(`Metadata validation failed: ${getErrorMessage(error)}`);
       return Promise.resolve(false);
     }
   }

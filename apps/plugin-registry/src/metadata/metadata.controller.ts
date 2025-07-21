@@ -9,6 +9,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
+import { getErrorMessage } from '@lib/shared/common';
 import { PluginCategory, PluginStatus } from './metadata.entity';
 import { MetadataService, PluginSearchQuery, PluginSortBy } from './metadata.service';
 
@@ -62,7 +63,7 @@ export class MetadataController {
         },
       };
     } catch (error) {
-      this.logger.error(`Search failed: ${error.message}`);
+      this.logger.error(`Search failed: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -77,7 +78,7 @@ export class MetadataController {
         data: stats,
       };
     } catch (error) {
-      this.logger.error(`Failed to get stats: ${error.message}`);
+      this.logger.error(`Failed to get stats: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -92,7 +93,7 @@ export class MetadataController {
         data: plugins,
       };
     } catch (error) {
-      this.logger.error(`Failed to get popular plugins: ${error.message}`);
+      this.logger.error(`Failed to get popular plugins: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -107,7 +108,7 @@ export class MetadataController {
         data: plugins,
       };
     } catch (error) {
-      this.logger.error(`Failed to get recent plugins: ${error.message}`);
+      this.logger.error(`Failed to get recent plugins: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -126,7 +127,7 @@ export class MetadataController {
         data: plugin,
       };
     } catch (error) {
-      this.logger.error(`Failed to get plugin ${id}: ${error.message}`);
+      this.logger.error(`Failed to get plugin ${id}: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -142,7 +143,7 @@ export class MetadataController {
       };
     } catch (error) {
       this.logger.error(
-        `Failed to get plugins by name ${name}: ${error.message}`,
+        `Failed to get plugins by name ${name}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -166,7 +167,7 @@ export class MetadataController {
       };
     } catch (error) {
       this.logger.error(
-        `Failed to get plugin ${name}@${version}: ${error.message}`,
+        `Failed to get plugin ${name}@${version}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -192,7 +193,7 @@ export class MetadataController {
         message: `Plugin status updated to ${body.status}`,
       };
     } catch (error) {
-      this.logger.error(`Failed to update plugin status: ${error.message}`);
+      this.logger.error(`Failed to update plugin status: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -215,7 +216,7 @@ export class MetadataController {
         message: 'Plugin rating updated',
       };
     } catch (error) {
-      this.logger.error(`Failed to update plugin rating: ${error.message}`);
+      this.logger.error(`Failed to update plugin rating: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -232,7 +233,7 @@ export class MetadataController {
         message: 'Plugin deleted successfully',
       };
     } catch (error) {
-      this.logger.error(`Failed to delete plugin: ${error.message}`);
+      this.logger.error(`Failed to delete plugin: ${getErrorMessage(error)}`);
       throw error;
     }
   }

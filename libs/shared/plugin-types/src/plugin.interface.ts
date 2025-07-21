@@ -35,7 +35,7 @@ export interface IPlugin {
   // Request handling - optional
   handleRequest?<T = unknown, R = unknown>(requestData: T): Promise<R>;
   onWebSocketConnection?<T = unknown>(
-    socket: WebSocket,
+    socket: unknown,
     data: T,
   ): Promise<void>;
 }

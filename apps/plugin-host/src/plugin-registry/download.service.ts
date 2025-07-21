@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getErrorMessage } from '@lib/shared/common';
 
 @Injectable()
 export class DownloadService {
@@ -32,7 +33,7 @@ export class DownloadService {
       this.logger.log(`Package downloaded successfully: ${filePath}`);
       return Promise.resolve(filePath);
     } catch (error) {
-      this.logger.error(`Failed to download package: ${error.message}`);
+      this.logger.error(`Failed to download package: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -88,7 +89,7 @@ export class DownloadService {
       return filePath;
     } catch (error) {
       this.logger.error(
-        `Failed to download package with progress: ${error.message}`,
+        `Failed to download package with progress: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -122,7 +123,7 @@ export class DownloadService {
         stream.on('error', reject);
       });
     } catch (error) {
-      this.logger.error(`Checksum verification error: ${error.message}`);
+      this.logger.error(`Checksum verification error: ${getErrorMessage(error)}`);
       return false;
     }
   }
@@ -146,7 +147,7 @@ export class DownloadService {
       this.logger.log('Download cleanup complete');
       await Promise.resolve();
     } catch (error) {
-      this.logger.error(`Failed to cleanup downloads: ${error.message}`);
+      this.logger.error(`Failed to cleanup downloads: ${getErrorMessage(error)}`);
     }
   }
 

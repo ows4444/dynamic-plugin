@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { getErrorMessage } from '@lib/shared/common';
 
 export interface PluginPermission {
   pluginName: string;
@@ -65,7 +66,7 @@ export class PluginSecurityService {
 
       return Promise.resolve(true);
     } catch (error) {
-      this.logger.error(`Permission check failed: ${error.message}`);
+      this.logger.error(`Permission check failed: ${getErrorMessage(error)}`);
       return Promise.resolve(false);
     }
   }

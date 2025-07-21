@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { promises as fs } from 'fs';
 import * as path from 'path';
+import { getErrorCode, getErrorMessage } from '@lib/shared/common';
 import { PluginStorageMetadata, StorageProvider } from './storage.interface';
 
 @Injectable()
@@ -21,10 +22,10 @@ export class FileSystemService implements StorageProvider {
       this.logger.debug(`Read file: ${filePath}`);
       return data;
     } catch (error) {
-      if (error.code === 'ENOENT') {
+      if (getErrorCode(error) === 'ENOENT') {
         return null;
       }
-      this.logger.error(`Failed to read file ${filePath}: ${error.message}`);
+      this.logger.error(`Failed to read file ${filePath}: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -39,7 +40,7 @@ export class FileSystemService implements StorageProvider {
 
       this.logger.debug(`Written file: ${filePath}`);
     } catch (error) {
-      this.logger.error(`Failed to write file ${filePath}: ${error.message}`);
+      this.logger.error(`Failed to write file ${filePath}: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -50,9 +51,9 @@ export class FileSystemService implements StorageProvider {
       await fs.unlink(fullPath);
       this.logger.debug(`Deleted file: ${filePath}`);
     } catch (error) {
-      if (error.code !== 'ENOENT') {
+      if (getErrorCode(error) !== 'ENOENT') {
         this.logger.error(
-          `Failed to delete file ${filePath}: ${error.message}`,
+          `Failed to delete file ${filePath}: ${getErrorMessage(error)}`,
         );
         throw error;
       }
@@ -75,11 +76,11 @@ export class FileSystemService implements StorageProvider {
       const entries = await fs.readdir(fullPath, { withFileTypes: true });
       return entries.map((entry) => entry.name);
     } catch (error) {
-      if (error.code === 'ENOENT') {
+      if (getErrorCode(error) === 'ENOENT') {
         return [];
       }
       this.logger.error(
-        `Failed to list directory ${directoryPath}: ${error.message}`,
+        `Failed to list directory ${directoryPath}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -92,7 +93,7 @@ export class FileSystemService implements StorageProvider {
       this.logger.debug(`Created directory: ${directoryPath}`);
     } catch (error) {
       this.logger.error(
-        `Failed to create directory ${directoryPath}: ${error.message}`,
+        `Failed to create directory ${directoryPath}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -104,9 +105,9 @@ export class FileSystemService implements StorageProvider {
       await fs.rmdir(fullPath, { recursive: true });
       this.logger.debug(`Deleted directory: ${directoryPath}`);
     } catch (error) {
-      if (error.code !== 'ENOENT') {
+      if (getErrorCode(error) !== 'ENOENT') {
         this.logger.error(
-          `Failed to delete directory ${directoryPath}: ${error.message}`,
+          `Failed to delete directory ${directoryPath}: ${getErrorMessage(error)}`,
         );
         throw error;
       }
@@ -134,11 +135,11 @@ export class FileSystemService implements StorageProvider {
         path: filePath,
       };
     } catch (error) {
-      if (error.code === 'ENOENT') {
+      if (getErrorCode(error) === 'ENOENT') {
         return null;
       }
       this.logger.error(
-        `Failed to get file stats ${filePath}: ${error.message}`,
+        `Failed to get file stats ${filePath}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -165,7 +166,7 @@ export class FileSystemService implements StorageProvider {
       return sizes.reduce((total, size) => total + size, 0);
     } catch (error) {
       this.logger.error(
-        `Failed to calculate directory size ${directoryPath}: ${error.message}`,
+        `Failed to calculate directory size ${directoryPath}: ${getErrorMessage(error)}`,
       );
       return 0;
     }
@@ -180,7 +181,7 @@ export class FileSystemService implements StorageProvider {
       this.logger.log(`Cleaned up ${cleanedCount.count} old files`);
       return cleanedCount.count;
     } catch (error) {
-      this.logger.error(`Failed to cleanup old files: ${error.message}`);
+      this.logger.error(`Failed to cleanup old files: ${getErrorMessage(error)}`);
       return cleanedCount.count;
     }
   }
@@ -193,7 +194,7 @@ export class FileSystemService implements StorageProvider {
     try {
       await fs.mkdir(this.basePath, { recursive: true });
     } catch (error) {
-      this.logger.error(`Failed to create base directory: ${error.message}`);
+      this.logger.error(`Failed to create base directory: ${getErrorMessage(error)}`);
     }
   }
 

@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Readable } from 'stream';
 import { MetadataService } from '../metadata/metadata.service';
 import { StorageService } from '../storage/storage.service';
+import { getErrorMessage } from '@lib/shared/common';
 
 export interface DownloadInfo {
   filename: string;
@@ -77,7 +78,7 @@ export class DownloadService {
       };
     } catch (error) {
       this.logger.error(
-        `Failed to get download info for ${pluginId}: ${error.message}`,
+        `Failed to get download info for ${pluginId}: ${getErrorMessage(error)}`,
       );
       return null;
     }
@@ -171,7 +172,7 @@ export class DownloadService {
       );
     } catch (error) {
       this.logger.error(
-        `Failed to record download for ${pluginId}: ${error.message}`,
+        `Failed to record download for ${pluginId}: ${getErrorMessage(error)}`,
       );
     }
   }

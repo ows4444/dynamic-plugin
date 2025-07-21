@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { DownloadService } from './download.service';
+import { getErrorMessage } from '@lib/shared/common';
 
 @Controller('plugins')
 export class DownloadController {
@@ -61,7 +62,7 @@ export class DownloadController {
       await this.downloadService.recordDownload(pluginId);
     } catch (error) {
       this.logger.error(
-        `Download failed for plugin ${pluginId}: ${error.message}`,
+        `Download failed for plugin ${pluginId}: ${getErrorMessage(error)}`,
       );
 
       if (!response.headersSent) {
@@ -95,7 +96,7 @@ export class DownloadController {
       return this.downloadPlugin(pluginId, response, range);
     } catch (error) {
       this.logger.error(
-        `Download failed for ${name}@${version}: ${error.message}`,
+        `Download failed for ${name}@${version}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -123,7 +124,7 @@ export class DownloadController {
       };
     } catch (error) {
       this.logger.error(
-        `Failed to get download info for ${pluginId}: ${error.message}`,
+        `Failed to get download info for ${pluginId}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -145,7 +146,7 @@ export class DownloadController {
         data: stats,
       };
     } catch (error) {
-      this.logger.error(`Failed to get download stats: ${error.message}`);
+      this.logger.error(`Failed to get download stats: ${getErrorMessage(error)}`);
       throw error;
     }
   }

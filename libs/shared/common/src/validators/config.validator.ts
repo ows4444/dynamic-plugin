@@ -146,7 +146,7 @@ export class ConfigValidator {
     path: string,
     errors: string[],
   ): void {
-    if (schema.enum && !schema.enum.includes(value)) {
+    if (schema.enum && !schema.enum.includes(value as ConfigValue)) {
       const enumValues = schema.enum.map(v => {
         if (typeof v === 'string') {
           return `"${v}"`;

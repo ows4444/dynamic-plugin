@@ -2,18 +2,26 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as path from 'path';
 import { ModuleResolverService } from './module-resolver.service';
 import { PluginRoute, RouteManagerService } from './route-manager.service';
+import { getErrorMessage } from '@lib/shared/common';
+
+interface PluginModuleClass {
+  new (...args: unknown[]): unknown;
+  [key: string]: unknown;
+}
 
 interface PluginModule {
-  default?: any;
-  PluginModule?: any;
-  [key: string]: any;
+  default?: PluginModuleClass | Record<string, unknown>;
+  PluginModule?: PluginModuleClass;
+  [key: string]: unknown;
 }
 
 interface PluginMetadata {
   name: string;
   version: string;
   description?: string;
-  [key: string]: any;
+  author?: string;
+  license?: string;
+  [key: string]: unknown;
 }
 
 export interface LoadedPlugin {
@@ -61,7 +69,7 @@ export class PluginLoaderService {
       this.logger.log(`Plugin loaded successfully: ${pluginId}`);
       return loadedPlugin;
     } catch (error) {
-      this.logger.error(`Failed to load plugin ${pluginId}: ${error.message}`);
+      this.logger.error(`Failed to load plugin ${pluginId}: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -87,7 +95,7 @@ export class PluginLoaderService {
       this.logger.log(`Plugin unloaded successfully: ${pluginId}`);
     } catch (error) {
       this.logger.error(
-        `Failed to unload plugin ${pluginId}: ${error.message}`,
+        `Failed to unload plugin ${pluginId}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -128,7 +136,11 @@ export class PluginLoaderService {
       return manifest;
     } catch (_error) {
       this.logger.warn(`Could not load manifest for plugin at ${pluginPath}`);
-      return {};
+      return {
+        name: 'unknown',
+        version: '0.0.0',
+        description: 'Plugin with missing manifest'
+      };
     }
   }
 }

@@ -1,12 +1,20 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { WebSocket } from 'ws';
 import { IPlugin } from '@lib/shared/plugin-types';
+import { getErrorMessage } from '@lib/shared/common';
 import {
   PluginInstance,
   PluginInstanceService,
 } from './plugin-instance.service';
 import { PluginSecurityService } from './plugin-security.service';
+
+interface WebSocketLike {
+  readyState: number;
+  send(data: string | Buffer): void;
+  close(code?: number, reason?: string): void;
+  on(event: string, listener: (...args: unknown[]) => void): void;
+  off(event: string, listener: (...args: unknown[]) => void): void;
+}
 
 export interface ProxyContext {
   request: Request;
@@ -64,7 +72,7 @@ export class PluginProxyService {
 
       return result;
     } catch (error) {
-      this.logger.error(`Proxy request failed: ${error.message}`);
+      this.logger.error(`Proxy request failed: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -80,8 +88,7 @@ export class PluginProxyService {
     }
 
     if (instance.instance.onWebSocketConnection) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      await instance.instance.onWebSocketConnection(socket as WebSocket, data);
+      await instance.instance.onWebSocketConnection(socket, data);
     }
   }
 
@@ -139,7 +146,7 @@ export class PluginProxyService {
 
       throw new BadRequestException(`No handler found for ${method} ${route}`);
     } catch (error) {
-      this.logger.error(`Plugin execution failed: ${error.message}`);
+      this.logger.error(`Plugin execution failed: ${getErrorMessage(error)}`);
       throw error;
     }
   }

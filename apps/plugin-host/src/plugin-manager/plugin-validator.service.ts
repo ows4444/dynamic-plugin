@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getErrorMessage } from '@lib/shared/common';
 
 @Injectable()
 export class PluginValidatorService {
@@ -32,7 +33,7 @@ export class PluginValidatorService {
       this.logger.log(`Package validation passed: ${packagePath}`);
       return await Promise.resolve(true) ;
     } catch (error) {
-      this.logger.error(`Package validation failed: ${error.message}`);
+      this.logger.error(`Package validation failed: ${getErrorMessage(error)}`);
       return await Promise.resolve(false) ;
     }
   }
@@ -64,7 +65,7 @@ export class PluginValidatorService {
 
       return Promise.resolve(true)
     } catch (error) {
-      this.logger.error(`Manifest validation failed: ${error.message}`);
+      this.logger.error(`Manifest validation failed: ${getErrorMessage(error)}`);
       return Promise.resolve(false)
     }
   }

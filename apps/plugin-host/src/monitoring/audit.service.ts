@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { getErrorMessage, getErrorStack } from '@lib/shared/common';
 
 export interface AuditEvent {
   id: string;
@@ -6,13 +7,13 @@ export interface AuditEvent {
   actor: string; // User or system component that initiated the action
   resource: string; // What was affected
   action: string; // What action was taken
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   timestamp: Date;
   source: 'user' | 'system' | 'plugin';
   severity: 'low' | 'medium' | 'high' | 'critical';
   success: boolean;
   error?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export type AuditEventType =
@@ -69,13 +70,13 @@ export class AuditService {
     actor: string,
     resource: string,
     action: string,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
     options: {
       source?: 'user' | 'system' | 'plugin';
       severity?: 'low' | 'medium' | 'high' | 'critical';
       success?: boolean;
       error?: string;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     } = {},
   ): Promise<void> {
     const event: AuditEvent = {
@@ -199,8 +200,8 @@ export class AuditService {
       {
         pluginName,
         instanceId,
-        errorMessage: error.message,
-        errorStack: error.stack,
+        errorMessage: getErrorMessage(error),
+        errorStack: getErrorStack(error),
         context,
       },
       {
@@ -217,7 +218,7 @@ export class AuditService {
     resource: string,
     action: string,
     violation: string,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
   ): Promise<void> {
     await this.logEvent(
       'security.violation',
@@ -263,7 +264,7 @@ export class AuditService {
 
   async logSystemEvent(
     type: 'startup' | 'shutdown',
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
   ): Promise<void> {
     await this.logEvent(
       type === 'startup' ? 'system.startup' : 'system.shutdown',
@@ -283,7 +284,7 @@ export class AuditService {
     actor: string,
     resource: string,
     action: string,
-    details: Record<string, any> = {},
+    details: Record<string, unknown> = {},
     success = true,
     error?: string,
   ): Promise<void> {

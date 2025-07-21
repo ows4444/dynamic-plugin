@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as os from 'os';
 import { PluginInstanceService } from '../plugin-runtime/plugin-instance.service';
+import { getErrorMessage } from '@lib/shared/common';
 
 export interface HealthStatus {
   status: 'healthy' | 'unhealthy' | 'degraded';
@@ -100,7 +101,7 @@ export class HealthCheckService {
         timestamp,
       };
     } catch (error) {
-      this.logger.error(`Health check failed: ${error.message}`);
+      this.logger.error(`Health check failed: ${getErrorMessage(error)}`);
 
       return {
         status: 'unhealthy',
@@ -322,7 +323,7 @@ export class HealthCheckService {
   private startPeriodicChecks(): void {
     this.checkInterval = setInterval(() => {
       this.performHealthCheck().catch(error => {
-        this.logger.error(`Periodic health check failed: ${error.message}`);
+        this.logger.error(`Periodic health check failed: ${getErrorMessage(error)}`);
       });
     }, this.checkIntervalMs);
   }
@@ -334,7 +335,7 @@ export class HealthCheckService {
         this.logger.warn(`System health status: ${health.status}`);
       }
     } catch (error) {
-      this.logger.error(`Periodic health check failed: ${error.message}`);
+      this.logger.error(`Periodic health check failed: ${getErrorMessage(error)}`);
     }
   }
 

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PluginStatus } from '@lib/shared/common';
+import { getErrorMessage, PluginStatus } from '@lib/shared/common';
 import { IPlugin } from '@lib/shared/plugin-types';
 
 export interface PluginModuleConstructor {
@@ -54,7 +54,7 @@ export class PluginInstanceService {
       return id;
     } catch (error) {
       this.logger.error(
-        `Failed to create plugin instance ${id}: ${error.message}`,
+        `Failed to create plugin instance ${id}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -77,7 +77,7 @@ export class PluginInstanceService {
       this.logger.log(`Destroyed plugin instance: ${instanceId}`);
     } catch (error) {
       this.logger.error(
-        `Failed to destroy plugin instance ${instanceId}: ${error.message}`,
+        `Failed to destroy plugin instance ${instanceId}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -112,7 +112,7 @@ export class PluginInstanceService {
     } catch (error) {
       instance.health = 'unhealthy';
       this.logger.warn(
-        `Health check failed for ${instanceId}: ${error.message}`,
+        `Health check failed for ${instanceId}: ${getErrorMessage(error)}`,
       );
     }
   }

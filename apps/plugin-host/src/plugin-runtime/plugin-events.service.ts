@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter } from 'events';
 import { IPluginManifest } from '@lib/shared/plugin-types';
+import { getErrorMessage, getErrorStack } from '@lib/shared/common';
 
 export interface PluginEventData {
   [key: string]: unknown;
@@ -79,7 +80,7 @@ export class PluginEventsService extends EventEmitter {
       this.logger.debug(`Emitted event: ${type} for plugin ${pluginId}`);
       await Promise.resolve();
     } catch (error) {
-      this.logger.error(`Failed to emit event ${type}: ${error.message}`);
+      this.logger.error(`Failed to emit event ${type}: ${getErrorMessage(error)}`);
     }
   }
 
@@ -91,7 +92,7 @@ export class PluginEventsService extends EventEmitter {
       const result = handler(event);
       if (result instanceof Promise) {
         result.catch((error) => {
-          this.logger.error(`Error in plugin event handler: ${error.message}`, error.stack);
+          this.logger.error(`Error in plugin event handler: ${getErrorMessage(error)}`, getErrorStack(error));
         });
       }
     });
@@ -152,8 +153,8 @@ export class PluginEventsService extends EventEmitter {
   ): Promise<void> {
     await this.emitPluginEvent('plugin.error', pluginId, instanceId, {
       error: {
-        message: error.message,
-        stack: error.stack,
+        message: getErrorMessage(error),
+        stack: getErrorStack(error),
         name: error.name,
       },
       context,

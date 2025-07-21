@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { getErrorMessage } from '@lib/shared/common';
 import { PluginCategory, PluginEntity, PluginStatus } from './metadata.entity';
 
 export interface CreatePluginDto {
@@ -96,7 +97,7 @@ export class MetadataService {
 
       return savedPlugin;
     } catch (error) {
-      this.logger.error(`Failed to create plugin metadata: ${error.message}`);
+      this.logger.error(`Failed to create plugin metadata: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -106,7 +107,7 @@ export class MetadataService {
       const plugin = await this.pluginRepository.findOne({ where: { id } });
       return plugin;
     } catch (error) {
-      this.logger.error(`Failed to find plugin by ID ${id}: ${error.message}`);
+      this.logger.error(`Failed to find plugin by ID ${id}: ${getErrorMessage(error)}`);
       return null;
     }
   }
@@ -122,7 +123,7 @@ export class MetadataService {
       return plugin;
     } catch (error) {
       this.logger.error(
-        `Failed to find plugin ${name}@${version}: ${error.message}`,
+        `Failed to find plugin ${name}@${version}: ${getErrorMessage(error)}`,
       );
       return null;
     }
@@ -136,7 +137,7 @@ export class MetadataService {
       });
     } catch (error) {
       this.logger.error(
-        `Failed to find plugins by name ${name}: ${error.message}`,
+        `Failed to find plugins by name ${name}: ${getErrorMessage(error)}`,
       );
       return [];
     }
@@ -217,7 +218,7 @@ export class MetadataService {
         hasMore: offset + plugins.length < total,
       };
     } catch (error) {
-      this.logger.error(`Plugin search failed: ${error.message}`);
+      this.logger.error(`Plugin search failed: ${getErrorMessage(error)}`);
       return { plugins: [], total: 0, hasMore: false };
     }
   }
@@ -257,7 +258,7 @@ export class MetadataService {
 
       return updatedPlugin;
     } catch (error) {
-      this.logger.error(`Failed to update plugin status: ${error.message}`);
+      this.logger.error(`Failed to update plugin status: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -277,7 +278,7 @@ export class MetadataService {
       this.logger.debug(`Incremented download count for plugin: ${id}`);
     } catch (error) {
       this.logger.error(
-        `Failed to increment download count for ${id}: ${error.message}`,
+        `Failed to increment download count for ${id}: ${getErrorMessage(error)}`,
       );
     }
   }
@@ -312,7 +313,7 @@ export class MetadataService {
 
       return updatedPlugin;
     } catch (error) {
-      this.logger.error(`Failed to update plugin rating: ${error.message}`);
+      this.logger.error(`Failed to update plugin rating: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -327,7 +328,7 @@ export class MetadataService {
 
       this.logger.log(`Deleted plugin metadata: ${id}`);
     } catch (error) {
-      this.logger.error(`Failed to delete plugin: ${error.message}`);
+      this.logger.error(`Failed to delete plugin: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -389,7 +390,7 @@ export class MetadataService {
         averageRating: parseFloat(String(ratingStats?.averageRating ?? '0')),
       };
     } catch (error) {
-      this.logger.error(`Failed to get plugin stats: ${error.message}`);
+      this.logger.error(`Failed to get plugin stats: ${getErrorMessage(error)}`);
       return {
         total: 0,
         byStatus: {} as Record<PluginStatus, number>,
@@ -411,7 +412,7 @@ export class MetadataService {
         take: limit,
       });
     } catch (error) {
-      this.logger.error(`Failed to get popular plugins: ${error.message}`);
+      this.logger.error(`Failed to get popular plugins: ${getErrorMessage(error)}`);
       return [];
     }
   }
@@ -424,7 +425,7 @@ export class MetadataService {
         take: limit,
       });
     } catch (error) {
-      this.logger.error(`Failed to get recent plugins: ${error.message}`);
+      this.logger.error(`Failed to get recent plugins: ${getErrorMessage(error)}`);
       return [];
     }
   }

@@ -1,17 +1,27 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as path from 'path';
+import { getErrorMessage } from '@lib/shared/common';
+
+interface PluginExports {
+  [key: string]: unknown;
+}
+
+interface PluginModuleClass {
+  new (...args: unknown[]): unknown;
+  [key: string]: unknown;
+}
 
 interface PluginModule {
-  default?: any;
-  PluginModule?: any;
+  default?: PluginModuleClass | PluginExports;
+  PluginModule?: PluginModuleClass;
   cleanup?: () => Promise<void> | void;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 @Injectable()
 export class ModuleResolverService {
   private readonly logger = new Logger(ModuleResolverService.name);
-  private moduleCache: Map<string, PluginModule> = new Map();
+  private readonly moduleCache: Map<string, PluginModule> = new Map();
 
   async resolveModule(pluginPath: string): Promise<PluginModule> {
     this.logger.log(`Resolving module at: ${pluginPath}`);
@@ -57,25 +67,28 @@ export class ModuleResolverService {
       return module;
     } catch (error) {
       this.logger.error(
-        `Failed to resolve module at ${pluginPath}: ${error.message}`,
+        `Failed to resolve module at ${pluginPath}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
   }
 
-  async cleanupModule(module: any): Promise<void> {
+  async cleanupModule(module: PluginModule | unknown): Promise<void> {
     this.logger.log('Cleaning up module');
 
     try {
       // Call cleanup method if it exists
-      if (module && typeof module.cleanup === 'function') {
-        await (module.cleanup as () => Promise<void> | void)();
+      if (module && typeof module === 'object' && 'cleanup' in module) {
+        const typedModule = module as PluginModule;
+        if (typeof typedModule.cleanup === 'function') {
+          await typedModule.cleanup();
+        }
       }
 
       // Additional cleanup logic can go here
       this.logger.log('Module cleanup completed');
     } catch (error) {
-      this.logger.error(`Module cleanup failed: ${error.message}`);
+      this.logger.error(`Module cleanup failed: ${getErrorMessage(error)}`);
     }
   }
 
@@ -92,7 +105,7 @@ export class ModuleResolverService {
     }
   }
 
-  getModuleInfo(pluginPath: string): any {
+  getModuleInfo(pluginPath: string): PluginModule | undefined {
     return this.moduleCache.get(pluginPath);
   }
 

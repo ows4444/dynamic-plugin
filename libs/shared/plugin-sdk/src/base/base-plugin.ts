@@ -119,7 +119,7 @@ export abstract class BasePlugin
     return this.isEnabled;
   }
 
-  protected log(message: string, data?: any): void {
+  protected log(message: string, data?: Record<string, unknown>): void {
     LoggerUtil.log(this.metadata.id, message, this.logContext, data);
   }
 
@@ -127,15 +127,15 @@ export abstract class BasePlugin
     LoggerUtil.error(this.metadata.id, message, error, this.logContext);
   }
 
-  protected logWarn(message: string, data?: any): void {
+  protected logWarn(message: string, data?: Record<string, unknown>): void {
     LoggerUtil.warn(this.metadata.id, message, this.logContext, data);
   }
 
-  protected logDebug(message: string, data?: any): void {
+  protected logDebug(message: string, data?: Record<string, unknown>): void {
     LoggerUtil.debug(this.metadata.id, message, this.logContext, data);
   }
 
-  protected audit(action: string, data?: any): void {
+  protected audit(action: string, data?: Record<string, unknown>): void {
     LoggerUtil.audit(this.metadata.id, action, this.logContext, data);
   }
 
@@ -148,7 +148,7 @@ export abstract class BasePlugin
     );
   }
 
-  protected logSecurity(event: string, data?: any): void {
+  protected logSecurity(event: string, data?: Record<string, unknown>): void {
     LoggerUtil.security(this.metadata.id, event, this.logContext, data);
   }
 

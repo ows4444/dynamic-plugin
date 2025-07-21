@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DownloadService } from './download.service';
 import { MetadataService } from './metadata.service';
+import { getErrorMessage } from '@lib/shared/common';
 
 export interface RegistryPlugin {
   id: string;
@@ -43,7 +44,7 @@ export class RegistryClientService {
       this.logger.log(`Found ${mockPlugins.length} plugins in registry`);
       return Promise.resolve(mockPlugins);
     } catch (error) {
-      this.logger.error(`Failed to search plugins: ${error.message}`);
+      this.logger.error(`Failed to search plugins: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -66,7 +67,7 @@ export class RegistryClientService {
       this.logger.log(`Retrieved plugin: ${plugin.name}@${plugin.version}`);
       return Promise.resolve(plugin);
     } catch (error) {
-      this.logger.error(`Failed to get plugin ${pluginId}: ${error.message}`);
+      this.logger.error(`Failed to get plugin ${pluginId}: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -93,7 +94,7 @@ export class RegistryClientService {
       return localPath;
     } catch (error) {
       this.logger.error(
-        `Failed to download plugin ${pluginId}: ${error.message}`,
+        `Failed to download plugin ${pluginId}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -118,7 +119,7 @@ export class RegistryClientService {
       return versions;
     } catch (error) {
       this.logger.error(
-        `Failed to get versions for plugin ${pluginId}: ${error.message}`,
+        `Failed to get versions for plugin ${pluginId}: ${getErrorMessage(error)}`,
       );
       throw error;
     }
@@ -150,7 +151,7 @@ export class RegistryClientService {
         `Plugin published successfully: ${metadata.name}@${metadata.version}`,
       );
     } catch (error) {
-      this.logger.error(`Failed to publish plugin: ${error.message}`);
+      this.logger.error(`Failed to publish plugin: ${getErrorMessage(error)}`);
       throw error;
     }
   }

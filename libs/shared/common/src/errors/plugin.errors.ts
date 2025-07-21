@@ -1,18 +1,38 @@
+export interface PluginErrorDetails {
+  code?: string;
+  pluginId?: string;
+  version?: string;
+  host?: string;
+  timestamp?: Date;
+  path?: string;
+  method?: string;
+  statusCode?: number;
+  stack?: string;
+  context?: {
+    operation?: string;
+    component?: string;
+    params?: Record<string, unknown>;
+  };
+  metadata?: Record<string, unknown>;
+}
+
+export interface NodeErrorCapture {
+  captureStackTrace?: (targetObject: Error, constructorOpt?: Function) => void;
+}
+
 export class PluginError extends Error {
   constructor(
     message: string,
     public readonly code: string,
     public readonly pluginId?: string,
-    public readonly details?: Record<string, any>,
+    public readonly details?: PluginErrorDetails,
   ) {
     super(message);
     this.name = 'PluginError';
 
     // V8 stack trace capture for better debugging
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const captureStackTrace = (Error as any).captureStackTrace;
+    const captureStackTrace = (Error as NodeErrorCapture).captureStackTrace;
     if (typeof captureStackTrace === 'function') {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       captureStackTrace(this, PluginError);
     }
   }
@@ -33,7 +53,7 @@ export class PluginInstallationError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_INSTALLATION_ERROR', pluginId, details);
     this.name = 'PluginInstallationError';
@@ -44,7 +64,7 @@ export class PluginLoadError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_LOAD_ERROR', pluginId, details);
     this.name = 'PluginLoadError';
@@ -55,7 +75,7 @@ export class PluginValidationError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_VALIDATION_ERROR', pluginId, details);
     this.name = 'PluginValidationError';
@@ -66,7 +86,7 @@ export class PluginDependencyError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_DEPENDENCY_ERROR', pluginId, details);
     this.name = 'PluginDependencyError';
@@ -77,7 +97,7 @@ export class PluginSecurityError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_SECURITY_ERROR', pluginId, details);
     this.name = 'PluginSecurityError';
@@ -88,7 +108,7 @@ export class PluginPermissionError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_PERMISSION_ERROR', pluginId, details);
     this.name = 'PluginPermissionError';
@@ -99,7 +119,7 @@ export class PluginConfigurationError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_CONFIGURATION_ERROR', pluginId, details);
     this.name = 'PluginConfigurationError';
@@ -110,7 +130,7 @@ export class PluginRuntimeError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_RUNTIME_ERROR', pluginId, details);
     this.name = 'PluginRuntimeError';
@@ -121,7 +141,7 @@ export class PluginTimeoutError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_TIMEOUT_ERROR', pluginId, details);
     this.name = 'PluginTimeoutError';
@@ -132,7 +152,7 @@ export class PluginCommunicationError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_COMMUNICATION_ERROR', pluginId, details);
     this.name = 'PluginCommunicationError';
@@ -143,7 +163,7 @@ export class PluginStorageError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_STORAGE_ERROR', pluginId, details);
     this.name = 'PluginStorageError';
@@ -154,7 +174,7 @@ export class PluginRegistryError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_REGISTRY_ERROR', pluginId, details);
     this.name = 'PluginRegistryError';
@@ -165,7 +185,7 @@ export class PluginVersionError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_VERSION_ERROR', pluginId, details);
     this.name = 'PluginVersionError';
@@ -176,7 +196,7 @@ export class PluginCompatibilityError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_COMPATIBILITY_ERROR', pluginId, details);
     this.name = 'PluginCompatibilityError';
@@ -187,7 +207,7 @@ export class PluginManifestError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_MANIFEST_ERROR', pluginId, details);
     this.name = 'PluginManifestError';
@@ -198,7 +218,7 @@ export class PluginExecutionError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_EXECUTION_ERROR', pluginId, details);
     this.name = 'PluginExecutionError';
@@ -209,7 +229,7 @@ export class PluginResourceError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_RESOURCE_ERROR', pluginId, details);
     this.name = 'PluginResourceError';
@@ -220,7 +240,7 @@ export class PluginHealthCheckError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_HEALTH_CHECK_ERROR', pluginId, details);
     this.name = 'PluginHealthCheckError';
@@ -231,7 +251,7 @@ export class PluginNotFoundError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_NOT_FOUND', pluginId, details);
     this.name = 'PluginNotFoundError';
@@ -242,7 +262,7 @@ export class PluginAlreadyExistsError extends PluginError {
   constructor(
     message: string,
     pluginId?: string,
-    details?: Record<string, any>,
+    details?: PluginErrorDetails,
   ) {
     super(message, 'PLUGIN_ALREADY_EXISTS', pluginId, details);
     this.name = 'PluginAlreadyExistsError';
@@ -278,7 +298,7 @@ export function createPluginError(
   code: ErrorCode,
   message: string,
   pluginId?: string,
-  details?: Record<string, any>,
+  details?: PluginErrorDetails,
 ): PluginError {
   const errorMap = {
     [ERROR_CODES.PLUGIN_INSTALLATION_ERROR]: PluginInstallationError,

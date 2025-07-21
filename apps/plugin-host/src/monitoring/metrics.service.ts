@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { getErrorMessage, getErrorStack } from '@lib/shared/common';
 import * as os from 'os';
 
 export interface Metric {
@@ -173,9 +174,9 @@ export class MetricsService {
 
     pluginMetric.errors.total++;
     pluginMetric.errors.lastError = {
-      message: error.message,
+      message: getErrorMessage(error),
       timestamp: new Date(),
-      stack: error.stack,
+      stack: getErrorStack(error),
     };
 
     this.calculateErrorRate(pluginMetric);
@@ -402,7 +403,7 @@ export class MetricsService {
         const pluginCount = this.pluginMetrics.size;
         this.recordMetric('plugins.total', pluginCount);
       } catch (error) {
-        this.logger.error(`Metrics collection failed: ${error.message}`);
+        this.logger.error(`Metrics collection failed: ${getErrorMessage(error)}`);
       }
     }, 30000); // Collect system metrics every 30 seconds
   }
