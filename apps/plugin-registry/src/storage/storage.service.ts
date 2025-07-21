@@ -166,23 +166,23 @@ export class StorageService {
   async calculateDirectorySize(directoryPath: string): Promise<number> {
     try {
       const fullPath = this.getFullPath(directoryPath);
-      let totalSize = 0;
-
+      
       const entries = await fs.readdir(fullPath, { withFileTypes: true });
 
-      for (const entry of entries) {
+      const sizePromises = entries.map(async (entry) => {
         const entryPath = path.join(fullPath, entry.name);
         if (entry.isDirectory()) {
-          totalSize += await this.calculateDirectorySize(
+          return this.calculateDirectorySize(
             path.relative(this.basePath, entryPath),
           );
         } else {
           const stats = await fs.stat(entryPath);
-          totalSize += stats.size;
+          return stats.size;
         }
-      }
+      });
 
-      return totalSize;
+      const sizes = await Promise.all(sizePromises);
+      return sizes.reduce((total, size) => total + size, 0);
     } catch (error) {
       this.logger.error(
         `Failed to calculate directory size ${directoryPath}: ${error.message}`,
@@ -238,40 +238,50 @@ export class StorageService {
     const fullPath = this.getFullPath(directoryPath);
     const entries = await fs.readdir(fullPath, { withFileTypes: true });
 
+    const directoryPromises: Promise<void>[] = [];
+    const filePromises: Promise<void>[] = [];
+
     for (const entry of entries) {
       const entryPath = path.join(fullPath, entry.name);
       const relativePath = path.relative(this.basePath, entryPath);
 
       if (entry.isDirectory()) {
-        await this.cleanupDirectory(
-          relativePath,
-          cutoffDate,
-          pattern,
-          cleanedCount,
+        directoryPromises.push(
+          this.cleanupDirectory(
+            relativePath,
+            cutoffDate,
+            pattern,
+            cleanedCount,
+          ).then(async () => {
+            // Remove empty directories
+            try {
+              const remainingEntries = await fs.readdir(entryPath);
+              if (remainingEntries.length === 0) {
+                await fs.rmdir(entryPath);
+                cleanedCount++;
+              }
+            } catch {
+              // Directory not empty or other error, ignore
+            }
+          })
         );
-
-        // Remove empty directories
-        try {
-          const remainingEntries = await fs.readdir(entryPath);
-          if (remainingEntries.length === 0) {
-            await fs.rmdir(entryPath);
-            cleanedCount++;
-          }
-        } catch {
-          // Directory not empty or other error, ignore
-        }
       } else {
         // Check if file matches pattern (if specified)
         if (pattern && !entry.name.match(new RegExp(pattern))) {
           continue;
         }
 
-        const stats = await fs.stat(entryPath);
-        if (stats.mtime < cutoffDate) {
-          await fs.unlink(entryPath);
-          cleanedCount++;
-        }
+        filePromises.push(
+          fs.stat(entryPath).then(async (stats) => {
+            if (stats.mtime < cutoffDate) {
+              await fs.unlink(entryPath);
+              cleanedCount++;
+            }
+          })
+        );
       }
     }
+
+    await Promise.all([...directoryPromises, ...filePromises]);
   }
 }

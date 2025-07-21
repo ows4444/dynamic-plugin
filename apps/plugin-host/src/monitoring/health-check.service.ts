@@ -128,13 +128,13 @@ export class HealthCheckService {
     let unhealthy = 0;
     let unknown = 0;
 
-    for (const instance of instances) {
+    const healthCheckPromises = instances.map(async (instance) => {
       try {
         const startTime = Date.now();
         await this.instanceService.updateInstanceHealth(instance.id);
         const responseTime = Date.now() - startTime;
 
-        const healthDetail: PluginHealthDetail = {
+        return {
           id: instance.id,
           name: instance.name,
           version: instance.version,
@@ -142,26 +142,43 @@ export class HealthCheckService {
           lastCheck: new Date(),
           responseTime,
         };
+      } catch (error) {
+        return {
+          id: instance.id,
+          name: instance.name,
+          version: instance.version,
+          status: 'unhealthy' as const,
+          lastCheck: new Date(),
+          error: error.message,
+        };
+      }
+    });
 
-        if (instance.health === 'healthy') {
+    const healthResults = await Promise.allSettled(healthCheckPromises);
+
+    for (const result of healthResults) {
+      if (result.status === 'fulfilled') {
+        const healthDetail = result.value;
+        
+        if (healthDetail.status === 'healthy') {
           healthy++;
-        } else if (instance.health === 'unhealthy') {
+        } else if (healthDetail.status === 'unhealthy') {
           unhealthy++;
-          healthDetail.error = 'Health check failed';
+          healthDetail.error ??= 'Health check failed';
         } else {
           unknown++;
         }
 
         details.push(healthDetail);
-      } catch (error) {
+      } else {
         unhealthy++;
         details.push({
-          id: instance.id,
-          name: instance.name,
-          version: instance.version,
+          id: 'unknown',
+          name: 'unknown',
+          version: 'unknown',
           status: 'unhealthy',
           lastCheck: new Date(),
-          error: error.message,
+          error: result.reason?.message ?? 'Unknown error',
         });
       }
     }

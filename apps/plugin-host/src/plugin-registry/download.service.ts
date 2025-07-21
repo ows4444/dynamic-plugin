@@ -63,10 +63,13 @@ export class DownloadService {
       if (response.body) {
         const reader = response.body.getReader();
 
-        while (true) {
+        const readChunk = async (): Promise<void> => {
           const { done, value } = await reader.read();
 
-          if (done) break;
+          if (done) {
+            writeStream.end();
+            return;
+          }
 
           writeStream.write(value);
           downloaded += value.length;
@@ -74,9 +77,11 @@ export class DownloadService {
           if (onProgress && contentLength > 0) {
             onProgress(downloaded, contentLength);
           }
-        }
 
-        writeStream.end();
+          return readChunk();
+        };
+
+        await readChunk();
       }
 
       this.logger.log(`Package downloaded with progress: ${filePath}`);

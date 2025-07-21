@@ -147,23 +147,22 @@ export class FileSystemService implements StorageProvider {
   async calculateDirectorySize(directoryPath: string): Promise<number> {
     try {
       const fullPath = this.getFullPath(directoryPath);
-      let totalSize = 0;
-
       const entries = await fs.readdir(fullPath, { withFileTypes: true });
 
-      for (const entry of entries) {
+      const sizePromises = entries.map(async (entry) => {
         const entryPath = path.join(fullPath, entry.name);
         if (entry.isDirectory()) {
-          totalSize += await this.calculateDirectorySize(
+          return this.calculateDirectorySize(
             path.relative(this.basePath, entryPath),
           );
         } else {
           const stats = await fs.stat(entryPath);
-          totalSize += stats.size;
+          return stats.size;
         }
-      }
+      });
 
-      return totalSize;
+      const sizes = await Promise.all(sizePromises);
+      return sizes.reduce((total, size) => total + size, 0);
     } catch (error) {
       this.logger.error(
         `Failed to calculate directory size ${directoryPath}: ${error.message}`,
@@ -174,15 +173,15 @@ export class FileSystemService implements StorageProvider {
 
   async cleanupOldFiles(maxAge: number): Promise<number> {
     const cutoffDate = new Date(Date.now() - maxAge);
-    const cleanedCount = 0;
+    const cleanedCount = { count: 0 };
 
     try {
       await this.cleanupDirectory('', cutoffDate, cleanedCount);
-      this.logger.log(`Cleaned up ${cleanedCount} old files`);
-      return cleanedCount;
+      this.logger.log(`Cleaned up ${cleanedCount.count} old files`);
+      return cleanedCount.count;
     } catch (error) {
       this.logger.error(`Failed to cleanup old files: ${error.message}`);
-      return cleanedCount;
+      return cleanedCount.count;
     }
   }
 
@@ -209,12 +208,12 @@ export class FileSystemService implements StorageProvider {
   private async cleanupDirectory(
     directoryPath: string,
     cutoffDate: Date,
-    cleanedCount: number,
+    cleanedCount: { count: number },
   ): Promise<void> {
     const fullPath = this.getFullPath(directoryPath);
     const entries = await fs.readdir(fullPath, { withFileTypes: true });
 
-    for (const entry of entries) {
+    const promises = entries.map(async (entry) => {
       const entryPath = path.join(fullPath, entry.name);
       const relativePath = path.relative(this.basePath, entryPath);
 
@@ -224,15 +223,17 @@ export class FileSystemService implements StorageProvider {
         const remainingEntries = await fs.readdir(entryPath);
         if (remainingEntries.length === 0) {
           await fs.rmdir(entryPath);
-          cleanedCount++;
+          cleanedCount.count++;
         }
       } else {
         const stats = await fs.stat(entryPath);
         if (stats.mtime < cutoffDate) {
           await fs.unlink(entryPath);
-          cleanedCount++;
+          cleanedCount.count++;
         }
       }
-    }
+    });
+
+    await Promise.all(promises);
   }
 }

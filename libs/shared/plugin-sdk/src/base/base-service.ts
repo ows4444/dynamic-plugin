@@ -52,11 +52,12 @@ export abstract class BaseService {
     retries?: number,
   ): Promise<T> {
     const maxRetries = retries ?? this.options.retries ?? 3;
-    let lastError: Error;
-
+    let lastError: Error = new Error('Operation failed');
+     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const startTime = Date.now();
+        // eslint-disable-next-line no-await-in-loop
         const result = await Promise.race([
           operation(),
           this.createTimeoutPromise<T>(this.options.timeout ?? 30000),
@@ -77,6 +78,7 @@ export abstract class BaseService {
         );
 
         if (attempt < maxRetries) {
+          // eslint-disable-next-line no-await-in-loop
           await this.delay(this.options.retryDelay ?? 1000);
         }
       }
