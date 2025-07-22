@@ -129,7 +129,7 @@ export class HealthController {
       }
     }
   })
-  async getLiveness(): Promise<{ status: string; timestamp: Date; uptime: number }> {
+  getLiveness(): { status: string; timestamp: Date; uptime: number } {
     // Basic liveness check - if we can respond, we're alive
     return {
       status: 'alive',
@@ -166,7 +166,7 @@ export class HealthController {
       }
     }
   })
-  async getHealthMetrics(): Promise<{
+  getHealthMetrics(): {
     registeredChecks: string[];
     lastCheck: {
       timestamp: Date;
@@ -178,7 +178,7 @@ export class HealthController {
       arch: string;
       uptime: number;
     };
-  }> {
+  } {
     const registeredChecks = this.healthCheckService.getRegisteredHealthChecks();
     
     return {

@@ -42,7 +42,7 @@ export default tseslint.config(
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       // TypeScript-specific rules
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-unsafe-argument': 'warn',
       '@typescript-eslint/no-unsafe-assignment': 'warn',
@@ -55,8 +55,8 @@ export default tseslint.config(
         varsIgnorePattern: '^_',
         caughtErrorsIgnorePattern: '^_'
       }],
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'warn',
+      '@typescript-eslint/explicit-module-boundary-types': 'warn',
       '@typescript-eslint/no-inferrable-types': 'error',
       '@typescript-eslint/ban-ts-comment': 'warn',
       '@typescript-eslint/prefer-nullish-coalescing': 'error',
@@ -102,7 +102,33 @@ export default tseslint.config(
       'no-multi-str': 'error',
       'no-global-assign': 'error',
       
-      // Code organization
+      // Import ordering (note: requires eslint-plugin-import to be installed)
+      // 'import/order': ['error', {
+      //   'groups': ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+      //   'pathGroups': [
+      //     { 'pattern': '@app/**', 'group': 'internal' },
+      //     { 'pattern': '@lib/**', 'group': 'internal' },
+      //     { 'pattern': '@shared/**', 'group': 'internal' },
+      //     { 'pattern': '@domain/**', 'group': 'internal' }
+      //   ],
+      //   'newlines-between': 'always',
+      //   'alphabetize': { 'order': 'asc', 'caseInsensitive': true }
+      // }],
+      
+      // Naming conventions
+      '@typescript-eslint/naming-convention': [
+        'error',
+        { 'selector': 'interface', 'format': ['PascalCase'] },
+        { 'selector': 'typeAlias', 'format': ['PascalCase'] },
+        { 'selector': 'class', 'format': ['PascalCase'] },
+        { 'selector': 'method', 'format': ['camelCase'] },
+        { 'selector': 'property', 'format': ['camelCase'] },
+        { 'selector': 'variable', 'format': ['camelCase', 'UPPER_CASE'] },
+        { 'selector': 'parameter', 'format': ['camelCase'], 'leadingUnderscore': 'allow' },
+        { 'selector': 'enumMember', 'format': ['UPPER_CASE'] }
+      ],
+      
+      // Code organization  
       'sort-imports': ['error', {
         ignoreCase: true,
         ignoreDeclarationSort: true,

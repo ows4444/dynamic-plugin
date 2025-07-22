@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { HealthCheckService, HealthStatus } from '../monitoring/health-check.service';
+import { HealthCheckService, HealthStatus, PluginHealthSummary } from '../monitoring/health-check.service';
 
 @ApiTags('health')
 @Controller()
@@ -37,7 +37,7 @@ export class AppController {
   @Get('health/plugins')
   @ApiOperation({ summary: 'Plugin-specific health status' })
   @ApiResponse({ status: 200, description: 'Plugin health summary' })
-  async getPluginHealth() {
+  async getPluginHealth(): Promise<PluginHealthSummary> {
     return this.healthCheckService.checkPluginHealth();
   }
 }
