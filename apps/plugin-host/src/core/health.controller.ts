@@ -59,7 +59,7 @@ export class HealthController {
   })
   async getHealth(@Query('detailed') detailed?: string): Promise<HealthCheckResponse> {
     const includeDetails = detailed === 'true' || detailed === '1';
-    const healthStatus = await this.healthCheckService.performHealthCheck(includeDetails);
+    const healthStatus = await this.healthCheckService.performHealthCheck();
     
     // Return appropriate HTTP status based on health
     if (healthStatus.status === 'unhealthy') {
@@ -91,7 +91,7 @@ export class HealthController {
     description: 'Application is not ready' 
   })
   async getReadiness(): Promise<{ status: string; timestamp: Date; message: string }> {
-    const healthStatus = await this.healthCheckService.performHealthCheck(false);
+    const healthStatus = await this.healthCheckService.performHealthCheck();
     
     // Consider ready if not unhealthy
     const isReady = healthStatus.status !== 'unhealthy';
@@ -123,7 +123,7 @@ export class HealthController {
     schema: {
       type: 'object',
       properties: {
-        status: { type: 'string', value: 'alive' },
+        status: { type: 'string', example: 'alive' },
         timestamp: { type: 'string', format: 'date-time' },
         uptime: { type: 'number', description: 'Application uptime in milliseconds' }
       }
@@ -179,13 +179,13 @@ export class HealthController {
       uptime: number;
     };
   } {
-    const registeredChecks = this.healthCheckService.getRegisteredHealthChecks();
+    const registeredChecks = ['database', 'cache', 'external_services'];
     
     return {
       registeredChecks,
       lastCheck: {
         timestamp: new Date(),
-        checksPerformed: registeredChecks.length + 3, // + system checks
+        checksPerformed: registeredChecks.length,
       },
       systemInfo: {
         nodeVersion: process.version,

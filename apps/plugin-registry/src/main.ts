@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const logger = new Logger('PluginRegistry');
 
   // Validate environment variables before starting the application
@@ -32,14 +32,22 @@ async function bootstrap() {
     }),
   );
 
-  // Enable CORS
-  app.enableCors({
-    origin: true,
-    credentials: true,
-  });
+  // Enable CORS based on environment configuration
+  const corsOrigins = process.env['CORS_ORIGINS']?.split(',') ?? ['http://localhost:3000'];
+  const corsEnabled = process.env['CORS_ENABLED'] === 'true';
+  
+  if (corsEnabled) {
+    app.enableCors({
+      origin: corsOrigins,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    });
+  }
 
   // Global prefix for all routes
-  app.setGlobalPrefix('api');
+  const apiPrefix = process.env['API_PREFIX'] ?? 'api';
+  app.setGlobalPrefix(apiPrefix);
 
   // Setup Swagger documentation
   const config = new DocumentBuilder()
@@ -60,10 +68,10 @@ async function bootstrap() {
     },
   });
 
-  const port = process.env['PORT'] ?? 3001;
+  const port = process.env['PLUGIN_REGISTRY_PORT'] ?? process.env['PORT'] ?? 3002;
   await app.listen(port);
 
   logger.log(`🚀 Plugin Registry is running on: http://localhost:${port}`);
-  logger.log(`📚 API Documentation available at: http://localhost:${port}/api/docs`);
+  logger.log(`📚 API Documentation available at: http://localhost:${port}/${apiPrefix}/docs`);
 }
 void bootstrap();

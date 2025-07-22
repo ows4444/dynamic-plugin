@@ -12,8 +12,8 @@ export interface AuditEvent {
   source: 'user' | 'system' | 'plugin';
   severity: 'low' | 'medium' | 'high' | 'critical';
   success: boolean;
-  error?: string;
-  metadata?: Record<string, unknown>;
+  error?: string | undefined;
+  metadata?: Record<string, unknown> | undefined;
 }
 
 export type AuditEventType =
@@ -51,7 +51,7 @@ export interface AuditSummary {
   eventsBySeverity: Record<string, number>;
   eventsBySource: Record<string, number>;
   successRate: number;
-  lastEvent?: AuditEvent;
+  lastEvent?: AuditEvent | undefined;
   timeRange: {
     earliest: Date;
     latest: Date;
@@ -75,7 +75,7 @@ export class AuditService {
       source?: 'user' | 'system' | 'plugin';
       severity?: 'low' | 'medium' | 'high' | 'critical';
       success?: boolean;
-      error?: string;
+      error?: string | undefined;
       metadata?: Record<string, unknown>;
     } = {},
   ): Promise<void> {
@@ -303,11 +303,11 @@ export class AuditService {
       filteredEvents = filteredEvents.filter((e) => e.type === query.type);
     }
 
-    if (query.actor) {
+    if (query.actor != null) {
       filteredEvents = filteredEvents.filter((e) => e.actor === query.actor);
     }
 
-    if (query.resource) {
+    if (query.resource != null) {
       filteredEvents = filteredEvents.filter((e) =>
         e.resource.includes(query.resource!),
       );
@@ -375,8 +375,8 @@ export class AuditService {
     for (const event of events) {
       eventsByType[event.type] = (eventsByType[event.type] || 0) + 1;
       eventsBySeverity[event.severity] =
-        (eventsBySeverity[event.severity] || 0) + 1;
-      eventsBySource[event.source] = (eventsBySource[event.source] || 0) + 1;
+        (eventsBySeverity[event.severity] ?? 0) + 1;
+      eventsBySource[event.source] = (eventsBySource[event.source] ?? 0) + 1;
 
       if (event.success) {
         successCount++;
@@ -386,8 +386,8 @@ export class AuditService {
     const timeRange =
       events.length > 0
         ? {
-            earliest: events[events.length - 1].timestamp,
-            latest: events[0].timestamp,
+            earliest: events[events.length - 1]?.timestamp ?? new Date(),
+            latest: events[0]?.timestamp ?? new Date(),
           }
         : {
             earliest: new Date(),
@@ -400,7 +400,7 @@ export class AuditService {
       eventsBySeverity,
       eventsBySource,
       successRate: events.length > 0 ? (successCount / events.length) * 100 : 0,
-      lastEvent: events[0],
+      lastEvent: events[0] ?? undefined,
       timeRange,
     };
   }
@@ -428,7 +428,8 @@ export class AuditService {
     const initialCount = this.events.length;
 
     for (let i = this.events.length - 1; i >= 0; i--) {
-      if (this.events[i].timestamp < cutoffDate) {
+      const event = this.events[i];
+      if (event && event.timestamp < cutoffDate) {
         this.events.splice(i, 1);
       }
     }

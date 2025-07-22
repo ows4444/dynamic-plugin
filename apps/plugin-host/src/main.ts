@@ -32,14 +32,22 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  // Enable CORS for plugin development
-  app.enableCors({
-    origin: true,
-    credentials: true,
-  });
+  // Enable CORS based on environment configuration
+  const corsOrigins = process.env['CORS_ORIGINS']?.split(',') ?? ['http://localhost:3000'];
+  const corsEnabled = process.env['CORS_ENABLED'] === 'true';
+  
+  if (corsEnabled) {
+    app.enableCors({
+      origin: corsOrigins,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    });
+  }
 
   // Global prefix for all routes
-  app.setGlobalPrefix('api');
+  const apiPrefix = process.env['API_PREFIX'] ?? 'api';
+  app.setGlobalPrefix(apiPrefix);
 
   // Setup Swagger documentation
   const config = new DocumentBuilder()
@@ -53,16 +61,16 @@ async function bootstrap(): Promise<void> {
     .build();
   
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
+  SwaggerModule.setup(`${apiPrefix}/docs`, app, document, {
     swaggerOptions: {
       persistAuthorization: true,
     },
   });
 
-  const port = process.env['PORT'] ?? 3000;
+  const port = process.env['PLUGIN_HOST_PORT'] ?? process.env['PORT'] ?? 3001;
   await app.listen(port);
 
   logger.log(`🚀 Plugin Host is running on: http://localhost:${port}`);
-  logger.log(`📚 API Documentation available at: http://localhost:${port}/api/docs`);
+  logger.log(`📚 API Documentation available at: http://localhost:${port}/${apiPrefix}/docs`);
 }
 void bootstrap();
