@@ -32,3 +32,7 @@ export * from './logging/structured-logger.service';
 export * from './logging/correlation-id.middleware';
 export * from './logging/logging.interceptor';
 export * from './logging/logging.module';
+
+export * from './monitoring/performance-monitor.service';
+export * from './monitoring/metrics-collector.service';
+export * from './monitoring/monitoring.module';
