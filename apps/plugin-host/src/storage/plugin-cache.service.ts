@@ -1,6 +1,6 @@
 import { getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
-import { CacheEntry, CacheOptions } from './storage.interface';
+import type { CacheEntry, CacheOptions } from './storage.interface';
 
 @Injectable()
 export class PluginCacheService {

@@ -1,18 +1,14 @@
 // Base classes
-export * from './base/base-plugin';
-export * from './base/base-service';
+export * from './base';
 
 // Decorators
-export * from './decorators/plugin.decorator';
-export * from './decorators/plugin-route.decorator';
+export * from './decorators';
 
 // Context
-export * from './context/plugin-context';
+export * from './context';
 
 // Utilities
-export * from './utilities/config.util';
-export * from './utilities/validation.util';
-export * from './utilities/logger.util';
+export * from './utilities';
 
 // Shared module and service
 export * from './shared/plugin-sdk.module';

@@ -6,16 +6,16 @@ export interface EnvironmentValidationResult {
   errors: string[];
   warnings: string[];
   environment: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
 }
 
 export interface EnvironmentRequirement {
   key: string;
   required: boolean;
   type: 'string' | 'number' | 'boolean' | 'url' | 'email' | 'port';
-  defaultValue?: any;
+  defaultValue?: unknown;
   description: string;
-  allowedValues?: any[];
+  allowedValues?: unknown[];
   minLength?: number;
   maxLength?: number;
   min?: number;
@@ -239,7 +239,7 @@ export class EnvironmentValidator {
     return result;
   }
 
-  validateAndThrow(): Record<string, any> {
+  validateAndThrow(): Record<string, unknown> {
     const result = this.validate();
 
     if (!result.isValid) {

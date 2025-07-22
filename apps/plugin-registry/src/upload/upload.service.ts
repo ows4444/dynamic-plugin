@@ -14,8 +14,8 @@ function isPluginManifest(obj: unknown): obj is PluginManifest {
     obj !== null &&
     'name' in obj &&
     'version' in obj &&
-    typeof (obj as any).name === 'string' &&
-    typeof (obj as any).version === 'string'
+    typeof (obj as PluginManifest).name === 'string' &&
+    typeof (obj as PluginManifest).version === 'string'
   );
 }
 
@@ -23,8 +23,8 @@ function isPackageJsonContent(obj: unknown): obj is PackageJsonContent {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    (!('name' in obj) || typeof (obj as any).name === 'string') &&
-    (!('version' in obj) || typeof (obj as any).version === 'string')
+    (!('name' in obj) || typeof (obj as PackageJsonContent).name === 'string') &&
+    (!('version' in obj) || typeof (obj as PackageJsonContent).version === 'string')
   );
 }
 

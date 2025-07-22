@@ -36,6 +36,13 @@ export interface ConflictAnalysis {
   }>;
 }
 
+interface PackageJsonLike {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  [key: string]: unknown;
+}
+
 export interface VulnerabilityAnalysis {
   dependency: string;
   version: string;
@@ -58,7 +65,7 @@ export class DependencyChecker {
     this.initializeKnownIssues();
   }
 
-  async checkDependencies(packageJson: any): Promise<DependencyCheckResult> {
+  async checkDependencies(packageJson: PackageJsonLike): Promise<DependencyCheckResult> {
     const result: DependencyCheckResult = {
       valid: true,
       dependencies: [],
@@ -203,7 +210,7 @@ export class DependencyChecker {
     });
   }
 
-  private extractAllDependencies(packageJson: any): Array<{
+  private extractAllDependencies(packageJson: PackageJsonLike): Array<{
     name: string;
     version: string;
     type: 'dependency' | 'devDependency' | 'peerDependency';
@@ -243,7 +250,7 @@ export class DependencyChecker {
     const analysis: DependencyAnalysis = {
       name: dep.name,
       version: dep.version,
-      type: dep.type as any,
+      type: dep.type as 'dependency' | 'devDependency' | 'peerDependency',
       status: 'valid',
       issues: [],
     };

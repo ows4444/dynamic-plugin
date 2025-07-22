@@ -292,7 +292,7 @@ export class BundleOptimizerService {
     }
   }
 
-  private async getBundleStats(bundlePath: string): Promise<any> {
+  private async getBundleStats(bundlePath: string): Promise<Record<string, unknown>> {
     // This would typically parse webpack stats.json
     // Simplified implementation
     return {};
@@ -340,22 +340,22 @@ export class BundleOptimizerService {
     return recommendations;
   }
 
-  private extractModuleInfo(stats: any): Array<{ name: string; size: number; percentage: number }> {
+  private extractModuleInfo(stats: Record<string, unknown>): Array<{ name: string; size: number; percentage: number }> {
     // Implementation would extract module information from webpack stats
     return [];
   }
 
-  private findDuplicateModules(stats: any): string[] {
+  private findDuplicateModules(stats: Record<string, unknown>): string[] {
     // Implementation would find duplicate modules
     return [];
   }
 
-  private findUnusedExports(stats: any): string[] {
+  private findUnusedExports(stats: Record<string, unknown>): string[] {
     // Implementation would find unused exports
     return [];
   }
 
-  private findHeavyDependencies(stats: any): string[] {
+  private findHeavyDependencies(stats: Record<string, unknown>): string[] {
     // Implementation would identify heavy dependencies
     return [];
   }

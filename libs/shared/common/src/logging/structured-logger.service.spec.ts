@@ -31,7 +31,7 @@ describe('StructuredLoggerService', () => {
 
   beforeEach(async () => {
     const mockConfigService = {
-      get: jest.fn((key: string, defaultValue?: any) => {
+      get: jest.fn((key: string, defaultValue?: unknown) => {
         switch (key) {
           case 'NODE_ENV':
             return 'test';
@@ -47,7 +47,7 @@ describe('StructuredLoggerService', () => {
       log: jest.fn(),
       on: jest.fn(),
       end: jest.fn(),
-    } as any;
+    } as jest.Mocked<winston.Logger>;
 
     (winston.createLogger as jest.Mock).mockReturnValue(mockLogger);
 

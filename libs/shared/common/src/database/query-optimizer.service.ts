@@ -5,7 +5,7 @@ export interface QueryPerformanceMetrics {
   query: string;
   executionTime: number;
   rowsAffected: number;
-  parameters?: any[];
+  parameters?: unknown[];
   timestamp: Date;
   isSlowQuery: boolean;
 }
@@ -74,7 +74,7 @@ export class QueryOptimizerService {
    */
   analyzeSqlForOptimization(
     query: string,
-    parameters?: any[],
+    parameters?: unknown[],
   ): QueryOptimizationSuggestion[] {
     const suggestions: QueryOptimizationSuggestion[] = [];
     const normalizedQuery = query.toLowerCase();

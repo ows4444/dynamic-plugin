@@ -113,9 +113,9 @@ export class LoggerUtil {
       formatted += ` [${contextStr}]`;
     }
 
-    if (data) {
+    if (data != null) {
       const dataStr =
-        typeof data === 'object' && data !== null 
+        typeof data === 'object' 
           ? JSON.stringify(data) 
           : typeof data === 'string' 
           ? data 

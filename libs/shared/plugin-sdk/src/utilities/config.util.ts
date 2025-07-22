@@ -8,7 +8,7 @@ export type PluginConfigOptions = PluginConfig;
 export class ConfigUtil {
   static validateConfig(config: PluginConfigOptions, _schema: Record<string, unknown>): boolean {
     // Basic validation logic
-    if (!config || typeof config !== 'object') {
+    if (config == null || Array.isArray(config)) {
       return false;
     }
 
@@ -32,10 +32,10 @@ export class ConfigUtil {
     defaultValue?: T,
   ): T | undefined {
     const keys = key.split('.');
-    let value = config;
+    let value: unknown = config;
 
     for (const k of keys) {
-      if (value && typeof value === 'object' && k in value) {
+      if (value != null && typeof value === 'object' && k in value) {
         value = (value as Record<string, unknown>)[k];
       } else {
         return defaultValue;
@@ -55,22 +55,14 @@ export class ConfigUtil {
 
     if (lastKey == null) return;
 
-    let current = config;
+    let current: Record<string, unknown> = config as Record<string, unknown>;
     for (const k of keys) {
       if (!(k in current) || typeof current[k] !== 'object') {
         current[k] = {};
       }
-      if (current && typeof current === 'object' && k in current) {
-        current = current[k] as Record<string, unknown>;
-      } else {
-        throw new Error(`Invalid configuration path: ${path}`);
-      }
+      current = current[k] as Record<string, unknown>;
     }
 
-    if (current && typeof current === 'object') {
-      (current as Record<string, unknown>)[lastKey] = value;
-    } else {
-      throw new Error(`Cannot set value at path: ${path}`);
-    }
+    current[lastKey] = value;
   }
 }

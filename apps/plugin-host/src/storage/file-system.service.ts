@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { getErrorCode, getErrorMessage } from '@lib/shared/common';
-import { PluginStorageMetadata, StorageProvider } from './storage.interface';
+import type { PluginStorageMetadata, StorageProvider } from './storage.interface';
 
 @Injectable()
 export class FileSystemService implements StorageProvider {
