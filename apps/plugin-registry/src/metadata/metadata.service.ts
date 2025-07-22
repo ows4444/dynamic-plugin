@@ -1,6 +1,7 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Inject, CACHE_MANAGER } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Cache } from 'cache-manager';
 import { getErrorMessage } from '@lib/shared/common';
 import { PluginCategory, PluginEntity, PluginStatus } from './metadata.entity';
 
@@ -78,6 +79,8 @@ export class MetadataService {
   constructor(
     @InjectRepository(PluginEntity)
     private readonly pluginRepository: Repository<PluginEntity>,
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
   ) {}
 
   async createPlugin(createDto: CreatePluginDto): Promise<PluginEntity> {
@@ -90,6 +93,9 @@ export class MetadataService {
       });
 
       const savedPlugin = await this.pluginRepository.save(plugin);
+
+      // Invalidate caches after creating new plugin
+      await this.invalidateAllCaches();
 
       this.logger.log(
         `Created plugin metadata: ${createDto.name}@${createDto.version}`,
@@ -148,13 +154,45 @@ export class MetadataService {
       const limit = Math.min(query.limit ?? 50, 200);
       const offset = query.offset ?? 0;
 
+      // Build optimized query with proper indexing
       const queryBuilder = this.pluginRepository
         .createQueryBuilder('plugin')
+        .select([
+          'plugin.id',
+          'plugin.name',
+          'plugin.version',
+          'plugin.description',
+          'plugin.author',
+          'plugin.license',
+          'plugin.tags',
+          'plugin.category',
+          'plugin.status',
+          'plugin.homepage',
+          'plugin.repository',
+          'plugin.downloadCount',
+          'plugin.rating',
+          'plugin.ratingCount',
+          'plugin.createdAt',
+          'plugin.updatedAt',
+          'plugin.publishedAt',
+        ])
         .where('plugin.status = :status', {
           status: query.status ?? PluginStatus.PUBLISHED,
         });
 
-      // Apply filters
+      // Apply filters with optimized indexing
+      if (query.category) {
+        queryBuilder.andWhere('plugin.category = :category', {
+          category: query.category,
+        });
+      }
+
+      if (query.minRating) {
+        queryBuilder.andWhere('plugin.rating >= :minRating', {
+          minRating: query.minRating,
+        });
+      }
+
       if (query.name) {
         queryBuilder.andWhere('plugin.name ILIKE :name', {
           name: `%${query.name}%`,
@@ -167,56 +205,83 @@ export class MetadataService {
         });
       }
 
-      if (query.category) {
-        queryBuilder.andWhere('plugin.category = :category', {
-          category: query.category,
-        });
-      }
-
       if (query.tags && query.tags.length > 0) {
         queryBuilder.andWhere('plugin.tags && :tags', {
           tags: query.tags,
         });
       }
 
-      if (query.minRating) {
-        queryBuilder.andWhere('plugin.rating >= :minRating', {
-          minRating: query.minRating,
-        });
-      }
-
+      // Optimized full-text search using PostgreSQL features
       if (query.search) {
         queryBuilder.andWhere(
-          '(plugin.name ILIKE :search OR plugin.description ILIKE :search OR plugin.tags::text ILIKE :search)',
-          { search: `%${query.search}%` },
+          `(
+            to_tsvector('english', plugin.name || ' ' || COALESCE(plugin.description, '')) 
+            @@ plainto_tsquery('english', :search)
+            OR plugin.tags::text ILIKE :searchLike
+          )`,
+          { 
+            search: query.search,
+            searchLike: `%${query.search}%`
+          },
         );
       }
 
-      // Apply sorting
+      // Apply sorting with proper index usage
       const sortBy = query.sortBy ?? 'createdAt';
       const sortOrder = query.sortOrder ?? 'DESC';
-      queryBuilder.orderBy(`plugin.${sortBy}`, sortOrder);
+      
+      // Use composite indexes for better performance
+      if (sortBy === 'rating') {
+        queryBuilder.orderBy('plugin.status', 'ASC');
+        queryBuilder.addOrderBy('plugin.rating', sortOrder);
+        queryBuilder.addOrderBy('plugin.downloadCount', 'DESC');
+      } else if (sortBy === 'downloadCount') {
+        queryBuilder.orderBy('plugin.status', 'ASC');
+        queryBuilder.addOrderBy('plugin.downloadCount', sortOrder);
+        queryBuilder.addOrderBy('plugin.rating', 'DESC');
+      } else if (sortBy === 'publishedAt') {
+        queryBuilder.orderBy('plugin.status', 'ASC');
+        queryBuilder.addOrderBy('plugin.publishedAt', sortOrder);
+      } else {
+        queryBuilder.orderBy(`plugin.${sortBy}`, sortOrder);
+      }
 
       // Add secondary sort by name for consistent ordering
       if (sortBy !== 'name') {
         queryBuilder.addOrderBy('plugin.name', 'ASC');
       }
 
-      // Get total count
-      const totalQuery = queryBuilder.clone();
-      const total = await totalQuery.getCount();
+      // Use a single query for both count and data when possible
+      if (offset === 0 && limit <= 50) {
+        // For small result sets, get both count and data efficiently
+        const [plugins, total] = await queryBuilder
+          .limit(limit)
+          .getManyAndCount();
 
-      // Apply pagination
-      queryBuilder.limit(limit).offset(offset);
+        return {
+          plugins,
+          total,
+          hasMore: total > limit,
+        };
+      } else {
+        // For larger result sets or pagination, use separate optimized queries
+        const countQuery = queryBuilder
+          .clone()
+          .select('COUNT(*)', 'count');
 
-      // Execute query
-      const plugins = await queryBuilder.getMany();
+        const [plugins, countResult] = await Promise.all([
+          queryBuilder.limit(limit).offset(offset).getMany(),
+          countQuery.getRawOne(),
+        ]);
 
-      return {
-        plugins,
-        total,
-        hasMore: offset + plugins.length < total,
-      };
+        const total = parseInt(countResult?.count || '0', 10);
+
+        return {
+          plugins,
+          total,
+          hasMore: offset + plugins.length < total,
+        };
+      }
     } catch (error) {
       this.logger.error(`Plugin search failed: ${getErrorMessage(error)}`);
       return { plugins: [], total: 0, hasMore: false };
@@ -251,6 +316,13 @@ export class MetadataService {
       }
 
       const updatedPlugin = await this.pluginRepository.save(plugin);
+
+      // Invalidate caches after status update
+      if (status === PluginStatus.PUBLISHED || status === PluginStatus.DEPRECATED) {
+        await this.invalidateAllCaches();
+      } else {
+        await this.invalidateStatsCache();
+      }
 
       this.logger.log(
         `Updated plugin status: ${plugin.name}@${plugin.version} -> ${status}`,
@@ -340,55 +412,73 @@ export class MetadataService {
     totalDownloads: number;
     averageRating: number;
   }> {
+    const cacheKey = 'plugin-stats';
+    
     try {
-      const [
-        total, 
-        statusStats, 
-        categoryStats, 
-        downloadStats, 
-        ratingStats
-      ] = await Promise.all([
-          this.pluginRepository.count(),
-          this.pluginRepository
-            .createQueryBuilder('plugin')
-            .select('plugin.status', 'status')
-            .addSelect('COUNT(*)', 'count')
-            .groupBy('plugin.status')
-            .getRawMany(),
-          this.pluginRepository
-            .createQueryBuilder('plugin')
-            .select('plugin.category', 'category')
-            .addSelect('COUNT(*)', 'count')
-            .groupBy('plugin.category')
-            .getRawMany(),
-          this.pluginRepository
-            .createQueryBuilder('plugin')
-            .select('SUM(plugin.downloadCount)', 'totalDownloads')
-            .getRawOne() as Promise<DatabaseDownloadResult>,
-          this.pluginRepository
-            .createQueryBuilder('plugin')
-            .select('AVG(plugin.rating)', 'averageRating')
-            .where('plugin.ratingCount > 0')
-            .getRawOne() as Promise<DatabaseRatingResult>,
-        ]);
+      // Check cache first
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached) {
+        this.logger.debug('Returning cached plugin stats');
+        return cached as any;
+      }
+
+      // Optimized single query to get all stats at once
+      const statsQuery = `
+        WITH stats AS (
+          SELECT 
+            COUNT(*) as total,
+            SUM(download_count) as total_downloads,
+            AVG(CASE WHEN rating_count > 0 THEN rating ELSE NULL END) as avg_rating
+          FROM plugins
+        ),
+        status_stats AS (
+          SELECT 
+            status,
+            COUNT(*) as count
+          FROM plugins
+          GROUP BY status
+        ),
+        category_stats AS (
+          SELECT 
+            category,
+            COUNT(*) as count
+          FROM plugins
+          GROUP BY category
+        )
+        SELECT 
+          (SELECT row_to_json(stats) FROM stats) as general_stats,
+          (SELECT json_agg(row_to_json(status_stats)) FROM status_stats) as status_stats,
+          (SELECT json_agg(row_to_json(category_stats)) FROM category_stats) as category_stats
+      `;
+
+      const [result] = await this.pluginRepository.query(statsQuery);
+      
+      const generalStats = result.general_stats || {};
+      const statusStats = result.status_stats || [];
+      const categoryStats = result.category_stats || [];
 
       const byStatus = {} as Record<PluginStatus, number>;
-      statusStats.forEach((stat: DatabaseQueryResult) => {
+      statusStats.forEach((stat: any) => {
         byStatus[stat.status as PluginStatus] = parseInt(String(stat.count), 10);
       });
 
       const byCategory = {} as Record<PluginCategory, number>;
-      categoryStats.forEach((stat: DatabaseCategoryResult) => {
+      categoryStats.forEach((stat: any) => {
         byCategory[stat.category as PluginCategory] = parseInt(String(stat.count), 10);
       });
 
-      return {
-        total,
+      const stats = {
+        total: parseInt(String(generalStats.total ?? '0'), 10),
         byStatus,
         byCategory,
-        totalDownloads: parseInt(String(downloadStats?.totalDownloads ?? '0'), 10),
-        averageRating: parseFloat(String(ratingStats?.averageRating ?? '0')),
+        totalDownloads: parseInt(String(generalStats.total_downloads ?? '0'), 10),
+        averageRating: parseFloat(String(generalStats.avg_rating ?? '0')),
       };
+
+      // Cache for 5 minutes
+      await this.cacheManager.set(cacheKey, stats, 300);
+      
+      return stats;
     } catch (error) {
       this.logger.error(`Failed to get plugin stats: ${getErrorMessage(error)}`);
       return {
@@ -402,8 +492,22 @@ export class MetadataService {
   }
 
   async getPopularPlugins(limit = 10): Promise<PluginEntity[]> {
+    const cacheKey = `popular-plugins-${limit}`;
+    
     try {
-      return await this.pluginRepository.find({
+      // Check cache first
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached) {
+        this.logger.debug(`Returning cached popular plugins (limit: ${limit})`);
+        return cached as PluginEntity[];
+      }
+
+      const plugins = await this.pluginRepository.find({
+        select: [
+          'id', 'name', 'version', 'description', 'author', 'license',
+          'tags', 'category', 'status', 'homepage', 'repository',
+          'downloadCount', 'rating', 'ratingCount', 'createdAt', 'publishedAt'
+        ],
         where: { status: PluginStatus.PUBLISHED },
         order: {
           downloadCount: 'DESC',
@@ -411,6 +515,11 @@ export class MetadataService {
         },
         take: limit,
       });
+
+      // Cache for 10 minutes
+      await this.cacheManager.set(cacheKey, plugins, 600);
+      
+      return plugins;
     } catch (error) {
       this.logger.error(`Failed to get popular plugins: ${getErrorMessage(error)}`);
       return [];
@@ -418,15 +527,57 @@ export class MetadataService {
   }
 
   async getRecentPlugins(limit = 10): Promise<PluginEntity[]> {
+    const cacheKey = `recent-plugins-${limit}`;
+    
     try {
-      return await this.pluginRepository.find({
+      // Check cache first
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached) {
+        this.logger.debug(`Returning cached recent plugins (limit: ${limit})`);
+        return cached as PluginEntity[];
+      }
+
+      const plugins = await this.pluginRepository.find({
+        select: [
+          'id', 'name', 'version', 'description', 'author', 'license',
+          'tags', 'category', 'status', 'homepage', 'repository',
+          'downloadCount', 'rating', 'ratingCount', 'createdAt', 'publishedAt'
+        ],
         where: { status: PluginStatus.PUBLISHED },
         order: { publishedAt: 'DESC' },
         take: limit,
       });
+
+      // Cache for 10 minutes
+      await this.cacheManager.set(cacheKey, plugins, 600);
+      
+      return plugins;
     } catch (error) {
       this.logger.error(`Failed to get recent plugins: ${getErrorMessage(error)}`);
       return [];
     }
+  }
+
+  // Cache invalidation methods
+  async invalidateStatsCache(): Promise<void> {
+    await this.cacheManager.del('plugin-stats');
+  }
+
+  async invalidatePopularPluginsCache(): Promise<void> {
+    const keys = ['popular-plugins-5', 'popular-plugins-10', 'popular-plugins-20'];
+    await Promise.all(keys.map(key => this.cacheManager.del(key)));
+  }
+
+  async invalidateRecentPluginsCache(): Promise<void> {
+    const keys = ['recent-plugins-5', 'recent-plugins-10', 'recent-plugins-20'];
+    await Promise.all(keys.map(key => this.cacheManager.del(key)));
+  }
+
+  async invalidateAllCaches(): Promise<void> {
+    await Promise.all([
+      this.invalidateStatsCache(),
+      this.invalidatePopularPluginsCache(),
+      this.invalidateRecentPluginsCache(),
+    ]);
   }
 }

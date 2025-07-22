@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { getErrorMessage, PluginStatus } from '@lib/shared/common';
 import { IPlugin } from '@lib/shared/plugin-types';
+import { PluginSandboxService, PluginExecutionContext } from './plugin-sandbox.service';
 
 export interface PluginModuleConstructor {
   new (): IPlugin;
@@ -16,25 +17,48 @@ export interface PluginInstance {
   version: string;
   status: PluginStatus;
   instance: IPlugin;
+  sandboxId?: string;
+  pluginPath?: string;
   createdAt: Date;
   lastActivity?: Date;
   health: 'healthy' | 'unhealthy' | 'unknown';
+  memoryUsage?: number;
+  cleanupHandlers: (() => Promise<void>)[];
 }
 
 @Injectable()
-export class PluginInstanceService {
+export class PluginInstanceService implements OnModuleDestroy {
   private readonly logger = new Logger(PluginInstanceService.name);
   private readonly instances = new Map<string, PluginInstance>();
+  private readonly cleanupInterval: NodeJS.Timeout;
+
+  constructor(private readonly sandboxService: PluginSandboxService) {
+    // Start cleanup interval
+    this.cleanupInterval = setInterval(
+      () => this.performCleanup(),
+      5 * 60 * 1000, // Every 5 minutes
+    );
+  }
 
   async createInstance(
     pluginModule: PluginModule,
     name: string,
     version: string,
+    pluginPath?: string,
   ): Promise<string> {
     const id = this.generateInstanceId(name, version);
 
     try {
       const instance: IPlugin = new pluginModule.default();
+
+      // Create sandbox for plugin isolation
+      const sandboxId = await this.sandboxService.createSandbox(id, {
+        maxMemory: 128, // 128MB limit
+        allowNetworkAccess: false,
+        allowFileSystemAccess: false,
+        allowedPermissions: ['read:data', 'write:data'],
+        timeoutMs: 30000,
+      });
 
       const pluginInstance: PluginInstance = {
         id,
@@ -42,15 +66,18 @@ export class PluginInstanceService {
         version,
         status: PluginStatus.STARTING,
         instance,
+        sandboxId,
+        pluginPath,
         createdAt: new Date(),
         health: 'unknown',
+        cleanupHandlers: [],
       };
 
       this.instances.set(id, pluginInstance);
 
       await this.initializePlugin(pluginInstance);
 
-      this.logger.log(`Created plugin instance: ${id}`);
+      this.logger.log(`Created plugin instance: ${id} with sandbox: ${sandboxId}`);
       return id;
     } catch (error) {
       this.logger.error(
@@ -69,8 +96,17 @@ export class PluginInstanceService {
     try {
       instance.status = PluginStatus.STOPPING;
 
+      // Run cleanup handlers first
+      await this.runCleanupHandlers(instance);
+
+      // Call plugin's onDestroy if available
       if (instance.instance.onDestroy) {
         await instance.instance.onDestroy();
+      }
+
+      // Destroy sandbox
+      if (instance.sandboxId) {
+        await this.sandboxService.destroySandbox(instance.sandboxId);
       }
 
       this.instances.delete(instanceId);
@@ -134,6 +170,91 @@ export class PluginInstanceService {
       pluginInstance.status = PluginStatus.ERROR;
       pluginInstance.health = 'unhealthy';
       throw error;
+    }
+  }
+
+  async executePluginMethod(
+    instanceId: string,
+    method: string,
+    data?: unknown,
+    permissions: string[] = [],
+  ): Promise<unknown> {
+    const instance = this.instances.get(instanceId);
+    if (!instance || !instance.sandboxId) {
+      throw new Error(`Plugin instance not found or no sandbox: ${instanceId}`);
+    }
+
+    const context: PluginExecutionContext = {
+      pluginPath: instance.pluginPath || '',
+      config: {},
+      requestData: data,
+      method,
+      permissions,
+    };
+
+    const result = await this.sandboxService.executePluigin(
+      instance.sandboxId,
+      context,
+    );
+
+    // Update instance stats
+    instance.lastActivity = new Date();
+    if (result.memoryUsed) {
+      instance.memoryUsage = result.memoryUsed;
+    }
+
+    return result;
+  }
+
+  addCleanupHandler(instanceId: string, handler: () => Promise<void>): void {
+    const instance = this.instances.get(instanceId);
+    if (instance) {
+      instance.cleanupHandlers.push(handler);
+    }
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    clearInterval(this.cleanupInterval);
+    
+    // Destroy all instances
+    const instances = Array.from(this.instances.keys());
+    await Promise.all(
+      instances.map(instanceId => this.destroyInstance(instanceId)),
+    );
+  }
+
+  private async runCleanupHandlers(instance: PluginInstance): Promise<void> {
+    for (const handler of instance.cleanupHandlers) {
+      try {
+        await handler();
+      } catch (error) {
+        this.logger.warn(
+          `Cleanup handler failed for ${instance.id}: ${getErrorMessage(error)}`,
+        );
+      }
+    }
+    instance.cleanupHandlers.length = 0; // Clear array
+  }
+
+  private async performCleanup(): Promise<void> {
+    try {
+      // Check for stale instances
+      const staleThreshold = 60 * 60 * 1000; // 1 hour
+      const now = Date.now();
+
+      for (const [instanceId, instance] of this.instances.entries()) {
+        const lastActivity = instance.lastActivity?.getTime() || instance.createdAt.getTime();
+        
+        if (now - lastActivity > staleThreshold) {
+          this.logger.log(`Cleaning up stale instance: ${instanceId}`);
+          await this.destroyInstance(instanceId);
+        }
+      }
+
+      // Clean up sandbox service
+      await this.sandboxService.cleanupInactiveSandboxes();
+    } catch (error) {
+      this.logger.error(`Cleanup failed: ${getErrorMessage(error)}`);
     }
   }
 

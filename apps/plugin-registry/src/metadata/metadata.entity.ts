@@ -158,6 +158,11 @@ export enum PluginCategory {
 @Index(['name', 'status'])
 @Index(['category', 'status'])
 @Index(['author', 'status'])
+@Index(['status', 'category', 'rating'])
+@Index(['status', 'downloadCount'])
+@Index(['status', 'publishedAt'])
+@Index(['tags'], { type: 'gin' })
+@Index(['status', 'name', 'description'], { type: 'gin', name: 'idx_plugins_search' })
 export class PluginEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
