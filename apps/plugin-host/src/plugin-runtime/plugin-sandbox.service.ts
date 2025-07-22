@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Worker, MessageChannel, MessagePort } from 'worker_threads';
-import { resolve } from 'path';
-import { EventEmitter } from 'events';
 import { getErrorMessage } from '@lib/shared/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter } from 'events';
+import { resolve } from 'path';
+import { MessageChannel, MessagePort, Worker } from 'worker_threads';
 
 export interface SandboxConfig {
   maxMemory: number; // in MB
@@ -56,7 +56,7 @@ export class PluginSandboxService {
     timeoutMs: 30000, // 30 seconds
   };
 
-  async createSandbox(
+  createSandbox(
     pluginId: string,
     config: Partial<SandboxConfig> = {},
   ): Promise<string> {
@@ -105,21 +105,21 @@ export class PluginSandboxService {
       this.sandboxes.set(sandboxId, sandbox);
 
       this.logger.log(`Created sandbox: ${sandboxId} for plugin: ${pluginId}`);
-      return sandboxId;
+      return Promise.resolve(sandboxId);
     } catch (error) {
       this.logger.error(
         `Failed to create sandbox for plugin ${pluginId}: ${getErrorMessage(error)}`,
       );
-      throw error;
+      return Promise.reject(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
-  async executePluigin(
+  async executePlugin(
     sandboxId: string,
     context: PluginExecutionContext,
   ): Promise<PluginExecutionResult> {
     const sandbox = this.sandboxes.get(sandboxId);
-    if (!sandbox || !sandbox.isActive) {
+    if (!((sandbox?.isActive) ?? false)) {
       throw new Error(`Sandbox not found or inactive: ${sandboxId}`);
     }
 
@@ -127,13 +127,13 @@ export class PluginSandboxService {
     
     try {
       // Check permissions
-      await this.validatePermissions(context.permissions, sandbox);
+      await this.validatePermissions(context.permissions, sandbox!);
 
       // Execute plugin in sandbox
-      const result = await this.executeInSandbox(sandbox, context);
+      const result = await this.executeInSandbox(sandbox!, context);
       
       const executionTime = Date.now() - startTime;
-      sandbox.lastActivity = new Date();
+      sandbox!.lastActivity = new Date();
 
       this.logger.debug(
         `Plugin executed in sandbox ${sandboxId} in ${executionTime}ms`,
@@ -143,7 +143,7 @@ export class PluginSandboxService {
         success: true,
         data: result,
         executionTime,
-        memoryUsed: sandbox.memoryUsage,
+        memoryUsed: sandbox!.memoryUsage,
       };
     } catch (error) {
       const executionTime = Date.now() - startTime;
@@ -156,7 +156,7 @@ export class PluginSandboxService {
         success: false,
         error: getErrorMessage(error),
         executionTime,
-        memoryUsed: sandbox.memoryUsage,
+        memoryUsed: sandbox!.memoryUsage,
       };
     }
   }
@@ -189,7 +189,7 @@ export class PluginSandboxService {
     }
   }
 
-  async getSandboxStats(sandboxId: string): Promise<{
+  getSandboxStats(sandboxId: string): Promise<{
     memoryUsage: number;
     cpuUsage: number;
     uptime: number;
@@ -197,17 +197,17 @@ export class PluginSandboxService {
   } | null> {
     const sandbox = this.sandboxes.get(sandboxId);
     if (!sandbox) {
-      return null;
+      return Promise.resolve(null);
     }
 
     const uptime = Date.now() - sandbox.createdAt.getTime();
 
-    return {
+    return Promise.resolve({
       memoryUsage: sandbox.memoryUsage,
       cpuUsage: sandbox.cpuUsage,
       uptime,
       isActive: sandbox.isActive,
-    };
+    });
   }
 
   async cleanupInactiveSandboxes(): Promise<void> {
@@ -307,7 +307,7 @@ export class PluginSandboxService {
       const errorHandler = (error: unknown) => {
         clearTimeout(timeout);
         sandbox.eventEmitter.removeListener('result', resultHandler);
-        reject(error);
+        reject(error instanceof Error ? error : new Error(String(error)));
       };
 
       sandbox.eventEmitter.once('result', resultHandler);
@@ -321,16 +321,21 @@ export class PluginSandboxService {
     });
   }
 
-  private async validatePermissions(
+  private validatePermissions(
     requestedPermissions: string[],
-    sandbox: SandboxInstance,
+    _sandbox: SandboxInstance,
   ): Promise<void> {
     // Implementation would check against allowed permissions
     // This is a simplified version
-    for (const permission of requestedPermissions) {
-      if (!this.isPermissionAllowed(permission)) {
-        throw new Error(`Permission denied: ${permission}`);
+    try {
+      for (const permission of requestedPermissions) {
+        if (!this.isPermissionAllowed(permission)) {
+          throw new Error(`Permission denied: ${permission}`);
+        }
       }
+      return Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error instanceof Error ? error : new Error(String(error)));
     }
   }
 

@@ -1,5 +1,5 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 
 export interface CacheOptions {
@@ -68,7 +68,7 @@ export class CacheManagerService {
       await this.cacheManager.set(fullKey, value, options.ttl);
       
       this.stats.sets++;
-      this.logger.debug(`Cache SET for key: ${fullKey}, TTL: ${options.ttl || 'default'}`);
+      this.logger.debug(`Cache SET for key: ${fullKey}, TTL: ${options.ttl ?? 'default'}`);
     } catch (error) {
       this.stats.errors++;
       this.logger.error(`Cache SET error for key ${key}: ${error.message}`);
@@ -167,7 +167,7 @@ export class CacheManagerService {
    */
   async reset(): Promise<void> {
     try {
-      await this.cacheManager.reset();
+      await this.cacheManager.clear();
       this.logger.log('Cache completely reset');
     } catch (error) {
       this.stats.errors++;
@@ -208,6 +208,6 @@ export class CacheManagerService {
    * Build full cache key with namespace
    */
   private buildKey(key: string, namespace?: string): string {
-    return namespace ? `${namespace}:${key}` : key;
+    return (namespace != null) ? `${namespace}:${key}` : key;
   }
 }

@@ -1,7 +1,7 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { getErrorMessage, PluginStatus } from '@lib/shared/common';
-import { IPlugin } from '@lib/shared/plugin-types';
-import { PluginSandboxService, PluginExecutionContext } from './plugin-sandbox.service';
+import type { IPlugin } from '@lib/shared/plugin-types';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { type PluginExecutionContext, PluginSandboxService } from './plugin-sandbox.service';
 
 export interface PluginModuleConstructor {
   new (): IPlugin;
@@ -35,7 +35,7 @@ export class PluginInstanceService implements OnModuleDestroy {
   constructor(private readonly sandboxService: PluginSandboxService) {
     // Start cleanup interval
     this.cleanupInterval = setInterval(
-      () => this.performCleanup(),
+        () => this.performCleanup(),
       5 * 60 * 1000, // Every 5 minutes
     );
   }
@@ -105,7 +105,7 @@ export class PluginInstanceService implements OnModuleDestroy {
       }
 
       // Destroy sandbox
-      if (instance.sandboxId) {
+      if (instance.sandboxId != null) {
         await this.sandboxService.destroySandbox(instance.sandboxId);
       }
 
@@ -180,19 +180,19 @@ export class PluginInstanceService implements OnModuleDestroy {
     permissions: string[] = [],
   ): Promise<unknown> {
     const instance = this.instances.get(instanceId);
-    if (!instance || !instance.sandboxId) {
+    if ((instance?.sandboxId) == null) {
       throw new Error(`Plugin instance not found or no sandbox: ${instanceId}`);
     }
 
     const context: PluginExecutionContext = {
-      pluginPath: instance.pluginPath || '',
+      pluginPath: instance.pluginPath ?? '',
       config: {},
       requestData: data,
       method,
       permissions,
     };
 
-    const result = await this.sandboxService.executePluigin(
+    const result = await this.sandboxService.executePlugin(
       instance.sandboxId,
       context,
     );

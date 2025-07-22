@@ -1,8 +1,9 @@
+import { getErrorCode, getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
+import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as tar from 'tar';
-import * as crypto from 'crypto';
 
 export interface PackageOptions {
   pluginPath: string;
@@ -15,18 +16,28 @@ export interface PackageOptions {
   compressionLevel?: number;
 }
 
+export interface ManifestData {
+  name: string;
+  version: string;
+  main?: string;
+  description?: string;
+  [key: string]: unknown;
+}
+
+export interface PackageMetadata {
+  name: string;
+  version: string;
+  createdAt: Date;
+  buildInfo?: Record<string, unknown>;
+}
+
 export interface PackageResult {
   packagePath: string;
   size: number;
   checksum: string;
   files: string[];
-  manifest: any;
-  metadata: {
-    name: string;
-    version: string;
-    createdAt: Date;
-    buildInfo?: any;
-  };
+  manifest: ManifestData;
+  metadata: PackageMetadata;
 }
 
 export interface PackageValidation {
@@ -110,7 +121,7 @@ export class BundlePackager {
       return result;
 
     } catch (error) {
-      this.logger.error(`Package creation failed: ${error.message}`);
+      this.logger.error(`Package creation failed: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -124,8 +135,8 @@ export class BundlePackager {
     } = {},
   ): Promise<{
     extractedFiles: string[];
-    manifest: any;
-    metadata: any;
+    manifest: ManifestData;
+    metadata: Record<string, unknown>;
   }> {
     const { overwrite = false, preservePermissions = true } = options;
 
@@ -138,7 +149,7 @@ export class BundlePackager {
           await fs.access(extractPath);
           throw new Error('Extraction path already exists. Use overwrite option to replace.');
         } catch (error) {
-          if (error.code !== 'ENOENT') {
+          if (getErrorCode(error) !== 'ENOENT') {
             throw error;
           }
         }
@@ -164,7 +175,7 @@ export class BundlePackager {
       const manifest = JSON.parse(await fs.readFile(manifestPath, 'utf-8'));
 
       // Load metadata if available
-      let metadata = {};
+      let metadata: Record<string, unknown> = {};
       try {
         const metadataPath = path.join(extractPath, '.plugin-metadata.json');
         metadata = JSON.parse(await fs.readFile(metadataPath, 'utf-8'));
@@ -181,7 +192,7 @@ export class BundlePackager {
       };
 
     } catch (error) {
-      this.logger.error(`Package extraction failed: ${error.message}`);
+      this.logger.error(`Package extraction failed: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -227,7 +238,7 @@ export class BundlePackager {
 
     } catch (error) {
       result.valid = false;
-      result.errors.push(`Validation error: ${error.message}`);
+      result.errors.push(`Validation error: ${getErrorMessage(error)}`);
     }
 
     return result;
@@ -237,7 +248,7 @@ export class BundlePackager {
     size: number;
     checksum: string;
     files: string[];
-    manifest?: any;
+    manifest?: ManifestData;
     created?: Date;
   }> {
     try {
@@ -253,7 +264,7 @@ export class BundlePackager {
         },
       });
 
-      let manifest;
+      let manifest: ManifestData | undefined;
       try {
         // Try to extract and read manifest
         const manifestContent = await this.extractFileFromArchive(
@@ -274,19 +285,19 @@ export class BundlePackager {
       };
 
     } catch (error) {
-      this.logger.error(`Failed to get package info: ${error.message}`);
+      this.logger.error(`Failed to get package info: ${getErrorMessage(error)}`);
       throw error;
     }
   }
 
-  private async loadManifest(pluginPath: string): Promise<any> {
+  private async loadManifest(pluginPath: string): Promise<ManifestData> {
     const manifestPath = path.join(pluginPath, 'plugin.manifest.json');
     
     try {
       const manifestContent = await fs.readFile(manifestPath, 'utf-8');
       return JSON.parse(manifestContent);
     } catch (error) {
-      throw new Error(`Failed to load manifest: ${error.message}`);
+      throw new Error(`Failed to load manifest: ${getErrorMessage(error)}`);
     }
   }
 
@@ -352,7 +363,7 @@ export class BundlePackager {
           }
         }
       } catch (error) {
-        this.logger.debug(`Pattern ${pattern} matched no files or caused error: ${error.message}`);
+        this.logger.debug(`Pattern ${pattern} matched no files or caused error: ${getErrorMessage(error)}`);
       }
     }
 
@@ -385,7 +396,7 @@ export class BundlePackager {
 
   private async validatePackageContents(
     files: Array<{ absolutePath: string; relativePath: string }>,
-    manifest: any,
+    manifest: ManifestData,
   ): Promise<PackageValidation> {
     const result: PackageValidation = {
       valid: true,
@@ -404,7 +415,7 @@ export class BundlePackager {
     }
 
     // Check for main entry point
-    if (manifest.main) {
+    if (manifest.main != null) {
       const mainFile = files.find(f => f.relativePath === manifest.main);
       if (!mainFile) {
         result.valid = false;
@@ -505,7 +516,7 @@ export class BundlePackager {
 
     } catch (error) {
       result.valid = false;
-      result.errors.push(`Cannot read archive: ${error.message}`);
+      result.errors.push(`Cannot read archive: ${getErrorMessage(error)}`);
     }
   }
 
@@ -599,6 +610,6 @@ export class BundlePackager {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2)) } ${ sizes[i]}`;
   }
 }

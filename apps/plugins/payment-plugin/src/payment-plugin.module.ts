@@ -111,8 +111,8 @@ export const PluginMetadata = {
     'events.listen',
   ],
   hooks: {
-    onLoad: () => Logger.log('Payment plugin loaded', 'PaymentPlugin'),
-    onUnload: () => Logger.log('Payment plugin unloaded', 'PaymentPlugin'),
+    onLoad: () => { Logger.log('Payment plugin loaded', 'PaymentPlugin'); },
+    onUnload: () => { Logger.log('Payment plugin unloaded', 'PaymentPlugin'); },
   },
 };
 

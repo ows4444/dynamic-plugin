@@ -19,7 +19,7 @@ export interface LogEntry {
 
 @Injectable()
 export class LoggerUtil {
-  private static loggers = new Map<string, Logger>();
+  private static readonly loggers = new Map<string, Logger>();
 
   static getLogger(pluginId: string): Logger {
     if (!this.loggers.has(pluginId)) {

@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import type { 
-  ValidationError, 
-  ValidationResult 
+import type {
+  ValidationError,
+  ValidationResult
 } from '@lib/shared/plugin-types';
+import { Injectable } from '@nestjs/common';
 
 export interface ValidationRule {
   type:
@@ -78,7 +78,7 @@ export class ValidationUtil {
             value,
           };
         }
-        if (rule.min && value.length < rule.min) {
+        if ((rule.min != null) && value.length < rule.min) {
           return {
             field,
             message:
@@ -88,7 +88,7 @@ export class ValidationUtil {
             value,
           };
         }
-        if (rule.max && value.length > rule.max) {
+        if ((rule.max != null) && value.length > rule.max) {
           return {
             field,
             message:
@@ -116,7 +116,7 @@ export class ValidationUtil {
             value,
           };
         }
-        if (rule.min && value < rule.min) {
+        if ((rule.min != null) && value < rule.min) {
           return {
             field,
             message: rule.message ?? `${field} must be at least ${rule.min}`,
@@ -124,7 +124,7 @@ export class ValidationUtil {
             value,
           };
         }
-        if (rule.max && value > rule.max) {
+        if ((rule.max != null) && value > rule.max) {
           return {
             field,
             message: rule.message ?? `${field} must be at most ${rule.max}`,
@@ -154,7 +154,7 @@ export class ValidationUtil {
             value,
           };
         }
-        if (rule.min && value.length < rule.min) {
+        if ((rule.min != null) && value.length < rule.min) {
           return {
             field,
             message:
@@ -163,7 +163,7 @@ export class ValidationUtil {
             value,
           };
         }
-        if (rule.max && value.length > rule.max) {
+        if ((rule.max != null) && value.length > rule.max) {
           return {
             field,
             message:

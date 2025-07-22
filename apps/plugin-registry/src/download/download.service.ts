@@ -1,8 +1,8 @@
+import { getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Readable } from 'stream';
 import { MetadataService } from '../metadata/metadata.service';
 import { StorageService } from '../storage/storage.service';
-import { getErrorMessage } from '@lib/shared/common';
 
 export interface DownloadInfo {
   filename: string;
@@ -203,7 +203,7 @@ export class DownloadService {
     const topPlugins = Array.from(pluginDownloads.entries())
       .map(([key, downloads]) => {
         const [pluginId, nameVersion] = key.split(':');
-        const [name, version] = nameVersion.split('@');
+        const [name, version] = nameVersion!.split('@');
         return { id: pluginId, name, version, downloads };
       })
       .sort((a, b) => b.downloads - a.downloads)
@@ -213,7 +213,7 @@ export class DownloadService {
       .map(([date, downloads]) => ({ date, downloads }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    return   Promise.resolve({
+    return Promise.resolve({
       period,
       totalDownloads: recentDownloads.length,
       uniquePlugins: pluginDownloads.size,
@@ -225,7 +225,7 @@ export class DownloadService {
   getDownloadHistory(pluginId?: string, limit = 100): DownloadRecord[] {
     let history = [...this.downloadHistory];
 
-    if (pluginId) {
+    if (pluginId != null) {
       history = history.filter((record) => record.pluginId === pluginId);
     }
 
@@ -248,7 +248,7 @@ export class DownloadService {
     }
 
     const start = parseInt(match[1], 10);
-    const end = match[2] ? parseInt(match[2], 10) : undefined;
+    const end = (match[2] != null) ? parseInt(match[2], 10) : undefined;
 
     return { start, end };
   }

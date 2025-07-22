@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
 import { CacheEntry, CacheOptions } from './storage.interface';
 
@@ -7,7 +8,7 @@ export class PluginCacheService {
   private readonly cache = new Map<string, CacheEntry>();
   private readonly defaultTTL = 30 * 60 * 1000; // 30 minutes
   private readonly maxCacheSize = 1000;
-  private cleanupInterval: NodeJS.Timeout;
+  private cleanupInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.setupCleanupInterval();
@@ -86,7 +87,7 @@ export class PluginCacheService {
   async clear(pattern?: string): Promise<number> {
     let deletedCount = 0;
 
-    if (!pattern) {
+    if (pattern == null) {
       deletedCount = this.cache.size;
       this.cache.clear();
       this.logger.log(`Cleared entire cache (${deletedCount} entries)`);
@@ -129,8 +130,8 @@ export class PluginCacheService {
     const now = new Date();
     const expiringEntries = entries.filter(
       (entry) =>
-        entry.expiresAt &&
-        entry.expiresAt.getTime() - now.getTime() < 5 * 60 * 1000,
+        (entry.expiresAt &&
+        entry.expiresAt.getTime() - now.getTime() < 5 * 60 * 1000) ?? false,
     ).length;
 
     const creationTimes = entries.map((entry) => entry.createdAt);
@@ -235,7 +236,7 @@ export class PluginCacheService {
       }
     }
 
-    if (lruKey) {
+    if (lruKey != null) {
       this.cache.delete(lruKey);
       this.logger.debug(`Evicted LRU cache entry: ${lruKey}`);
     }
@@ -255,7 +256,7 @@ export class PluginCacheService {
     this.cleanupInterval = setInterval(
       () => {
         this.cleanupExpired().catch((error) => {
-          this.logger.error(`Cache cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+          this.logger.error(`Cache cleanup failed: ${getErrorMessage(error)}`);
         });
       },
       5 * 60 * 1000,

@@ -1,10 +1,10 @@
-import { applyDecorators, UseInterceptors } from '@nestjs/common';
 import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
+import { applyDecorators, UseInterceptors } from '@nestjs/common';
 
 export interface CacheResponseOptions {
   ttl?: number; // Time to live in seconds
   key?: string; // Custom cache key
-  keyGenerator?: (...args: any[]) => string; // Custom key generator function
+  keyGenerator?: (...args: unknown[]) => string; // Custom key generator function
 }
 
 /**
@@ -20,7 +20,7 @@ export function CacheResponse(options: CacheResponseOptions = {}) {
   }
 
   // Set custom cache key if provided
-  if (options.key) {
+  if (options.key != null) {
     decorators.push(CacheKey(options.key));
   }
 

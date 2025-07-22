@@ -9,7 +9,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthService, CreateTokenDto } from './jwt-auth.service';
+import { CreateTokenDto, JwtAuthService } from './jwt-auth.service';
 import { AuthGuard } from './auth.guard';
 
 @Controller('auth')

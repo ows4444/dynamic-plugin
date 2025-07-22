@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
 import type { PluginConfig } from '@lib/shared/plugin-types';
+import { Injectable } from '@nestjs/common';
 
 // Type alias for backward compatibility 
 export type PluginConfigOptions = PluginConfig;
@@ -53,16 +53,24 @@ export class ConfigUtil {
     const keys = key.split('.');
     const lastKey = keys.pop();
 
-    if (!lastKey) return;
+    if (lastKey == null) return;
 
     let current = config;
     for (const k of keys) {
       if (!(k in current) || typeof current[k] !== 'object') {
         current[k] = {};
       }
-      current = current[k] as Record<string, unknown>;
+      if (current && typeof current === 'object' && k in current) {
+        current = current[k] as Record<string, unknown>;
+      } else {
+        throw new Error(`Invalid configuration path: ${path}`);
+      }
     }
 
-    (current as Record<string, unknown>)[lastKey] = value;
+    if (current && typeof current === 'object') {
+      (current as Record<string, unknown>)[lastKey] = value;
+    } else {
+      throw new Error(`Cannot set value at path: ${path}`);
+    }
   }
 }

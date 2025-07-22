@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
 
 export interface ValidationResult {
@@ -67,7 +68,7 @@ export class ValidationService {
       ];
 
       for (const field of requiredFields) {
-        if (!manifest[field]) {
+        if (!(manifest[field])) {
           result.errors.push(`Missing required field: ${field}`);
           result.valid = false;
         }
@@ -135,7 +136,7 @@ export class ValidationService {
       }
 
       // Validate host requirements
-      if (manifest.engines?.host) {
+      if ((manifest.engines?.host) != null) {
         if (!/^[><=~^]*\d+\.\d+\.\d+/.test(String(manifest.engines.host))) {
           result.warnings.push(
             'Host version requirement format may be invalid',
@@ -165,7 +166,7 @@ export class ValidationService {
         this.validateHooks(manifest.hooks, result);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown manifest validation error';
+      const errorMessage = getErrorMessage(error,'Unknown manifest validation error'); ;
       result.errors.push(`Manifest validation failed: ${errorMessage}`);
       result.valid = false;
     }
@@ -203,7 +204,7 @@ export class ValidationService {
       
       return Promise.resolve(result);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown security validation error';
+      const errorMessage = getErrorMessage( error , 'Unknown security validation error')
       result.errors.push(`Security validation failed: ${errorMessage}`);
       result.valid = false;
     }
@@ -259,11 +260,11 @@ export class ValidationService {
       // Check for conflicting versions
       this.checkVersionConflicts(dependencies, result);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown dependency validation error';
+      const errorMessage =getErrorMessage( error , 'Unknown dependency validation error')
       result.warnings.push(`Dependency validation failed: ${errorMessage}`);
     }
 
-    return  Promise.resolve(result);
+    return Promise.resolve(result);
   }
 
   private checkDangerousPatterns(
@@ -348,7 +349,7 @@ export class ValidationService {
     let match;
 
     while ((match = importPattern.exec(content)) !== null) {
-      const moduleName = match[1] ? String(match[1]) : '';
+      const moduleName = (match[1] != null) ? String(match[1]) : '';
       if (
         suspiciousImports.includes(moduleName) ||
         moduleName.startsWith('.')
@@ -411,7 +412,7 @@ export class ValidationService {
 
   private validateRoutes(routes: PluginRouteData[], result: ValidationResult): void {
     for (const route of routes) {
-      if (!route.path || !route.method) {
+      if ((route.path == null) || (route.method == null)) {
         result.errors.push('Route must have path and method');
         continue;
       }

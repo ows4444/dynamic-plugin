@@ -5,8 +5,8 @@ export type PluginRequestBody =
   | string 
   | number 
   | boolean 
-  | Record<string, any> 
-  | Array<any> 
+  | Record<string, unknown> 
+  | Array<unknown> 
   | null;
 
 export interface PluginRequest {
@@ -25,8 +25,8 @@ export type PluginResponseBody =
   | string 
   | number 
   | boolean 
-  | Record<string, any> 
-  | Array<any> 
+  | Record<string, unknown> 
+  | Array<unknown> 
   | null;
 
 export interface PluginResponse {
@@ -76,7 +76,7 @@ export class PluginContext {
   private _user: PluginUser | null = null;
   private _host!: PluginHost;
   private _executionContext: PluginExecutionContext;
-  private _data: Map<string, string | number | boolean | Date | Record<string, any> | Array<any>> = new Map();
+  private readonly _data: Map<string, string | number | boolean | Date | Record<string, unknown> | Array<unknown>> = new Map();
 
   constructor() {
     this._executionContext = {
@@ -172,11 +172,11 @@ export class PluginContext {
     return Date.now() - this._executionContext.startTime.getTime();
   }
 
-  set<T extends string | number | boolean | Date | Record<string, any> | Array<any>>(key: string, value: T): void {
+  set<T extends string | number | boolean | Date | Record<string, unknown> | Array<unknown>>(key: string, value: T): void {
     this._data.set(key, value);
   }
 
-  get<T extends string | number | boolean | Date | Record<string, any> | Array<any>>(key: string): T | undefined {
+  get<T extends string | number | boolean | Date | Record<string, unknown> | Array<unknown>>(key: string): T | undefined {
     return this._data.get(key) as T | undefined;
   }
 
@@ -192,7 +192,7 @@ export class PluginContext {
     this._data.clear();
   }
 
-  getAllData(): Record<string, string | number | boolean | Date | Record<string, any> | Array<any>> {
+  getAllData(): Record<string, string | number | boolean | Date | Record<string, unknown> | Array<unknown>> {
     return Object.fromEntries(this._data);
   }
 
@@ -209,7 +209,7 @@ export class PluginContext {
     return childContext;
   }
 
-  toJSON(): Record<string, any> {
+  toJSON(): Record<string, unknown> {
     return {
       plugin: this._plugin,
       request: this._request

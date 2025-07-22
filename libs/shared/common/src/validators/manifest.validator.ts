@@ -1,7 +1,7 @@
+import type { IManifest as PluginManifest, ValidationError, ValidationResult } from '@lib/shared/plugin-types';
 import { PluginPermission, SecurityLevel } from '../enums/permission.enum';
 import { PluginCategory, PluginType } from '../enums/plugin-status.enum';
-import type { IManifest as PluginManifest } from '@lib/shared/plugin-types';
-import type { ValidationError, ValidationResult } from '@lib/shared/plugin-types';
+ 
 
 // Comprehensive type definitions for manifest components
 export interface PluginAuthor {
@@ -225,9 +225,9 @@ export const TypeGuards = {
     if (!TypeGuards.isRecord(value)) return false;
     
     const record = value;
-    return TypeGuards.isNonEmptyString(record.name) &&
-           (record.email === undefined || TypeGuards.isString(record.email)) &&
-           (record.url === undefined || TypeGuards.isString(record.url));
+    return TypeGuards.isNonEmptyString(record['name']) &&
+           (record['email'] === undefined || TypeGuards.isString(record['email'])) &&
+           (record['url'] === undefined || TypeGuards.isString(record['url']));
   },
   
   isPluginLicense: (value: unknown): value is PluginLicense => {
@@ -235,18 +235,18 @@ export const TypeGuards = {
     if (!TypeGuards.isRecord(value)) return false;
     
     const record = value;
-    return TypeGuards.isNonEmptyString(record.type) &&
-           (record.url === undefined || TypeGuards.isString(record.url));
+    return TypeGuards.isNonEmptyString(record['type']) &&
+           (record['url'] === undefined || TypeGuards.isString(record['url']));
   },
   
   isPluginConfiguration: (value: unknown): value is PluginConfiguration => {
     if (!TypeGuards.isRecord(value)) return false;
     
     const config = value;
-    return (config.schema === undefined || TypeGuards.isRecord(config.schema)) &&
-           (config.defaults === undefined || TypeGuards.isRecord(config.defaults)) &&
-           (config.required === undefined || TypeGuards.isStringArray(config.required)) &&
-           (config.properties === undefined || TypeGuards.isRecord(config.properties));
+    return (config['schema'] === undefined || TypeGuards.isRecord(config['schema'])) &&
+           (config['defaults'] === undefined || TypeGuards.isRecord(config['defaults'])) &&
+           (config['required'] === undefined || TypeGuards.isStringArray(config['required'])) &&
+           (config['properties'] === undefined || TypeGuards.isRecord(config['properties']));
   },
   
   isManifestLike: (value: unknown): value is UnknownManifest => 
@@ -265,7 +265,7 @@ interface MutableValidationRule {
 
 // Builder pattern for validation rules with fluent API
 export class ValidationRuleBuilder {
-  private rule: MutableValidationRule = {};
+  private readonly rule: MutableValidationRule = {};
   
   name(name: string): this {
     this.rule.name = name;
@@ -319,9 +319,9 @@ export class ValidationErrorFactory {
     message: string,
     options: {
       value?: unknown;
-      expected?: string | string[];
+      expected?: string | string[] | undefined;
       severity?: ValidationError['severity'];
-      suggestions?: string[];
+      suggestions?: string[] | undefined;
     } = {}
   ): ValidationError {
     return {
@@ -543,18 +543,18 @@ export class ManifestValidator {
     errors: ValidationError[],
     _context: ValidationContext
   ): void {
-    this.validatePluginName(manifest.name, errors);
-    this.validateVersion(manifest.version, errors);
-    this.validateDescription(manifest.description, errors);
-    this.validateAuthor(manifest.author, errors);
-    this.validateLicense(manifest.license, errors);
-    this.validatePluginType(manifest.type, errors);
-    this.validatePluginCategory(manifest.category, errors);
-    this.validateMainField(manifest.main, errors);
-    this.validatePermissions(manifest.permissions, errors);
-    this.validateSecurityLevel(manifest.securityLevel, errors);
-    this.validateSupportedVersions(manifest.supportedVersions, errors);
-    this.validateHostVersions(manifest.minHostVersion, manifest.maxHostVersion, errors);
+    this.validatePluginName(manifest['name'], errors);
+    this.validateVersion(manifest['version'], errors);
+    this.validateDescription(manifest['description'], errors);
+    this.validateAuthor(manifest['author'], errors);
+    this.validateLicense(manifest['license'], errors);
+    this.validatePluginType(manifest['type'], errors);
+    this.validatePluginCategory(manifest['category'], errors);
+    this.validateMainField(manifest['main'], errors);
+    this.validatePermissions(manifest['permissions'], errors);
+    this.validateSecurityLevel(manifest['securityLevel'], errors);
+    this.validateSupportedVersions(manifest['supportedVersions'], errors);
+    this.validateHostVersions(manifest['minHostVersion'], manifest['maxHostVersion'], errors);
   }
 
   // Validate optional fields
@@ -564,28 +564,28 @@ export class ManifestValidator {
     warnings: ValidationWarning[],
     _context: ValidationContext
   ): void {
-    if (manifest.dependencies !== undefined) {
-      this.validateDependencies(manifest.dependencies, errors);
+    if (manifest['dependencies'] !== undefined) {
+      this.validateDependencies(manifest['dependencies'], errors);
     }
     
-    if (manifest.peerDependencies !== undefined) {
-      this.validatePeerDependencies(manifest.peerDependencies, errors);
+    if (manifest['peerDependencies'] !== undefined) {
+      this.validatePeerDependencies(manifest['peerDependencies'], errors);
     }
     
-    if (manifest.routes !== undefined) {
-      this.validateRoutes(manifest.routes, errors);
+    if (manifest['routes'] !== undefined) {
+      this.validateRoutes(manifest['routes'], errors);
     }
     
-    if (manifest.hooks !== undefined) {
-      this.validateHooks(manifest.hooks, errors);
+    if (manifest['hooks'] !== undefined) {
+      this.validateHooks(manifest['hooks'], errors);
     }
     
-    if (manifest.configuration !== undefined) {
-      this.validateConfiguration(manifest.configuration, errors);
+    if (manifest['configuration'] !== undefined) {
+      this.validateConfiguration(manifest['configuration'], errors);
     }
     
-    if (manifest.metadata !== undefined) {
-      this.validateMetadata(manifest.metadata, errors, warnings);
+    if (manifest['metadata'] !== undefined) {
+      this.validateMetadata(manifest['metadata'], errors, warnings);
     }
   }
 
@@ -596,16 +596,16 @@ export class ManifestValidator {
     warnings: ValidationWarning[],
     _context: ValidationContext
   ): void {
-    if (manifest.engines !== undefined) {
-      this.validateEngines(manifest.engines, errors);
+    if (manifest['engines'] !== undefined) {
+      this.validateEngines(manifest['engines'], errors);
     }
     
-    if (manifest.repository !== undefined) {
-      this.validateRepository(manifest.repository, errors);
+    if (manifest['repository'] !== undefined) {
+      this.validateRepository(manifest['repository'], errors);
     }
     
-    if (manifest.healthCheck !== undefined) {
-      this.validateHealthCheck(manifest.healthCheck, errors);
+    if (manifest['healthCheck'] !== undefined) {
+      this.validateHealthCheck(manifest['healthCheck'], errors);
     }
     
     // Additional validation for runtime settings
@@ -869,7 +869,7 @@ export class ManifestValidator {
       }
     } else if (author && typeof author === 'object') {
       const authorObj = author as Record<string, unknown>;
-      if (!authorObj.name || typeof authorObj.name !== 'string') {
+      if (!(authorObj['name']) || typeof authorObj['name'] !== 'string') {
         errors.push(ValidationErrorFactory.missingField('author.name'));
       }
     }
@@ -948,7 +948,7 @@ export class ManifestValidator {
     }
   }
 
-  private static validateMetadata(metadata: unknown, errors: ValidationError[]): void {
+  private static validateMetadata(metadata: unknown, errors: ValidationError[], _warnings?: ValidationWarning[]): void {
     if (metadata !== undefined && typeof metadata !== 'object') {
       errors.push(ValidationErrorFactory.invalidType('metadata', 'object', metadata));
     }
@@ -974,8 +974,8 @@ export class ManifestValidator {
 
   private static validateRuntimeSettings(manifest: UnknownManifest, errors: ValidationError[], _warnings: ValidationWarning[]): void {
     // Basic runtime validation
-    if (manifest.runtime && typeof manifest.runtime !== 'object') {
-      errors.push(ValidationErrorFactory.invalidType('runtime', 'object', manifest.runtime));
+    if ((Boolean(manifest['runtime'])) && typeof manifest['runtime'] !== 'object') {
+      errors.push(ValidationErrorFactory.invalidType('runtime', 'object', manifest['runtime']));
     }
   }
 }

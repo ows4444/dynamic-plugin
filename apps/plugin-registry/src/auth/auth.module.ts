@@ -36,8 +36,8 @@ import { AppConfiguration } from '@lib/shared/common';
   controllers: [AuthController],
   providers: [
     AuthGuard, 
-    AuthService,     // Keep for backward compatibility during migration
-    JwtAuthService,  // New JWT-based service
+    AuthService, // Keep for backward compatibility during migration
+    JwtAuthService, // New JWT-based service
   ],
   exports: [AuthGuard, AuthService, JwtAuthService],
 })

@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { PluginRegistryController } from './plugin-registry.controller';
 import { PluginRegistryService } from './plugin-registry.service';
 

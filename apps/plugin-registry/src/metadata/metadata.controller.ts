@@ -1,4 +1,9 @@
 import {
+  CacheResponse10Minutes,
+  CacheResponse5Minutes,
+  getErrorMessage
+} from '@lib/shared/common';
+import {
   Body,
   Controller,
   Delete,
@@ -7,14 +12,8 @@ import {
   NotFoundException,
   Param,
   Put,
-  Query,
+  Query
 } from '@nestjs/common';
-import { 
-  getErrorMessage,
-  CacheResponse5Minutes, 
-  CacheResponse10Minutes, 
-  CacheResponse1Minute 
-} from '@lib/shared/common';
 import { PluginCategory, PluginStatus } from './metadata.entity';
 import { MetadataService, PluginSearchQuery, PluginSortBy, ValidationResults } from './metadata.service';
 
@@ -43,7 +42,7 @@ export class MetadataController {
         name,
         author,
         category,
-        tags: tags ? tags.split(',') : undefined,
+        tags: (tags != null) ? tags.split(',') : undefined,
         status,
         minRating,
         search,

@@ -62,6 +62,18 @@ export default tseslint.config(
       '@typescript-eslint/prefer-nullish-coalescing': 'error',
       '@typescript-eslint/prefer-optional-chain': 'error',
       
+      // Enhanced TypeScript rules for better type safety
+      '@typescript-eslint/strict-boolean-expressions': 'error',
+      '@typescript-eslint/consistent-type-exports': 'error',
+      '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-meaningless-void-operator': 'error',
+      '@typescript-eslint/switch-exhaustiveness-check': 'error',
+      '@typescript-eslint/prefer-readonly': 'error',
+      '@typescript-eslint/prefer-readonly-parameter-types': 'off', // Too strict for NestJS
+      '@typescript-eslint/no-confusing-void-expression': 'error',
+      '@typescript-eslint/no-unnecessary-condition': 'warn',
+      '@typescript-eslint/restrict-template-expressions': 'error',
+      
       // NestJS specific rules
       '@typescript-eslint/parameter-properties': 'off',
       '@typescript-eslint/no-empty-function': ['error', { allow: ['constructors'] }],
@@ -77,11 +89,18 @@ export default tseslint.config(
       'no-duplicate-imports': 'error',
       'no-useless-constructor': 'off', // TypeScript handles this
       
-      // Plugin development specific
+      // Plugin development specific security rules
       'no-eval': 'error',
       'no-new-func': 'error',
       'no-implied-eval': 'error',
       'no-script-url': 'error',
+      'no-caller': 'error',
+      'no-extend-native': 'error',
+      'no-extra-bind': 'error',
+      'no-invalid-this': 'error',
+      'no-multi-spaces': 'error',
+      'no-multi-str': 'error',
+      'no-global-assign': 'error',
       
       // Code organization
       'sort-imports': ['error', {

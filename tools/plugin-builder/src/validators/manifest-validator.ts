@@ -1,20 +1,53 @@
+import { getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
+export interface ValidationError {
+  field: string;
+  message: string;
+  value?: unknown;
+}
+
+export interface ValidationWarning {
+  field: string;
+  message: string;
+  value?: unknown;
+}
+
+export interface ManifestData {
+  name?: string;
+  version?: string;
+  description?: string;
+  main?: string;
+  pluginType?: string;
+  apiVersion?: string;
+  author?: string | { name: string; email?: string; url?: string };
+  license?: string;
+  homepage?: string;
+  repository?: string | { type: string; url: string };
+  keywords?: string[];
+  permissions?: string[];
+  engines?: { host?: string; node?: string };
+  routes?: Array<{
+    path: string;
+    method: string;
+    handler?: string;
+    middleware?: string[];
+  }>;
+  hooks?: Record<string, string | { handler: string; priority?: number }>;
+  config?: Record<string, unknown>;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  [key: string]: unknown;
+}
+
 export interface ManifestValidationResult {
   valid: boolean;
-  errors: Array<{
-    field: string;
-    message: string;
-    value?: any;
-  }>;
-  warnings: Array<{
-    field: string;
-    message: string;
-    value?: any;
-  }>;
-  manifest?: any;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+  manifest?: ManifestData;
 }
 
 @Injectable()
@@ -39,17 +72,17 @@ export class ManifestValidator {
     };
 
     try {
-      let manifest: any;
+      let manifest: ManifestData;
 
       if (typeof manifestContent === 'string') {
         try {
           manifest = JSON.parse(manifestContent);
-        } catch (parseError) {
+        } catch (error) {
           result.valid = false;
           result.errors.push({
             field: 'root',
             message: 'Invalid JSON format',
-            value: parseError.message,
+            value: getErrorMessage(error),
           });
           return result;
         }
@@ -67,7 +100,7 @@ export class ManifestValidator {
         for (const error of this.ajv.errors) {
           result.errors.push({
             field: error.instancePath || error.schemaPath,
-            message: error.message ?? 'Validation failed',
+            message: getErrorMessage(error, 'Validation failed'),
             value: error.data,
           });
         }
@@ -79,11 +112,11 @@ export class ManifestValidator {
       // Generate warnings for best practices
       this.generateWarnings(manifest, result);
     } catch (error) {
-      this.logger.error(`Manifest validation failed: ${error.message}`);
+      this.logger.error(`Manifest validation failed: ${getErrorMessage(error)}`);
       result.valid = false;
       result.errors.push({
         field: 'root',
-        message: `Validation error: ${error.message}`,
+        message: `Validation error: ${getErrorMessage(error)}`,
       });
     }
 
@@ -103,7 +136,7 @@ export class ManifestValidator {
         errors: [
           {
             field: 'file',
-            message: `Cannot read manifest file: ${error.message}`,
+            message: `Cannot read manifest file: ${getErrorMessage(error)}`,
           },
         ],
         warnings: [],
@@ -112,11 +145,11 @@ export class ManifestValidator {
   }
 
   private async performCustomValidation(
-    manifest: any,
+    manifest: ManifestData,
     result: ManifestValidationResult,
   ): Promise<void> {
     // Validate name format
-    if (manifest.name) {
+    if (manifest.name != null) {
       if (!/^[a-z0-9\-_]{3,50}$/.test(manifest.name)) {
         result.errors.push({
           field: 'name',
@@ -147,7 +180,7 @@ export class ManifestValidator {
     }
 
     // Validate version format (semantic versioning)
-    if (manifest.version) {
+    if (manifest.version != null) {
       const semverRegex =
         /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
 
@@ -163,7 +196,7 @@ export class ManifestValidator {
     }
 
     // Validate API version compatibility
-    if (manifest.apiVersion) {
+    if (manifest.apiVersion != null) {
       const supportedVersions = ['1.0.0', '1.1.0', '2.0.0'];
       if (!supportedVersions.includes(manifest.apiVersion)) {
         result.errors.push({
@@ -176,7 +209,7 @@ export class ManifestValidator {
     }
 
     // Validate entry point exists
-    if (manifest.main) {
+    if (manifest.main != null) {
       try {
         const path = require('path');
         const fs = require('fs').promises;
@@ -192,7 +225,7 @@ export class ManifestValidator {
             value: manifest.main,
           });
         }
-      } catch (error) {
+      } catch (_error) {
         // Skip file existence check if we can't determine the path
       }
     }
@@ -236,7 +269,7 @@ export class ManifestValidator {
     }
 
     // Validate host requirements
-    if (manifest.engines?.host) {
+    if ((manifest.engines?.host) != null) {
       const hostVersionPattern = /^[><=~^]*\d+\.\d+\.\d+/;
       if (!hostVersionPattern.test(manifest.engines.host)) {
         result.warnings.push({
@@ -261,11 +294,11 @@ export class ManifestValidator {
   }
 
   private validateRoute(
-    route: any,
+    route: ManifestData['routes'][0],
     fieldPrefix: string,
     result: ManifestValidationResult,
   ): void {
-    if (!route.path) {
+    if (!(route.path)) {
       result.errors.push({
         field: `${fieldPrefix}.path`,
         message: 'Route path is required',
@@ -301,7 +334,7 @@ export class ManifestValidator {
       }
     }
 
-    if (route.path && !route.path.startsWith('/')) {
+    if ((Boolean(route.path)) && !route.path.startsWith('/')) {
       result.warnings.push({
         field: `${fieldPrefix}.path`,
         message: 'Route path should start with "/"',
@@ -319,7 +352,7 @@ export class ManifestValidator {
     }
   }
 
-  private validateHooks(hooks: any, result: ManifestValidationResult): void {
+  private validateHooks(hooks: ManifestData['hooks'], result: ManifestValidationResult): void {
     const validHooks = [
       'onLoad',
       'onUnload',
@@ -332,7 +365,7 @@ export class ManifestValidator {
       'afterResponse',
     ];
 
-    for (const [hookName, hookConfig] of Object.entries(hooks)) {
+    for (const [hookName, hookConfig] of Object.entries(hooks??{})) {
       if (!validHooks.includes(hookName)) {
         result.warnings.push({
           field: `hooks.${hookName}`,
@@ -342,8 +375,8 @@ export class ManifestValidator {
       }
 
       if (typeof hookConfig === 'object' && hookConfig !== null) {
-        const config = hookConfig as any;
-        if (config.handler && typeof config.handler !== 'string') {
+        const config = hookConfig as { handler?: string; priority?: number };
+        if ((config.handler != null) && typeof config.handler !== 'string') {
           result.errors.push({
             field: `hooks.${hookName}.handler`,
             message: 'Hook handler must be a string',
@@ -356,7 +389,7 @@ export class ManifestValidator {
   }
 
   private generateWarnings(
-    manifest: any,
+    manifest: ManifestData,
     result: ManifestValidationResult,
   ): void {
     // Check for recommended fields
@@ -370,7 +403,7 @@ export class ManifestValidator {
     ];
 
     for (const field of recommendedFields) {
-      if (!manifest[field]) {
+      if (!(manifest[field])) {
         result.warnings.push({
           field,
           message: `Recommended field '${field}' is missing`,
@@ -379,7 +412,7 @@ export class ManifestValidator {
     }
 
     // Check description length
-    if (manifest.description && manifest.description.length < 20) {
+    if ((manifest.description != null) && manifest.description.length < 20) {
       result.warnings.push({
         field: 'description',
         message: 'Description should be at least 20 characters long',
@@ -387,7 +420,7 @@ export class ManifestValidator {
       });
     }
 
-    if (manifest.description && manifest.description.length > 500) {
+    if ((manifest.description != null) && manifest.description.length > 500) {
       result.warnings.push({
         field: 'description',
         message: 'Description should be no more than 500 characters',
@@ -416,7 +449,7 @@ export class ManifestValidator {
     }
 
     // Check license format
-    if (manifest.license && !this.isValidLicense(manifest.license)) {
+    if ((manifest.license != null) && !this.isValidLicense(manifest.license)) {
       result.warnings.push({
         field: 'license',
         message: 'License should use SPDX identifier (e.g., MIT, Apache-2.0)',

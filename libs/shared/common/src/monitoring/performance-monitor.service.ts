@@ -58,8 +58,8 @@ export class PerformanceMonitorService {
   private readonly maxMetricsHistory = 1000;
   private readonly customMetrics = new Map<string, number>();
   private readonly requestTimes: number[] = [];
-  private monitoringInterval?: NodeJS.Timeout;
-  private startTime = Date.now();
+  private monitoringInterval?: NodeJS.Timeout | undefined;
+  private readonly startTime = Date.now();
 
   constructor(private readonly configService: ConfigService) {
     this.applicationMetrics = {
@@ -133,8 +133,8 @@ export class PerformanceMonitorService {
    * Get plugin-specific metrics
    */
   getPluginMetrics(pluginId?: string): PluginMetrics | PluginMetrics[] {
-    if (pluginId) {
-      return this.pluginMetrics.get(pluginId) || this.createEmptyPluginMetrics(pluginId);
+    if (pluginId != null) {
+      return this.pluginMetrics.get(pluginId) ?? this.createEmptyPluginMetrics(pluginId);
     }
 
     return Array.from(this.pluginMetrics.values());
@@ -144,14 +144,14 @@ export class PerformanceMonitorService {
    * Track plugin performance
    */
   trackPluginExecution(pluginId: string, executionTime: number, memoryUsage?: number): void {
-    const existing = this.pluginMetrics.get(pluginId) || this.createEmptyPluginMetrics(pluginId);
+    const existing = this.pluginMetrics.get(pluginId) ?? this.createEmptyPluginMetrics(pluginId);
     
     existing.executionTime = (existing.executionTime + executionTime) / 2; // Moving average
     existing.requestCount++;
     existing.lastActivity = new Date();
     existing.status = 'active';
 
-    if (memoryUsage) {
+    if (memoryUsage != null) {
       existing.memoryUsage = memoryUsage;
     }
 
@@ -162,7 +162,7 @@ export class PerformanceMonitorService {
    * Track plugin load time
    */
   trackPluginLoad(pluginId: string, loadTime: number): void {
-    const existing = this.pluginMetrics.get(pluginId) || this.createEmptyPluginMetrics(pluginId);
+    const existing = this.pluginMetrics.get(pluginId) ?? this.createEmptyPluginMetrics(pluginId);
     existing.loadTime = loadTime;
     this.pluginMetrics.set(pluginId, existing);
     this.applicationMetrics.totalPluginsLoaded++;
@@ -172,7 +172,7 @@ export class PerformanceMonitorService {
    * Track plugin error
    */
   trackPluginError(pluginId: string): void {
-    const existing = this.pluginMetrics.get(pluginId) || this.createEmptyPluginMetrics(pluginId);
+    const existing = this.pluginMetrics.get(pluginId) ?? this.createEmptyPluginMetrics(pluginId);
     existing.errorCount++;
     existing.status = 'error';
     this.pluginMetrics.set(pluginId, existing);
@@ -203,7 +203,7 @@ export class PerformanceMonitorService {
    * Increment custom metric
    */
   incrementCustomMetric(name: string, increment = 1): void {
-    const current = this.customMetrics.get(name) || 0;
+    const current = this.customMetrics.get(name) ?? 0;
     this.customMetrics.set(name, current + increment);
   }
 
@@ -408,7 +408,7 @@ export class PerformanceMonitorService {
     const now = Date.now();
     const idleThreshold = 5 * 60 * 1000; // 5 minutes
 
-    for (const [pluginId, metrics] of this.pluginMetrics) {
+    for (const [_pluginId, metrics] of this.pluginMetrics) {
       if (metrics.status === 'active' && now - metrics.lastActivity.getTime() > idleThreshold) {
         metrics.status = 'idle';
       }

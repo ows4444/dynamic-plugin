@@ -1,6 +1,6 @@
-import { Module, Global } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
 @Global()
@@ -78,7 +78,7 @@ import { DataSource } from 'typeorm';
   exports: [TypeOrmModule],
 })
 export class DatabaseModule {
-  constructor(private dataSource: DataSource) {
+  constructor(private readonly dataSource: DataSource) {
     // Log connection status
     if (this.dataSource.isInitialized) {
       console.log('✅ Database connection established successfully');

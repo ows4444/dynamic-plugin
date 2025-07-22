@@ -1,7 +1,7 @@
+import { getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
 import * as os from 'os';
 import { PluginInstanceService } from '../plugin-runtime/plugin-instance.service';
-import { getErrorMessage } from '@lib/shared/common';
 
 export interface HealthStatus {
   status: 'healthy' | 'unhealthy' | 'degraded';
@@ -70,7 +70,7 @@ export interface ServiceHealth {
 @Injectable()
 export class HealthCheckService {
   private readonly logger = new Logger(HealthCheckService.name);
-  private checkInterval: NodeJS.Timeout;
+  private checkInterval: NodeJS.Timeout | null = null;
   private readonly checkIntervalMs = 30000; // 30 seconds
 
   constructor(private readonly instanceService: PluginInstanceService) {
@@ -150,7 +150,7 @@ export class HealthCheckService {
           version: instance.version,
           status: 'unhealthy' as const,
           lastCheck: new Date(),
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error:  getErrorMessage(error),
         };
       }
     });
@@ -244,7 +244,7 @@ export class HealthCheckService {
         name: 'database',
         status: 'unhealthy',
         lastCheck: new Date(),
-        error: error instanceof Error ? error.message : 'Database error',
+        error: getErrorMessage(error),
       });
     }
 
@@ -256,7 +256,7 @@ export class HealthCheckService {
         name: 'cache',
         status: 'unhealthy',
         lastCheck: new Date(),
-        error: error instanceof Error ? error.message : 'Cache error',
+        error: getErrorMessage(error,'Cache error'),
       });
     }
 
@@ -340,8 +340,9 @@ export class HealthCheckService {
   }
 
   onApplicationShutdown(): void {
-    if (this.checkInterval) {
+    if (this.checkInterval !== null) {
       clearInterval(this.checkInterval);
+      this.checkInterval = null;
     }
     this.logger.log('Health check service shutdown complete');
   }

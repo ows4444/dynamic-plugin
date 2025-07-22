@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@lib/shared/common';
 import {
   BadRequestException,
   Body,
@@ -9,9 +10,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UploadService } from './upload.service';
-import { CreatePluginUploadDto } from './upload.dto';
 import { AuthGuard } from '../auth/auth.guard';
+import { CreatePluginUploadDto } from './upload.dto';
+import { UploadService } from './upload.service';
 
 @Controller('plugins')
 @UseGuards(AuthGuard)
@@ -45,7 +46,7 @@ export class UploadController {
         message: 'Plugin uploaded successfully',
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown upload error';
+      const errorMessage = getErrorMessage(error,'Unknown upload error') ;
       this.logger.error(`Failed to upload plugin: ${errorMessage}`);
       throw error;
     }
@@ -67,7 +68,7 @@ export class UploadController {
         message: 'Plugin validation completed',
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown validation error';
+      const errorMessage = getErrorMessage(error,'Unknown validation error') ;
       this.logger.error(`Plugin validation failed: ${errorMessage}`);
       throw error;
     }

@@ -1,7 +1,7 @@
-import { ConfigService } from '@nestjs/config';
-import { CacheModuleOptions } from '@nestjs/cache-manager';
+import type { CacheModuleOptions } from '@nestjs/cache-manager';
+import type { ConfigService } from '@nestjs/config';
 import { redisStore } from 'cache-manager-redis-store';
-import { AppConfiguration } from './app.config';
+import type { AppConfiguration } from './app.config';
 
 export const createCacheConfig = async (
   configService: ConfigService<AppConfiguration>,
@@ -25,7 +25,7 @@ export const createCacheConfig = async (
     });
 
     return {
-      store: store as any,
+      store,
       ttl: 300, // 5 minutes default TTL
       max: 1000, // Maximum number of items in cache
     };

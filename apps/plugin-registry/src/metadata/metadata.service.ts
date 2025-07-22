@@ -1,42 +1,58 @@
-import { Injectable, Logger, NotFoundException, Inject, CACHE_MANAGER } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Cache } from 'cache-manager';
 import { getErrorMessage } from '@lib/shared/common';
+import { CACHE_MANAGER, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Cache } from 'cache-manager';
+import { Repository } from 'typeorm';
 import { PluginCategory, PluginEntity, PluginStatus } from './metadata.entity';
+
+interface StatusStatRow {
+  status: string;
+  count: number;
+}
+
+interface CategoryStatRow {
+  category: string;
+  count: number;
+}
+
+interface PluginStatsResult {
+  general_stats?: Record<string, unknown>;
+  status_stats?: StatusStatRow[];
+  category_stats?: CategoryStatRow[];
+}
 
 export interface CreatePluginDto {
   name: string;
   version: string;
-  description?: string;
-  author?: string;
-  license?: string;
-  tags?: string[];
-  category?: PluginCategory;
-  homepage?: string;
-  repository?: string;
-  dependencies?: string[];
-  minHostVersion?: string;
-  maxHostVersion?: string;
+  description?: string | undefined;
+  author?: string | undefined;
+  license?: string | undefined;
+  tags?: string[] | undefined;
+  category?: PluginCategory | undefined;
+  homepage?: string | undefined;
+  repository?: string | undefined;
+  dependencies?: string[] | undefined;
+  minHostVersion?: string | undefined;
+  maxHostVersion?: string | undefined;
   filePath: string;
   fileSize: number;
   checksum: string;
-  manifest?: Record<string, unknown>;
-  readme?: string;
+  manifest?: Record<string, unknown> | undefined;
+  readme?: string | undefined;
 }
 
 export interface PluginSearchQuery {
-  name?: string;
-  author?: string;
-  category?: PluginCategory;
-  tags?: string[];
-  status?: PluginStatus;
-  minRating?: number;
-  search?: string;
-  limit?: number;
-  offset?: number;
-  sortBy?: PluginSortBy;
-  sortOrder?: 'ASC' | 'DESC';
+  name?: string | undefined;
+  author?: string | undefined;
+  category?: PluginCategory | undefined;
+  tags?: string[] | undefined;
+  status?: PluginStatus | undefined;
+  minRating?: number | undefined;
+  search?: string | undefined;
+  limit?: number | undefined;
+  offset?: number | undefined;
+  sortBy?: PluginSortBy | undefined;
+  sortOrder?: 'ASC' | 'DESC' | undefined;
 }
 
 export interface PluginSearchResult {
@@ -45,7 +61,7 @@ export interface PluginSearchResult {
   hasMore: boolean;
 }
 
-export type PluginSortBy = 'name' | 'createdAt' | 'updatedAt' | 'downloadCount' | 'rating';
+export type PluginSortBy = 'name' | 'createdAt' | 'updatedAt' | 'downloadCount' | 'rating' | 'publishedAt';
 
 export interface ValidationResults {
   valid: boolean;
@@ -181,25 +197,25 @@ export class MetadataService {
         });
 
       // Apply filters with optimized indexing
-      if (query.category) {
+      if (query.category != null) {
         queryBuilder.andWhere('plugin.category = :category', {
           category: query.category,
         });
       }
 
-      if (query.minRating) {
+      if (query.minRating != null) {
         queryBuilder.andWhere('plugin.rating >= :minRating', {
           minRating: query.minRating,
         });
       }
 
-      if (query.name) {
+      if (query.name != null) {
         queryBuilder.andWhere('plugin.name ILIKE :name', {
           name: `%${query.name}%`,
         });
       }
 
-      if (query.author) {
+      if (query.author != null) {
         queryBuilder.andWhere('plugin.author ILIKE :author', {
           author: `%${query.author}%`,
         });
@@ -212,7 +228,7 @@ export class MetadataService {
       }
 
       // Optimized full-text search using PostgreSQL features
-      if (query.search) {
+      if (query.search != null) {
         queryBuilder.andWhere(
           `(
             to_tsvector('english', plugin.name || ' ' || COALESCE(plugin.description, '')) 
@@ -419,7 +435,7 @@ export class MetadataService {
       const cached = await this.cacheManager.get(cacheKey);
       if (cached) {
         this.logger.debug('Returning cached plugin stats');
-        return cached as any;
+        return cached as PluginStats;
       }
 
       // Optimized single query to get all stats at once
@@ -453,17 +469,17 @@ export class MetadataService {
 
       const [result] = await this.pluginRepository.query(statsQuery);
       
-      const generalStats = result.general_stats || {};
-      const statusStats = result.status_stats || [];
-      const categoryStats = result.category_stats || [];
+      const generalStats = result.general_stats ?? {};
+      const statusStats = result.status_stats ?? [];
+      const categoryStats = result.category_stats ?? [];
 
       const byStatus = {} as Record<PluginStatus, number>;
-      statusStats.forEach((stat: any) => {
+      statusStats.forEach((stat: StatusStatRow) => {
         byStatus[stat.status as PluginStatus] = parseInt(String(stat.count), 10);
       });
 
       const byCategory = {} as Record<PluginCategory, number>;
-      categoryStats.forEach((stat: any) => {
+      categoryStats.forEach((stat: CategoryStatRow) => {
         byCategory[stat.category as PluginCategory] = parseInt(String(stat.count), 10);
       });
 

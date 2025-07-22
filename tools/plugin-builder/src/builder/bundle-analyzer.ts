@@ -1,7 +1,8 @@
+import { getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs/promises';
-import * as path from 'path';
 import { gzipSize } from 'gzip-size';
+import * as path from 'path';
 
 export interface BundleAnalysis {
   bundlePath: string;
@@ -47,7 +48,7 @@ export class BundleAnalyzer {
     try {
       const bundlePath = await this.findMainBundle(outputPath);
       
-      if (!bundlePath) {
+      if (bundlePath == null) {
         throw new Error('Bundle file not found in output directory');
       }
 
@@ -67,7 +68,7 @@ export class BundleAnalyzer {
         recommendations,
       };
     } catch (error) {
-      this.logger.error(`Bundle analysis failed: ${error.message}`);
+      this.logger.error(`Bundle analysis failed: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -127,9 +128,9 @@ export class BundleAnalyzer {
         (file.endsWith('.js') && !file.includes('.map'))
       );
 
-      return bundleFile ? path.join(outputPath, bundleFile) : null;
+      return (bundleFile != null) ? path.join(outputPath, bundleFile) : null;
     } catch (error) {
-      this.logger.error(`Failed to find bundle file: ${error.message}`);
+      this.logger.error(`Failed to find bundle file: ${getErrorMessage(error)}`);
       return null;
     }
   }
@@ -164,7 +165,7 @@ export class BundleAnalyzer {
       const duplicates: Array<{ name: string; versions: string[]; instances: number }> = [];
 
       // This is a simplified analysis - in practice, you'd analyze the actual bundle content
-      for (const [name, version] of Object.entries(dependencies)) {
+      for (const [name, _version] of Object.entries(dependencies)) {
         if (this.isExternalDependency(name)) {
           external.push(name);
         } else {
@@ -179,7 +180,7 @@ export class BundleAnalyzer {
         duplicates,
       };
     } catch (error) {
-      this.logger.warn(`Dependency analysis failed: ${error.message}`);
+      this.logger.warn(`Dependency analysis failed: ${getErrorMessage(error)}`);
       return {
         total: 0,
         external: [],
@@ -262,8 +263,8 @@ export class BundleAnalyzer {
 
   private evaluateBundleSize(sizeInBytes: number): number {
     if (sizeInBytes < 100 * 1024) return 100; // < 100KB
-    if (sizeInBytes < 250 * 1024) return 90;  // < 250KB
-    if (sizeInBytes < 500 * 1024) return 75;  // < 500KB
+    if (sizeInBytes < 250 * 1024) return 90; // < 250KB
+    if (sizeInBytes < 500 * 1024) return 75; // < 500KB
     if (sizeInBytes < 1024 * 1024) return 50; // < 1MB
     return 25; // >= 1MB
   }
@@ -312,7 +313,7 @@ export class BundleAnalyzer {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2)) } ${ sizes[i]}`;
   }
 
   private formatSizeChange(sizeChange: number, percentChange: number): string {

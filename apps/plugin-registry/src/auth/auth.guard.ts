@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@lib/shared/common';
 import {
   CanActivate,
   ExecutionContext,
@@ -24,7 +25,7 @@ export class AuthGuard implements CanActivate {
     try {
       const token = this.extractTokenFromHeader(request);
 
-      if (!token) {
+      if (token == null) {
         throw new UnauthorizedException('Missing authentication token');
       }
 
@@ -47,7 +48,7 @@ export class AuthGuard implements CanActivate {
 
       return true;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown authentication error';
+      const errorMessage = getErrorMessage(error, 'Unknown authentication error') ;
       this.logger.warn(`Authentication failed: ${errorMessage}`);
       throw error;
     }
@@ -56,7 +57,7 @@ export class AuthGuard implements CanActivate {
   private extractTokenFromHeader(request: Request): string | undefined {
     const authHeader = request.headers.authorization;
 
-    if (!authHeader) {
+    if (authHeader == null) {
       return undefined;
     }
 

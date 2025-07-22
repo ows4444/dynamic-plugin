@@ -1,7 +1,9 @@
+import { getErrorMessage } from '@lib/shared/common';
+import type { IManifest as PluginManifest } from '@lib/shared/plugin-types';
 import { Injectable, Logger } from '@nestjs/common';
 import * as path from 'path';
 import * as webpack from 'webpack';
-import { BundleAnalyzer } from '../builder/bundle-analyzer';
+import { type BundleAnalysis, BundleAnalyzer } from '../builder/bundle-analyzer';
 import { PluginWebpackConfigBuilder } from '../builder/webpack.config';
 import { BundlePackager } from '../packager/bundle-packager';
 import { DependencyChecker } from '../validators/dependency-checker';
@@ -27,7 +29,7 @@ export interface BuildResult {
   bundleSize: number;
   warnings: string[];
   errors: string[];
-  analysis?: any;
+  analysis?: BundleAnalysis;
   packagePath?: string;
 }
 
@@ -58,12 +60,12 @@ export class BuildCommand {
     try {
       this.logger.log(`Building plugin at: ${options.pluginPath}`);
 
-      if (options.verbose) {
+      if (options.verbose ?? false) {
         this.logger.log(`Build options: ${JSON.stringify(options, null, 2)}`);
       }
 
       // Pre-build validation
-      if (!options.skipValidation) {
+      if (!(options.skipValidation ?? false)) {
         await this.performValidation(options.pluginPath, result);
 
         if (result.errors.length > 0) {
@@ -89,7 +91,7 @@ export class BuildCommand {
       });
 
       // Build the plugin
-      if (options.watch) {
+      if (options.watch ?? false) {
         await this.buildWithWatch(webpackConfig, result);
       } else {
         await this.buildOnce(webpackConfig, result);
@@ -100,7 +102,7 @@ export class BuildCommand {
       }
 
       // Post-build analysis
-      if (options.analyze) {
+      if (options.analyze ?? false) {
         try {
           const analysis =
             await this.bundleAnalyzer.analyzeBuildOutput(outputPath);
@@ -120,12 +122,12 @@ export class BuildCommand {
             });
           }
         } catch (error) {
-          result.warnings.push(`Bundle analysis failed: ${error.message}`);
+          result.warnings.push(`Bundle analysis failed: ${getErrorMessage(error)}`);
         }
       }
 
       // Package the plugin
-      if (options.package) {
+      if (options.package ?? false) {
         try {
           const packageResult = await this.bundlePackager.createPackage({
             pluginPath: options.pluginPath,
@@ -136,7 +138,7 @@ export class BuildCommand {
           result.packagePath = packageResult.packagePath;
           this.logger.log(`Plugin packaged: ${packageResult.packagePath}`);
         } catch (error) {
-          result.warnings.push(`Packaging failed: ${error.message}`);
+          result.warnings.push(`Packaging failed: ${getErrorMessage(error)}`);
         }
       }
 
@@ -146,9 +148,9 @@ export class BuildCommand {
       // Print summary
       this.printBuildSummary(result, manifest);
     } catch (error) {
-      result.errors.push(error.message);
+      result.errors.push(getErrorMessage(error));
       result.buildTime = Date.now() - startTime;
-      this.logger.error(`Build failed: ${error.message}`);
+      this.logger.error(`Build failed: ${getErrorMessage(error)}`);
     }
 
     return result;
@@ -195,14 +197,14 @@ export class BuildCommand {
 
         result.warnings.push(...dependencyCheck.recommendations);
       } catch (error) {
-        result.warnings.push(`Dependency validation failed: ${error.message}`);
+        result.warnings.push(`Dependency validation failed: ${getErrorMessage(error)}`);
       }
     } catch (error) {
-      result.warnings.push(`Validation failed: ${error.message}`);
+      result.warnings.push(`Validation failed: ${getErrorMessage(error)}`);
     }
   }
 
-  private async loadManifest(pluginPath: string): Promise<any> {
+  private async loadManifest(pluginPath: string): Promise<PluginManifest> {
     const manifestPath = path.join(pluginPath, 'plugin.manifest.json');
     const content = await require('fs').promises.readFile(
       manifestPath,
@@ -220,7 +222,7 @@ export class BuildCommand {
 
       compiler.run((error, stats) => {
         if (error) {
-          result.errors.push(error.message);
+          result.errors.push(getErrorMessage(error));
           reject(error);
           return;
         }
@@ -234,14 +236,14 @@ export class BuildCommand {
         const info = stats.toJson();
 
         if (stats.hasErrors()) {
-          result.errors.push(...(info.errors?.map((e) => e.message) || []));
+          result.errors.push(...(info.errors?.map((e) => e.message) ?? []));
           result.success = false;
         } else {
           result.success = true;
         }
 
         if (stats.hasWarnings()) {
-          result.warnings.push(...(info.warnings?.map((w) => w.message) || []));
+          result.warnings.push(...(info.warnings?.map((w) => w.message) ?? []));
         }
 
         // Get bundle size
@@ -261,18 +263,17 @@ export class BuildCommand {
     webpackConfig: webpack.Configuration,
     result: BuildResult,
   ): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((_resolve) => {
       const compiler = webpack(webpackConfig);
 
       const watchOptions = {
         aggregateTimeout: 300,
-        poll: undefined,
         ignored: /node_modules/,
       };
 
       compiler.watch(watchOptions, (error, stats) => {
         if (error) {
-          this.logger.error(`Watch build error: ${error.message}`);
+          this.logger.error(`Watch build error: ${getErrorMessage(error)}`);
           return;
         }
 
@@ -286,7 +287,7 @@ export class BuildCommand {
         if (stats.hasErrors()) {
           this.logger.error('Build errors:');
           info.errors?.forEach((error) => {
-            this.logger.error(`  ${error.message}`);
+            this.logger.error(`  ${getErrorMessage(error)}`);
           });
           result.success = false;
         } else {
@@ -318,7 +319,7 @@ export class BuildCommand {
     });
   }
 
-  private printBuildSummary(result: BuildResult, manifest: any): void {
+  private printBuildSummary(result: BuildResult, manifest: PluginManifest): void {
     this.logger.log('\n=== Build Summary ===');
     this.logger.log(`Plugin: ${manifest.name}@${manifest.version}`);
     this.logger.log(`Status: ${result.success ? '✅ SUCCESS' : '❌ FAILED'}`);
@@ -326,7 +327,7 @@ export class BuildCommand {
     this.logger.log(`Bundle Size: ${this.formatBytes(result.bundleSize)}`);
     this.logger.log(`Output: ${result.outputPath}`);
 
-    if (result.packagePath) {
+    if (result.packagePath != null) {
       this.logger.log(`Package: ${result.packagePath}`);
     }
 

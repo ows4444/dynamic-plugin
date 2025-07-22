@@ -1,5 +1,5 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { StructuredLoggerService } from './structured-logger.service';
 
@@ -55,7 +55,7 @@ export class CorrelationIdMiddleware implements NestMiddleware {
 
     // Override res.end to log response
     const originalEnd = res.end;
-    res.end = function(chunk?: any, encoding?: any): Response {
+    res.end = function(chunk?: unknown, encoding?: BufferEncoding): Response {
       const duration = Date.now() - startTime;
       
       requestLogger.http('Outgoing response', {
@@ -87,7 +87,7 @@ export class CorrelationIdMiddleware implements NestMiddleware {
     next();
   }
 
-  private sanitizeHeaders(headers: Record<string, any>): Record<string, any> {
+  private sanitizeHeaders(headers: Record<string, unknown>): Record<string, unknown> {
     const sanitized = { ...headers };
     
     // Remove sensitive headers

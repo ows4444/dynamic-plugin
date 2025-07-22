@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { PluginTemplateController } from './plugin-template.controller';
 import { PluginTemplateService } from './plugin-template.service';
 

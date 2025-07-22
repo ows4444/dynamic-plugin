@@ -1,34 +1,34 @@
+import { AppConfiguration, getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { AppConfiguration } from '@lib/shared/common';
+import { JwtService } from '@nestjs/jwt';
 
 export interface JwtPayload {
   sub: string; // subject (user ID)
-  username?: string;
+  username?: string | undefined;
   permissions: string[];
-  iat?: number; // issued at
-  exp?: number; // expires at
-  jti?: string; // JWT ID for tracking
+  iat?: number | undefined; // issued at
+  exp?: number | undefined; // expires at
+  jti?: string | undefined; // JWT ID for tracking
 }
 
 export interface TokenInfo {
   id: string;
   userId: string;
-  username?: string;
+  username?: string | undefined;
   permissions: string[];
   expiresAt: Date;
   createdAt: Date;
-  lastUsed?: Date;
+  lastUsed?: Date | undefined;
   isActive: boolean;
 }
 
 export interface CreateTokenDto {
   userId: string;
-  username?: string;
+  username?: string | undefined;
   permissions: string[];
-  expiresIn?: string; // JWT format like '1h', '30m', '7d'
-  description?: string;
+  expiresIn?: string | undefined; // JWT format like '1h', '30m', '7d'
+  description?: string | undefined;
 }
 
 @Injectable()
@@ -53,16 +53,16 @@ export class JwtAuthService {
       }
 
       // Check if token has been revoked
-      if (this.revokedTokens.has(payload.jti || token)) {
+      if (this.revokedTokens.has(payload.jti ?? token)) {
         return false;
       }
 
       // Update last used timestamp
-      this.tokenUsage.set(payload.jti || token, new Date());
+      this.tokenUsage.set(payload.jti ?? token, new Date());
 
       return true;
     } catch (error) {
-      this.logger.warn(`Token validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.warn(`Token validation failed: ${getErrorMessage(error)}`);
       return false;
     }
   }
@@ -76,17 +76,17 @@ export class JwtAuthService {
       }
 
       return {
-        id: payload.jti || 'unknown',
+        id: payload.jti ?? 'unknown',
         userId: payload.sub,
         username: payload.username,
         permissions: payload.permissions,
         expiresAt: new Date(payload.exp! * 1000),
         createdAt: new Date(payload.iat! * 1000),
-        lastUsed: this.tokenUsage.get(payload.jti || token),
-        isActive: !this.revokedTokens.has(payload.jti || token),
+        lastUsed: this.tokenUsage.get(payload.jti ?? token),
+        isActive: !this.revokedTokens.has(payload.jti ?? token),
       };
     } catch (error) {
-      this.logger.error(`Failed to get token info: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(`Failed to get token info: ${ getErrorMessage(error) }`);
       return null;
     }
   }
@@ -107,7 +107,7 @@ export class JwtAuthService {
     });
 
     // Decode to get expiration time for TokenInfo
-    const decoded = this.jwtService.decode(token) as JwtPayload;
+    const decoded = this.jwtService.decode(token);
 
     const tokenInfo: TokenInfo = {
       id: jti,
@@ -132,14 +132,14 @@ export class JwtAuthService {
         return false;
       }
 
-      const tokenId = payload.jti || token;
+      const tokenId = payload.jti ?? token;
       this.revokedTokens.add(tokenId);
       this.tokenUsage.delete(tokenId);
 
       this.logger.log(`Revoked JWT token: ${payload.jti}`);
       return true;
     } catch (error) {
-      this.logger.error(`Failed to revoke token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(`Failed to revoke token: ${getErrorMessage(error)}`);
       return false;
     }
   }
@@ -149,7 +149,7 @@ export class JwtAuthService {
     // without maintaining a blacklist or changing the user's secret
     // This is a limitation of stateless JWTs
     this.logger.warn(`Cannot revoke all tokens for user ${userId} - JWT limitation`);
-    return 0;
+    return Promise.resolve(0);
   }
 
   async hasPermission(token: string, permission: string): Promise<boolean> {
@@ -161,7 +161,7 @@ export class JwtAuthService {
       }
 
       // Check if token has been revoked
-      if (this.revokedTokens.has(payload.jti || token)) {
+      if (this.revokedTokens.has(payload.jti ?? token)) {
         return false;
       }
 
@@ -172,7 +172,7 @@ export class JwtAuthService {
 
       return payload.permissions.includes(permission);
     } catch (error) {
-      this.logger.error(`Permission check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(`Permission check failed: ${getErrorMessage(error)}`);
       return false;
     }
   }
@@ -186,7 +186,7 @@ export class JwtAuthService {
       }
 
       // Check if token has been revoked
-      if (this.revokedTokens.has(payload.jti || token)) {
+      if (this.revokedTokens.has(payload.jti ?? token)) {
         return null;
       }
 
@@ -198,13 +198,13 @@ export class JwtAuthService {
       };
 
       // Revoke the old token
-      if (payload.jti) {
+      if (payload.jti != null) {
         this.revokedTokens.add(payload.jti);
       }
 
       return this.createToken(createDto);
     } catch (error) {
-      this.logger.error(`Token refresh failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(`Token refresh failed: ${getErrorMessage(error)}`);
       return null;
     }
   }
@@ -225,12 +225,12 @@ export class JwtAuthService {
       }
     }
 
-    return {
+    return Promise.resolve({
       total: this.tokenUsage.size + this.revokedTokens.size,
       active: this.tokenUsage.size,
       revoked: this.revokedTokens.size,
       recentlyUsed,
-    };
+    });
   }
 
   private async verifyToken(token: string): Promise<JwtPayload | null> {
@@ -243,7 +243,7 @@ export class JwtAuthService {
         if (error.name === 'TokenExpiredError') {
           this.logger.debug('Token expired during verification');
         } else {
-          this.logger.warn(`Token verification failed: ${error.message}`);
+          this.logger.warn(`Token verification failed: ${getErrorMessage(error)}`);
         }
       }
       return null;
@@ -275,7 +275,7 @@ export class JwtAuthService {
     }
 
     // Clean up old revoked tokens (they're expired anyway)
-    const initialRevokedSize = this.revokedTokens.size;
+    const _initialRevokedSize = this.revokedTokens.size;
     // Note: We can't easily determine when revoked JWTs expire without decoding them
     // In a production system, you'd want to store revoked tokens with expiration timestamps
 
@@ -313,7 +313,7 @@ export class JwtAuthService {
       this.logger.log('Created default read-only JWT token');
       this.logger.log(`Read token: ${readToken.token}`);
     } catch (error) {
-      this.logger.error(`Failed to create default tokens: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(`Failed to create default tokens: ${getErrorMessage(error)}`);
     }
   }
 }

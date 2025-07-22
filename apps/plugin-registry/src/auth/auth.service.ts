@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
+import { getErrorMessage } from '../../../../libs/shared/common/src';
 
 export interface TokenInfo {
   id: string;
@@ -52,7 +53,7 @@ export class AuthService {
       return Promise.resolve(true);
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown token validation error';
+      const errorMessage = getErrorMessage(error, 'Unknown token validation error');
       this.logger.error(`Token validation failed: ${errorMessage}`);
       return Promise.resolve(false);
     }
@@ -68,7 +69,7 @@ export class AuthService {
     const token = this.generateToken();
     const tokenId = this.generateTokenId();
 
-    const expiresAt = createDto.expiresIn
+    const expiresAt = (createDto.expiresIn != null)
       ? new Date(Date.now() + createDto.expiresIn)
       : undefined;
 

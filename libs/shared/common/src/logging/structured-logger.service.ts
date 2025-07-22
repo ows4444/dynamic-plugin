@@ -1,15 +1,17 @@
 import { Injectable, LoggerService, Scope } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as winston from 'winston';
 import { v4 as uuidv4 } from 'uuid';
+import * as winston from 'winston';
 
 export interface LogContext {
-  correlationId?: string;
-  userId?: string;
-  pluginId?: string;
-  operation?: string;
-  duration?: number;
-  metadata?: Record<string, any>;
+  correlationId?: string | undefined;
+  userId?: string | undefined;
+  pluginId?: string | undefined;
+  operation?: string | undefined;
+  duration?: number | undefined;
+  metadata?: Record<string, unknown> | undefined;
+  stack?: string | undefined;
+  timestamp?: string | undefined;
 }
 
 export interface LogEntry {
@@ -36,13 +38,13 @@ export class StructuredLoggerService implements LoggerService {
   private readonly logger: winston.Logger;
   private readonly serviceName: string;
   private readonly environment: string;
-  private correlationId?: string;
+  private correlationId?: string | undefined;
 
   constructor(
     private readonly configService: ConfigService,
     serviceName?: string,
   ) {
-    this.serviceName = serviceName || 'unknown-service';
+    this.serviceName = serviceName ?? 'unknown-service';
     this.environment = this.configService.get('NODE_ENV', 'development');
     
     this.logger = winston.createLogger({
@@ -94,7 +96,7 @@ export class StructuredLoggerService implements LoggerService {
    */
   log(level: LogLevel | string, message: string, context?: LogContext): void {
     const logEntry: LogEntry = {
-      level: level as string,
+      level,
       message,
       timestamp: new Date().toISOString(),
       context: this.enrichContext(context),
@@ -102,11 +104,11 @@ export class StructuredLoggerService implements LoggerService {
       environment: this.environment,
     };
 
-    if (context?.stack) {
+    if ((context?.stack) != null) {
       logEntry.stack = context.stack;
     }
 
-    this.logger.log(level as string, logEntry);
+    this.logger.log(level, logEntry);
   }
 
   /**
@@ -137,7 +139,7 @@ export class StructuredLoggerService implements LoggerService {
     pluginId: string,
     event: string,
     message: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ): void {
     this.log(LogLevel.INFO, message, {
       pluginId,
@@ -152,7 +154,7 @@ export class StructuredLoggerService implements LoggerService {
   logPerformance(
     operation: string,
     duration: number,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ): void {
     this.log(LogLevel.INFO, `Performance: ${operation}`, {
       operation,
@@ -171,7 +173,7 @@ export class StructuredLoggerService implements LoggerService {
     event: string,
     message: string,
     severity: 'low' | 'medium' | 'high' | 'critical' = 'medium',
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ): void {
     const level = severity === 'critical' || severity === 'high' ? LogLevel.ERROR : LogLevel.WARN;
     this.log(level, `Security: ${message}`, {
@@ -191,7 +193,7 @@ export class StructuredLoggerService implements LoggerService {
     action: string,
     resource: string,
     userId?: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ): void {
     this.log(LogLevel.INFO, `Audit: ${action} on ${resource}`, {
       userId,
@@ -237,9 +239,10 @@ export class StructuredLoggerService implements LoggerService {
         winston.format.timestamp(),
         winston.format.printf((info) => {
           const { timestamp, level, message, service, context } = info;
-          const correlationId = context?.correlationId ? `[${context.correlationId}]` : '';
-          const operation = context?.operation ? `[${context.operation}]` : '';
-          return `${timestamp} ${level} [${service}]${correlationId}${operation} ${message}`;
+          const logContext = context as LogContext | undefined;
+          const correlationId = ((logContext?.correlationId) != null) ? `[${String(logContext.correlationId)}]` : '';
+          const operation = ((logContext?.operation) != null) ? `[${String(logContext.operation)}]` : '';
+          return `${String(timestamp)} ${String(level)} [${String(service)}]${correlationId}${operation} ${String(message)}`;
         }),
       );
     }
@@ -298,7 +301,8 @@ export class StructuredLoggerService implements LoggerService {
             winston.format.json(),
             winston.format((info) => {
               // Only audit logs
-              return info.context?.metadata?.auditLog ? info : false;
+              const logContext = info['context'] as LogContext | undefined;
+              return logContext?.metadata && 'auditLog' in logContext.metadata && (Boolean(logContext.metadata['auditLog'])) ? info : false;
             })(),
           ),
         }),
@@ -317,7 +321,8 @@ export class StructuredLoggerService implements LoggerService {
             winston.format.json(),
             winston.format((info) => {
               // Only performance logs
-              return info.context?.metadata?.performanceLog ? info : false;
+              const logContext = info['context'] as LogContext | undefined;
+              return logContext?.metadata && 'performanceLog' in logContext.metadata && (Boolean(logContext.metadata['performanceLog'])) ? info : false;
             })(),
           ),
         }),
@@ -329,8 +334,8 @@ export class StructuredLoggerService implements LoggerService {
 
   private enrichContext(context?: LogContext): LogContext {
     return {
-      correlationId: this.correlationId,
       ...context,
+      correlationId: this.correlationId ?? context?.correlationId,
       timestamp: new Date().toISOString(),
     };
   }

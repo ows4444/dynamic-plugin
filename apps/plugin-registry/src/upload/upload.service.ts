@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@lib/shared/common';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as tar from 'tar';
@@ -5,6 +6,27 @@ import { MetadataService } from '../metadata/metadata.service';
 import { StorageService } from '../storage/storage.service';
 import { ValidationService } from '../validation/validation.service';
 import { CreatePluginUploadDto, PluginUploadResponseDto } from './upload.dto';
+
+// Type guards for runtime validation
+function isPluginManifest(obj: unknown): obj is PluginManifest {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'name' in obj &&
+    'version' in obj &&
+    typeof (obj as any).name === 'string' &&
+    typeof (obj as any).version === 'string'
+  );
+}
+
+function isPackageJsonContent(obj: unknown): obj is PackageJsonContent {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    (!('name' in obj) || typeof (obj as any).name === 'string') &&
+    (!('version' in obj) || typeof (obj as any).version === 'string')
+  );
+}
 
 export interface ValidationResult {
   valid: boolean;
@@ -114,7 +136,7 @@ export class UploadService {
         filePath: pluginPath,
         fileSize: file.size,
         checksum,
-        manifest: validation.manifest as PluginManifest,
+        manifest: validation.manifest,
       });
 
       // Clean up temporary file
@@ -137,7 +159,7 @@ export class UploadService {
       );
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown upload error';
+      const errorMessage = getErrorMessage(error,'Unknown upload error');
       this.logger.error(
         `Upload failed for ${uploadDto.name}@${uploadDto.version}: ${errorMessage}`,
       );
@@ -145,8 +167,8 @@ export class UploadService {
       // Clean up any temporary files
       try {
         await this.storageService.deleteDirectory(`temp/${uploadId}`);
-      } catch (cleanupError) {
-        const cleanupErrorMessage = cleanupError instanceof Error ? cleanupError.message : 'Unknown cleanup error';
+      } catch (error) {
+        const cleanupErrorMessage = getErrorMessage(error,'Unknown cleanup error');
         this.logger.warn(
           `Failed to cleanup temp directory: ${cleanupErrorMessage}`,
         );
@@ -190,7 +212,12 @@ export class UploadService {
 
       // Parse and validate manifest
       try {
-        const manifest = JSON.parse(manifestFile.content.toString()) as PluginManifest;
+        const parsedManifest = JSON.parse(manifestFile.content.toString());
+        if (!isPluginManifest(parsedManifest)) {
+          result.errors.push('Invalid manifest format: missing required fields');
+          return result;
+        }
+        const manifest = parsedManifest;
         result.manifest = manifest;
 
         const manifestValidation =
@@ -228,7 +255,12 @@ export class UploadService {
       );
       if (packageJsonFile) {
         try {
-          const packageJson = JSON.parse(packageJsonFile.content.toString()) as PackageJsonContent;
+          const parsedPackageJson = JSON.parse(packageJsonFile.content.toString());
+          if (!isPackageJsonContent(parsedPackageJson)) {
+            result.warnings.push('Invalid package.json format');
+            return result;
+          }
+          const packageJson = parsedPackageJson;
           const depValidation =
             await this.validationService.validateDependencies(packageJson);
           if (!depValidation.valid) {
@@ -240,7 +272,7 @@ export class UploadService {
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown validation error';
+      const errorMessage = getErrorMessage(error,'Unknown validation error');
       result.errors.push(`Validation error: ${errorMessage}`);
       result.valid = false;
     }
@@ -331,7 +363,7 @@ export class UploadService {
       });
 
       stream.on('error', reject);
-      stream.on('end', () => resolve(files));
+      stream.on('end', () => { resolve(files); });
 
       stream.end(buffer);
     });

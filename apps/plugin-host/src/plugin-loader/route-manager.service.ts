@@ -75,7 +75,7 @@ export interface PluginModuleWithRoutes {
 @Injectable()
 export class RouteManagerService {
   private readonly logger = new Logger(RouteManagerService.name);
-  private pluginRoutes: Map<string, PluginRoute[]> = new Map();
+  private readonly pluginRoutes: Map<string, PluginRoute[]> = new Map();
 
   async registerRoutes(pluginId: string, module: PluginModuleWithRoutes): Promise<PluginRoute[]> {
     this.logger.log(`Registering routes for plugin: ${pluginId}`);

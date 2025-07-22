@@ -24,7 +24,7 @@ class PluginWorker {
             this.sendError(`Unknown message type: ${message.type}`);
         }
       } catch (error) {
-        this.sendError(error.message);
+        this.sendError(getErrorMessage(error));
       }
     });
 
@@ -49,7 +49,7 @@ class PluginWorker {
       
       this.sendResult(result);
     } catch (error) {
-      this.sendError(error.message);
+      this.sendError(getErrorMessage(error));
     }
   }
 
@@ -170,7 +170,7 @@ class PluginWorker {
 
       return fs.readFileSync(fullPath, 'utf8');
     } catch (error) {
-      throw new Error(`Failed to load plugin: ${error.message}`);
+      throw new Error(`Failed to load plugin: ${getErrorMessage(error)}`);
     }
   }
 

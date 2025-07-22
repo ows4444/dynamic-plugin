@@ -1,20 +1,17 @@
+import { getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
 import * as path from 'path';
 import { ModuleResolverService } from './module-resolver.service';
 import { PluginRoute, RouteManagerService } from './route-manager.service';
-import { getErrorMessage } from '@lib/shared/common';
-
 interface PluginModuleClass {
   new (...args: unknown[]): unknown;
   [key: string]: unknown;
 }
-
 interface PluginModule {
   default?: PluginModuleClass | Record<string, unknown>;
   PluginModule?: PluginModuleClass;
   [key: string]: unknown;
 }
-
 interface PluginMetadata {
   name: string;
   version: string;
@@ -23,19 +20,16 @@ interface PluginMetadata {
   license?: string;
   [key: string]: unknown;
 }
-
 export interface LoadedPlugin {
   id: string;
   module: PluginModule;
   routes: PluginRoute[];
   metadata: PluginMetadata;
 }
-
 @Injectable()
 export class PluginLoaderService {
   private readonly logger = new Logger(PluginLoaderService.name);
-  private loadedPlugins: Map<string, LoadedPlugin> = new Map();
-
+  private readonly loadedPlugins: Map<string, LoadedPlugin> = new Map();
   constructor(
     private readonly moduleResolver: ModuleResolverService,
     private readonly routeManager: RouteManagerService,
@@ -45,16 +39,9 @@ export class PluginLoaderService {
     this.logger.log(`Loading plugin: ${pluginId}`);
 
     try {
-      // Resolve plugin module path
       const pluginPath = this.getPluginPath(pluginId);
-
-      // Dynamically import the plugin module
       const module = await this.moduleResolver.resolveModule(pluginPath);
-
-      // Extract plugin metadata
       const metadata = await this.extractMetadata(pluginPath);
-
-      // Register plugin routes
       const routes = await this.routeManager.registerRoutes(pluginId, module);
 
       const loadedPlugin: LoadedPlugin = {
@@ -73,7 +60,7 @@ export class PluginLoaderService {
       throw error;
     }
   }
-
+ 
   async unloadPlugin(pluginId: string): Promise<void> {
     this.logger.log(`Unloading plugin: ${pluginId}`);
 
@@ -83,13 +70,8 @@ export class PluginLoaderService {
     }
 
     try {
-      // Unregister routes
       await this.routeManager.unregisterRoutes(pluginId);
-
-      // Clean up module references
       await this.moduleResolver.cleanupModule(plugin.module);
-
-      // Remove from loaded plugins
       this.loadedPlugins.delete(pluginId);
 
       this.logger.log(`Plugin unloaded successfully: ${pluginId}`);
@@ -101,34 +83,26 @@ export class PluginLoaderService {
     }
   }
 
+ 
   async reloadPlugin(pluginId: string): Promise<LoadedPlugin> {
     this.logger.log(`Reloading plugin: ${pluginId}`);
-
-    // Unload if already loaded
     if (this.loadedPlugins.has(pluginId)) {
       await this.unloadPlugin(pluginId);
     }
-
-    // Load again
     return this.loadPlugin(pluginId);
   }
-
   getLoadedPlugins(): LoadedPlugin[] {
     return Array.from(this.loadedPlugins.values());
   }
-
   getLoadedPlugin(pluginId: string): LoadedPlugin | undefined {
     return this.loadedPlugins.get(pluginId);
   }
-
   isPluginLoaded(pluginId: string): boolean {
     return this.loadedPlugins.has(pluginId);
   }
-
   private getPluginPath(pluginId: string): string {
     return path.join(process.cwd(), 'plugins', pluginId);
   }
-
   private async extractMetadata(pluginPath: string): Promise<PluginMetadata> {
     try {
       const manifestPath = path.join(pluginPath, 'manifest.json');

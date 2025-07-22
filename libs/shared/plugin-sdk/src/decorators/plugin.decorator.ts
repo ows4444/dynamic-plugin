@@ -1,5 +1,5 @@
 import { applyDecorators, SetMetadata } from '@nestjs/common';
-import { PluginMetadata } from '../base/base-plugin';
+import type { PluginMetadata } from '../base/base-plugin';
 
 export const PLUGIN_METADATA_KEY = 'plugin:metadata';
 export const PLUGIN_CONFIG_KEY = 'plugin:config';

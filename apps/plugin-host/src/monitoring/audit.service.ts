@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
 import { getErrorMessage, getErrorStack } from '@lib/shared/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 export interface AuditEvent {
   id: string;
@@ -208,7 +208,7 @@ export class AuditService {
         source: 'plugin',
         severity: 'high',
         success: false,
-        error: error.message,
+        error:  getErrorMessage(error),
       },
     );
   }

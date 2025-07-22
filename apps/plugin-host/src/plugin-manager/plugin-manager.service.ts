@@ -26,11 +26,10 @@ export interface Plugin {
   status: 'installed' | 'running' | 'stopped' | 'error';
   metadata?: PluginInstallationMetadata & PluginRuntimeMetadata;
 }
-
 @Injectable()
 export class PluginManagerService {
   private readonly logger = new Logger(PluginManagerService.name);
-  private plugins: Map<string, Plugin> = new Map();
+  private readonly plugins: Map<string, Plugin> = new Map();
 
   constructor(
     private readonly installer: PluginInstallerService,
@@ -40,16 +39,13 @@ export class PluginManagerService {
   async installPlugin(pluginPackage: string): Promise<Plugin> {
     this.logger.log(`Installing plugin: ${pluginPackage}`);
 
-    // Validate plugin package
     const isValid = await this.validator.validatePackage(pluginPackage);
     if (!isValid) {
       throw new Error('Invalid plugin package');
     }
 
-    // Install plugin
     const plugin = await this.installer.install(pluginPackage);
 
-    // Store plugin info
     this.plugins.set(plugin.id, {
       ...plugin,
       status: 'installed',

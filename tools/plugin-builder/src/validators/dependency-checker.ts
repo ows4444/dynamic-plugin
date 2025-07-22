@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
 import * as semver from 'semver';
 
@@ -109,9 +110,9 @@ export class DependencyChecker {
       result.recommendations = this.generateRecommendations(result);
 
     } catch (error) {
-      this.logger.error(`Dependency check failed: ${error.message}`);
+      this.logger.error(`Dependency check failed: ${getErrorMessage(error)}`);
       result.valid = false;
-      result.recommendations.push(`Dependency analysis failed: ${error.message}`);
+      result.recommendations.push(`Dependency analysis failed: ${getErrorMessage(error)}`);
     }
 
     return result;
@@ -190,7 +191,7 @@ export class DependencyChecker {
           });
         }
       } catch (error) {
-        this.logger.debug(`Could not check latest version for ${name}: ${error.message}`);
+        this.logger.debug(`Could not check latest version for ${name}: ${getErrorMessage(error)}`);
       }
     }
 
@@ -296,7 +297,7 @@ export class DependencyChecker {
 
     } catch (error) {
       analysis.status = 'invalid';
-      analysis.issues.push(`Analysis failed: ${error.message}`);
+      analysis.issues.push(`Analysis failed: ${getErrorMessage(error)}`);
     }
 
     return analysis;
@@ -481,9 +482,9 @@ export class DependencyChecker {
   private isSuspiciousPackage(name: string): boolean {
     // Check for common typosquatting patterns
     const suspiciousPatterns = [
-      /^[a-z]+\d+$/,  // packages ending with numbers
-      /^[a-z]{1,3}$/,  // very short names
-      /[0O1lI]{2,}/,   // confusing characters
+      /^[a-z]+\d+$/, // packages ending with numbers
+      /^[a-z]{1,3}$/, // very short names
+      /[0O1lI]{2,}/, // confusing characters
     ];
 
     return suspiciousPatterns.some(pattern => pattern.test(name));

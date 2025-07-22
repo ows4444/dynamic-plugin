@@ -1,5 +1,5 @@
-import { IManifest } from "./manifest.interface";
 import type { ConfigSchema as ConfigPropertySchema, PluginConfig } from './config.interface';
+import type { IManifest } from "./manifest.interface";
 import type { ValidationError, ValidationResult, ValidationWarning } from './validation.interface';
 
 export interface IPlugin {
@@ -31,12 +31,10 @@ export interface IPlugin {
   onEvent(event: PluginEvent): Promise<void>;
   cleanup(): Promise<void>;
 
-  // Lifecycle hooks - optional
   onInit?(): Promise<void>;
   onDestroy?(): Promise<void>;
   healthCheck?(): Promise<boolean>;
 
-  // Request handling - optional
   handleRequest?<T = unknown, R = unknown>(requestData: T): Promise<R>;
   onWebSocketConnection?<T = unknown>(
     socket: unknown,
@@ -44,18 +42,11 @@ export interface IPlugin {
   ): Promise<void>;
 }
 
-// Re-export the comprehensive manifest interface with a cleaner name
 export type IPluginManifest = IManifest;
 
-// Re-export configuration types from the centralized config interface
 export type {
-  PluginConfig,
-  PluginConfigSchema,
-  ConfigValue,
-  ConfigSchema as ConfigPropertySchema,
-  ConfigValidationResult,
-  ConfigValidationError,
-  ConfigValidationWarning
+  ConfigSchema as ConfigPropertySchema, ConfigValidationError, ConfigValidationResult, ConfigValidationWarning, ConfigValue, PluginConfig,
+  PluginConfigSchema
 } from './config.interface';
 
 export interface PluginRoute {
@@ -69,6 +60,7 @@ export interface PluginRoute {
   parameters?: RouteParameter[];
   requestBody?: RouteRequestBody;
   responses?: Record<string, RouteResponse>;
+  version?: string; // API version for this route
 }
 
 export interface RouteParameter {
@@ -130,8 +122,7 @@ export interface PluginMetrics {
   customMetrics?: Record<string, number>;
 }
 
-// Re-export validation types from the centralized validation interface
-export type { ValidationResult, ValidationError, ValidationWarning };
+export type { ValidationError, ValidationResult, ValidationWarning };
 
 export interface PluginEvent {
   id: string;

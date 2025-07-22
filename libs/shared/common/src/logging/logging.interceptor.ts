@@ -1,21 +1,19 @@
 import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
   CallHandler,
-  Logger,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor
 } from '@nestjs/common';
 import { Observable, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
-import { Request } from 'express';
-import { StructuredLoggerService } from './structured-logger.service';
+import { catchError, tap } from 'rxjs/operators';
 import { RequestWithCorrelation } from './correlation-id.middleware';
+import { StructuredLoggerService } from './structured-logger.service';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   constructor(private readonly logger: StructuredLoggerService) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const contextType = context.getType();
 
     if (contextType === 'http') {
@@ -25,7 +23,7 @@ export class LoggingInterceptor implements NestInterceptor {
     return next.handle();
   }
 
-  private handleHttpRequest(context: ExecutionContext, next: CallHandler): Observable<any> {
+  private handleHttpRequest(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<RequestWithCorrelation>();
     const handler = context.getHandler();
     const controller = context.getClass();
@@ -37,7 +35,7 @@ export class LoggingInterceptor implements NestInterceptor {
     const startTime = Date.now();
     
     // Get request-scoped logger from middleware
-    const requestLogger = request.logger || this.logger;
+    const requestLogger = request.logger ?? this.logger;
 
     requestLogger.debug(`Executing ${operationName}`, {
       operation: operationName,
@@ -69,7 +67,7 @@ export class LoggingInterceptor implements NestInterceptor {
           requestLogger.logPerformance(operationName, duration, {
             controller: controllerName,
             handler: methodName,
-            responseSize: response ? JSON.stringify(response).length : 0,
+            responseSize: (response) ? JSON.stringify(response).length : 0,
           });
         }
       }),
