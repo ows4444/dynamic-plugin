@@ -29,24 +29,16 @@
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
     "paths": {
-      "@lib/shared/common": [
-        "libs/shared/common/src"
-      ],
-      "@lib/shared/common/*": [
-        "libs/shared/common/src/*"
-      ],
-      "@lib/shared/plugin-sdk": [
-        "libs/shared/plugin-sdk/src"
-      ],
-      "@lib/shared/plugin-sdk/*": [
-        "libs/shared/plugin-sdk/src/*"
-      ],
-      "@lib/shared/plugin-types": [
-        "libs/shared/plugin-types/src"
-      ],
-      "@lib/shared/plugin-types/*": [
-        "libs/shared/plugin-types/src/*"
-      ]
+      "@app/*": ["apps/*/src/*"],
+      "@shared/*": ["libs/shared/*/src/*"],
+      "@domain/*": ["libs/domains/*/src/*"],
+      "@plugin-sdk/*": ["libs/shared/plugin-sdk/src/*"],
+      "@lib/shared/common": ["libs/shared/common/src"],
+      "@lib/shared/common/*": ["libs/shared/common/src/*"],
+      "@lib/shared/plugin-sdk": ["libs/shared/plugin-sdk/src"],
+      "@lib/shared/plugin-sdk/*": ["libs/shared/plugin-sdk/src/*"],
+      "@lib/shared/plugin-types": ["libs/shared/plugin-types/src"],
+      "@lib/shared/plugin-types/*": ["libs/shared/plugin-types/src/*"]
     }
   },
   "exclude": [

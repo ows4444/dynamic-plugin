@@ -7,4 +7,5 @@ export type * from './permissions.interface';
 export type * from './plugin.interface';
 export * from './template-literal-types';
 export * from './type-guards';
+export * from './utility-types';
 export * from './validation.interface';
