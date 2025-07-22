@@ -11,6 +11,10 @@ import { PluginValidatorService } from './plugin-validator.service';
     PluginInstallerService,
     PluginValidatorService,
   ],
-  exports: [PluginManagerService],
+  exports: [
+    PluginManagerService,
+    PluginInstallerService,
+    PluginValidatorService,
+  ],
 })
 export class PluginManagerModule {}

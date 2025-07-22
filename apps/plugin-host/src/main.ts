@@ -1,10 +1,21 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './core/app.module';
-import { GlobalExceptionFilter } from '@lib/shared/common';
+import { GlobalExceptionFilter, EnvironmentValidator } from '@lib/shared/common';
 
 async function bootstrap() {
   const logger = new Logger('PluginHost');
+
+  // Validate environment variables before starting the application
+  try {
+    const envValidator = new EnvironmentValidator();
+    envValidator.validateAndThrow();
+    logger.log('✅ Environment validation completed successfully');
+  } catch (error) {
+    logger.error('❌ Environment validation failed');
+    logger.error(error.message);
+    process.exit(1);
+  }
 
   const app = await NestFactory.create(AppModule);
 

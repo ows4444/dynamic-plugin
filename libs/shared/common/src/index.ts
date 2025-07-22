@@ -16,12 +16,19 @@ export * from './config/config.module';
 export * from './config/database.config';
 export * from './config/cache.config';
 export * from './config/validation.schema';
+export * from './config/environment.validator';
 
 export * from './database/database.module';
 export * from './database/database.config';
+export * from './database/query-optimizer.service';
 
 export * from './cache/cache-manager.service';
 
 export * from './decorators/cache-response.decorator';
 
 export * from './utils/error.utils';
+
+export * from './logging/structured-logger.service';
+export * from './logging/correlation-id.middleware';
+export * from './logging/logging.interceptor';
+export * from './logging/logging.module';
