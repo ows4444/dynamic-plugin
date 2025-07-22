@@ -17,4 +17,11 @@ export * from './config/database.config';
 export * from './config/cache.config';
 export * from './config/validation.schema';
 
+export * from './database/database.module';
+export * from './database/database.config';
+
+export * from './cache/cache-manager.service';
+
+export * from './decorators/cache-response.decorator';
+
 export * from './utils/error.utils';

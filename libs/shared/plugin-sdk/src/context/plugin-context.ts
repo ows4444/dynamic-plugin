@@ -1,24 +1,42 @@
 import { Injectable, Scope } from '@nestjs/common';
 import { PluginMetadata } from '../base/base-plugin';
 
+export type PluginRequestBody = 
+  | string 
+  | number 
+  | boolean 
+  | Record<string, any> 
+  | Array<any> 
+  | null;
+
 export interface PluginRequest {
   id: string;
   method: string;
   url: string;
   headers: Record<string, string>;
-  query: Record<string, unknown>;
-  params: Record<string, unknown>;
-  body?: unknown;
+  query: Record<string, string | string[] | number | boolean>;
+  params: Record<string, string | number>;
+  body?: PluginRequestBody;
   user?: PluginUser;
   timestamp: Date;
 }
 
+export type PluginResponseBody = 
+  | string 
+  | number 
+  | boolean 
+  | Record<string, any> 
+  | Array<any> 
+  | null;
+
 export interface PluginResponse {
   statusCode: number;
   headers: Record<string, string>;
-  body?: unknown;
+  body?: PluginResponseBody;
   timestamp: Date;
 }
+
+export type PluginUserMetadata = Record<string, string | number | boolean | Date>;
 
 export interface PluginUser {
   id: string;
@@ -26,7 +44,7 @@ export interface PluginUser {
   email?: string;
   roles: string[];
   permissions: string[];
-  metadata?: Record<string, unknown>;
+  metadata?: PluginUserMetadata;
 }
 
 export interface PluginHost {
@@ -37,6 +55,8 @@ export interface PluginHost {
   features: string[];
 }
 
+export type PluginExecutionMetadata = Record<string, string | number | boolean | Date>;
+
 export interface PluginExecutionContext {
   requestId: string;
   correlationId?: string;
@@ -45,7 +65,7 @@ export interface PluginExecutionContext {
   startTime: Date;
   timeout?: number;
   retries?: number;
-  metadata?: Record<string, unknown>;
+  metadata?: PluginExecutionMetadata;
 }
 
 @Injectable({ scope: Scope.REQUEST })
@@ -56,7 +76,7 @@ export class PluginContext {
   private _user: PluginUser | null = null;
   private _host!: PluginHost;
   private _executionContext: PluginExecutionContext;
-  private _data: Map<string, unknown> = new Map();
+  private _data: Map<string, string | number | boolean | Date | Record<string, any> | Array<any>> = new Map();
 
   constructor() {
     this._executionContext = {
@@ -152,11 +172,11 @@ export class PluginContext {
     return Date.now() - this._executionContext.startTime.getTime();
   }
 
-  set<T>(key: string, value: T): void {
+  set<T extends string | number | boolean | Date | Record<string, any> | Array<any>>(key: string, value: T): void {
     this._data.set(key, value);
   }
 
-  get<T>(key: string): T | undefined {
+  get<T extends string | number | boolean | Date | Record<string, any> | Array<any>>(key: string): T | undefined {
     return this._data.get(key) as T | undefined;
   }
 
@@ -172,7 +192,7 @@ export class PluginContext {
     this._data.clear();
   }
 
-  getAllData(): Record<string, unknown> {
+  getAllData(): Record<string, string | number | boolean | Date | Record<string, any> | Array<any>> {
     return Object.fromEntries(this._data);
   }
 
@@ -189,7 +209,7 @@ export class PluginContext {
     return childContext;
   }
 
-  toJSON(): Record<string, unknown> {
+  toJSON(): Record<string, any> {
     return {
       plugin: this._plugin,
       request: this._request

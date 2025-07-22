@@ -1,12 +1,12 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { PluginRegistryModule } from './plugin-registry.module';
+import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from '@lib/shared/common';
 
 async function bootstrap() {
   const logger = new Logger('PluginRegistry');
 
-  const app = await NestFactory.create(PluginRegistryModule);
+  const app = await NestFactory.create(AppModule);
 
   // Global exception filter for consistent error handling
   app.useGlobalFilters(new GlobalExceptionFilter());

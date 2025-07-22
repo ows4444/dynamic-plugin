@@ -9,7 +9,12 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { getErrorMessage } from '@lib/shared/common';
+import { 
+  getErrorMessage,
+  CacheResponse5Minutes, 
+  CacheResponse10Minutes, 
+  CacheResponse1Minute 
+} from '@lib/shared/common';
 import { PluginCategory, PluginStatus } from './metadata.entity';
 import { MetadataService, PluginSearchQuery, PluginSortBy, ValidationResults } from './metadata.service';
 
@@ -69,6 +74,7 @@ export class MetadataController {
   }
 
   @Get('stats')
+  @CacheResponse5Minutes()
   async getPluginStats() {
     try {
       const stats = await this.metadataService.getPluginStats();
@@ -84,6 +90,7 @@ export class MetadataController {
   }
 
   @Get('popular')
+  @CacheResponse10Minutes()
   async getPopularPlugins(@Query('limit') limit?: number) {
     try {
       const plugins = await this.metadataService.getPopularPlugins(limit ?? 10);
@@ -99,6 +106,7 @@ export class MetadataController {
   }
 
   @Get('recent')
+  @CacheResponse10Minutes()
   async getRecentPlugins(@Query('limit') limit?: number) {
     try {
       const plugins = await this.metadataService.getRecentPlugins(limit ?? 10);
@@ -114,6 +122,7 @@ export class MetadataController {
   }
 
   @Get(':id')
+  @CacheResponse5Minutes()
   async getPluginById(@Param('id') id: string) {
     try {
       const plugin = await this.metadataService.findPluginById(id);
@@ -133,6 +142,7 @@ export class MetadataController {
   }
 
   @Get('name/:name')
+  @CacheResponse5Minutes()
   async getPluginsByName(@Param('name') name: string) {
     try {
       const plugins = await this.metadataService.findPluginsByName(name);
@@ -150,6 +160,7 @@ export class MetadataController {
   }
 
   @Get(':name/:version')
+  @CacheResponse5Minutes()
   async getPluginByNameVersion(
     @Param('name') name: string,
     @Param('version') version: string,
