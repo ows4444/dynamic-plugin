@@ -28,7 +28,7 @@ export interface IPlugin {
   getHealth(): Promise<PluginHealthCheck>;
   getMetrics(): Promise<PluginMetrics>;
   validateConfig(config: PluginConfig): Promise<ValidationResult>;
-  onEvent(event: PluginEvent): Promise<void>;
+  onEvent(event: IPluginEvent): Promise<void>;
   cleanup(): Promise<void>;
 
   onInit?(): Promise<void>;
@@ -124,7 +124,7 @@ export interface PluginMetrics {
 
 export type { ValidationError, ValidationResult, ValidationWarning };
 
-export interface PluginEvent {
+export interface IPluginEvent {
   id: string;
   type: string;
   source: string;

@@ -58,6 +58,9 @@ export interface PluginHost {
 export type PluginExecutionMetadata = Record<string, string | number | boolean | Date>;
 
 export interface PluginExecutionContext {
+  pluginId: string;
+  pluginName: string;
+  version: string;
   requestId: string;
   correlationId?: string;
   traceId?: string;
@@ -80,6 +83,9 @@ export class PluginContext {
 
   constructor() {
     this._executionContext = {
+      pluginId: '',
+      pluginName: '',
+      version: '',
       requestId: this.generateId(),
       startTime: new Date(),
     };
@@ -87,6 +93,9 @@ export class PluginContext {
 
   setPlugin(plugin: PluginMetadata): void {
     this._plugin = plugin;
+    this._executionContext.pluginId = plugin.id;
+    this._executionContext.pluginName = plugin.name;
+    this._executionContext.version = plugin.version;
   }
 
   getPlugin(): PluginMetadata {
@@ -203,6 +212,9 @@ export class PluginContext {
     childContext._user = this._user;
     childContext._executionContext = {
       ...this._executionContext,
+      pluginId: this._plugin.id,
+      pluginName: this._plugin.name,
+      version: this._plugin.version,
       requestId: this.generateId(),
       startTime: new Date(),
     };

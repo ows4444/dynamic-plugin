@@ -7,7 +7,7 @@ import type {
 import type { IManifest } from './manifest.interface';
 import type {
   HttpResponse,
-  PluginEvent,
+  IPluginEvent,
   PluginHealthCheck,
   PluginMetrics,
   PluginRoute,
@@ -253,7 +253,7 @@ export function isPluginMetrics(obj: unknown): obj is PluginMetrics {
   return true;
 }
 
-export function isPluginEvent(obj: unknown): obj is PluginEvent {
+export function isPluginEvent(obj: unknown): obj is IPluginEvent {
   if (!isObject(obj)) {
     return false;
   }

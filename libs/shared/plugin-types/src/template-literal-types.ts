@@ -34,7 +34,7 @@ export type PluginLifecycleEvent =
   | 'plugin:error'
   | 'plugin:health-check';
 
-export type PluginEvent = `plugin:${string}:${string}`;
+export type PluginEventType = `plugin:${string}:${string}`;
 
 export type SystemEvent = 
   | 'system:startup'

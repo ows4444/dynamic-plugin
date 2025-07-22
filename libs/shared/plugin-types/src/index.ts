@@ -1,4 +1,4 @@
-export * from './branded-types';
+// export * from './branded-types'; // File doesn't exist, using utility-types instead
 export type * from './communication.interface';
 export type * from './config.interface';
 export type * from './lifecycle.interface';
