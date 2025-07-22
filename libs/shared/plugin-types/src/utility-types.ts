@@ -3,16 +3,16 @@
  */
 
 // Branded types for domain-specific IDs
-export type PluginId = string & { readonly __brand: unique symbol };
-export type TenantId = string & { readonly __brand: unique symbol };
-export type UserId = string & { readonly __brand: unique symbol };
-export type SessionId = string & { readonly __brand: unique symbol };
+export type BrandedPluginId = string & { readonly __brand: unique symbol };
+export type BrandedTenantId = string & { readonly __brand: unique symbol };
+export type BrandedUserId = string & { readonly __brand: unique symbol };
+export type BrandedSessionId = string & { readonly __brand: unique symbol };
 
 // Template literal types for API versioning and routes
-export type ApiVersion = 'v1' | 'v2';
-export type PluginRoute = `/plugins/${string}`;
-export type VersionedRoute = `/${ApiVersion}${PluginRoute}`;
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+export type UtilityApiVersion = 'v1' | 'v2';
+export type UtilityPluginRoute = `/plugins/${string}`;
+export type UtilityVersionedRoute = `/${UtilityApiVersion}${UtilityPluginRoute}`;
+export type UtilityHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
 // Advanced utility types
 export type PartialByKeys<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
@@ -47,9 +47,9 @@ export type PluginPriority = 'low' | 'medium' | 'high' | 'critical';
 export type EventHandler<T = unknown> = (event: T) => void | Promise<void>;
 export type EventMap = Record<string, EventHandler>;
 
-// Configuration types
-export type ConfigValue = string | number | boolean | null | undefined;
-export type ConfigObject = Record<string, ConfigValue | ConfigObject>;
+// Configuration types (avoiding circular reference)
+export type UtilityConfigValue = string | number | boolean | null | undefined;
+export type UtilityConfigObject = Record<string, UtilityConfigValue | Record<string, unknown>>;
 
 // Error types
 export type ErrorCode = 
@@ -60,38 +60,38 @@ export type ErrorCode =
   | 'PLUGIN_TIMEOUT_ERROR';
 
 // Type guards for branded types
-export const isPluginId = (value: string): value is PluginId => {
+export const isBrandedPluginId = (value: string): value is BrandedPluginId => {
   return typeof value === 'string' && value.length > 0;
 };
 
-export const isTenantId = (value: string): value is TenantId => {
+export const isBrandedTenantId = (value: string): value is BrandedTenantId => {
   return typeof value === 'string' && value.length > 0;
 };
 
-export const isUserId = (value: string): value is UserId => {
+export const isBrandedUserId = (value: string): value is BrandedUserId => {
   return typeof value === 'string' && value.length > 0;
 };
 
 // Helper functions for branded types
-export const createPluginId = (value: string): PluginId => {
-  if (!isPluginId(value)) {
+export const createBrandedPluginId = (value: string): BrandedPluginId => {
+  if (!isBrandedPluginId(value)) {
     throw new Error('Invalid plugin ID');
   }
-  return value as PluginId;
+  return value;
 };
 
-export const createTenantId = (value: string): TenantId => {
-  if (!isTenantId(value)) {
+export const createBrandedTenantId = (value: string): BrandedTenantId => {
+  if (!isBrandedTenantId(value)) {
     throw new Error('Invalid tenant ID');
   }
-  return value as TenantId;
+  return value;
 };
 
-export const createUserId = (value: string): UserId => {
-  if (!isUserId(value)) {
+export const createBrandedUserId = (value: string): BrandedUserId => {
+  if (!isBrandedUserId(value)) {
     throw new Error('Invalid user ID');
   }
-  return value as UserId;
+  return value;
 };
 
 // Conditional types
