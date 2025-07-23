@@ -141,15 +141,19 @@ export class TreeShakingAnalyzer {
     const searchDir = async (dir: string): Promise<void> => {
       const entries = await fs.readdir(dir, { withFileTypes: true });
       
+      const promises: Promise<void>[] = [];
+      
       for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);
         
         if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
-          await searchDir(fullPath);
+          promises.push(searchDir(fullPath));
         } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.js'))) {
           files.push(fullPath);
         }
       }
+      
+      await Promise.all(promises);
     };
 
     await searchDir(path.join(projectRoot, 'src'));
@@ -159,8 +163,14 @@ export class TreeShakingAnalyzer {
   private async extractExports(sourceFiles: string[]): Promise<ModuleExport[]> {
     const exports: ModuleExport[] = [];
 
-    for (const filePath of sourceFiles) {
-      const content = await fs.readFile(filePath, 'utf-8');
+    const fileContents = await Promise.all(
+      sourceFiles.map(async (filePath) => {
+        const content = await fs.readFile(filePath, 'utf-8');
+        return { filePath, content };
+      })
+    );
+
+    for (const { filePath, content } of fileContents) {
       const sourceFile = typescript.createSourceFile(
         filePath,
         content,
@@ -243,8 +253,14 @@ export class TreeShakingAnalyzer {
   }
 
   private async analyzeUsage(sourceFiles: string[], exports: ModuleExport[]): Promise<void> {
-    for (const filePath of sourceFiles) {
-      const content = await fs.readFile(filePath, 'utf-8');
+    const fileContents = await Promise.all(
+      sourceFiles.map(async (filePath) => {
+        const content = await fs.readFile(filePath, 'utf-8');
+        return { filePath, content };
+      })
+    );
+
+    for (const { filePath, content } of fileContents) {
       const sourceFile = typescript.createSourceFile(
         filePath,
         content,
@@ -310,20 +326,26 @@ export class TreeShakingAnalyzer {
   private async detectSideEffects(sourceFiles: string[]): Promise<string[]> {
     const sideEffectModules: string[] = [];
 
-    for (const filePath of sourceFiles) {
-      const content = await fs.readFile(filePath, 'utf-8');
-      
-      // Simple heuristics for side effects
-      const hasSideEffects = 
-        content.includes('console.') ||
-        content.includes('document.') ||
-        content.includes('window.') ||
-        content.includes('global.') ||
-        content.includes('process.') ||
-        content.includes('require(') ||
-        content.includes('import(') ||
-        /\w+\(\)/.test(content.split('\n')[0] ?? ''); // Top-level function calls
+    const fileAnalyses = await Promise.all(
+      sourceFiles.map(async (filePath) => {
+        const content = await fs.readFile(filePath, 'utf-8');
+        
+        // Simple heuristics for side effects
+        const hasSideEffects = 
+          content.includes('console.') ||
+          content.includes('document.') ||
+          content.includes('window.') ||
+          content.includes('global.') ||
+          content.includes('process.') ||
+          content.includes('require(') ||
+          content.includes('import(') ||
+          /\w+\(\)/.test(content.split('\n')[0] ?? ''); // Top-level function calls
 
+        return { filePath, hasSideEffects };
+      })
+    );
+
+    for (const { filePath, hasSideEffects } of fileAnalyses) {
       if (hasSideEffects) {
         sideEffectModules.push(filePath);
       }
@@ -337,8 +359,14 @@ export class TreeShakingAnalyzer {
     // A full implementation would build a dependency graph
     const dependencies = new Map<string, string[]>();
     
-    for (const filePath of sourceFiles) {
-      const content = await fs.readFile(filePath, 'utf-8');
+    const fileContents = await Promise.all(
+      sourceFiles.map(async (filePath) => {
+        const content = await fs.readFile(filePath, 'utf-8');
+        return { filePath, content };
+      })
+    );
+
+    for (const { filePath, content } of fileContents) {
       const imports = this.extractImportPaths(content, filePath);
       dependencies.set(filePath, imports);
     }
