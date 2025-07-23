@@ -1,0 +1,240 @@
+version: '3.8'
+
+services:
+  # Database Services
+  postgres:
+    image: postgres:15-alpine
+    container_name: dynamic-plugin-postgres
+    environment:
+      POSTGRES_DB: plugin_registry
+      POSTGRES_USER: plugin_user
+      POSTGRES_PASSWORD: plugin_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./apps/plugin-registry/src/database/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plugin_user -d plugin_registry"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: dynamic-plugin-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Application Services
+  plugin-registry:
+    build:
+      context: .
+      dockerfile: apps/plugin-registry/Dockerfile
+      target: production
+    container_name: dynamic-plugin-registry
+    environment:
+      NODE_ENV: production
+      SERVICE_NAME: plugin-registry
+      PORT: 3002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: plugin_registry
+      DB_USERNAME: plugin_user
+      DB_PASSWORD: plugin_password
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CORS_ENABLED: "true"
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3001
+      API_PREFIX: api
+      LOG_LEVEL: info
+    volumes:
+      - plugin_storage:/app/storage
+      - plugin_logs:/app/logs
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  plugin-host:
+    build:
+      context: .
+      dockerfile: apps/plugin-host/Dockerfile
+      target: production
+    container_name: dynamic-plugin-host
+    environment:
+      NODE_ENV: production
+      SERVICE_NAME: plugin-host
+      PORT: 3001
+      PLUGIN_REGISTRY_URL: http://plugin-registry:3002
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: plugin_registry
+      DB_USERNAME: plugin_user
+      DB_PASSWORD: plugin_password
+      CORS_ENABLED: "true"
+      CORS_ORIGINS: http://localhost:3000
+      API_PREFIX: api
+      LOG_LEVEL: info
+      MAX_PLUGIN_MEMORY: 512
+      PLUGIN_TIMEOUT: 30000
+    volumes:
+      - plugin_plugins:/app/plugins
+      - plugin_logs:/app/logs
+      - plugin_storage:/app/storage
+    ports:
+      - "3001:3001"
+    depends_on:
+      plugin-registry:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  plugin-template:
+    build:
+      context: .
+      dockerfile: apps/plugin-template/Dockerfile
+      target: production
+    container_name: dynamic-plugin-template
+    environment:
+      NODE_ENV: production
+      SERVICE_NAME: plugin-template
+      PORT: 3003
+      LOG_LEVEL: info
+    volumes:
+      - plugin_generated:/app/generated
+      - plugin_logs:/app/logs
+    ports:
+      - "3003:3003"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring Services
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: dynamic-plugin-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    depends_on:
+      - plugin-host
+      - plugin-registry
+      - plugin-template
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: dynamic-plugin-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # Log Management
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.4
+    container_name: dynamic-plugin-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.10.4
+    container_name: dynamic-plugin-kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+
+  # API Gateway (Traefik)
+  traefik:
+    image: traefik:v3.0
+    container_name: dynamic-plugin-gateway
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--metrics.prometheus=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+
+volumes:
+  postgres_data:
+  redis_data:
+  plugin_storage:
+  plugin_plugins:
+  plugin_generated:
+  plugin_logs:
+  prometheus_data:
+  grafana_data:
+  elasticsearch_data:
+
+networks:
+  default:
+    name: dynamic-plugin-network
