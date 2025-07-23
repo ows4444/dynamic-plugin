@@ -54,8 +54,8 @@ export class CorrelationIdMiddleware implements NestMiddleware {
     const startTime = Date.now();
 
     // Override res.end to log response
-    const originalEnd = res.end;
-    res.end = function(chunk?: unknown, encoding?: BufferEncoding): Response {
+    const originalEnd = res.end.bind(res);
+    res.end = function(...args: unknown[]): Response {
       const duration = Date.now() - startTime;
       
       requestLogger.http('Outgoing response', {
@@ -81,7 +81,8 @@ export class CorrelationIdMiddleware implements NestMiddleware {
         });
       }
 
-      return originalEnd.call(this, chunk, encoding);
+      // Call original end with all arguments (type assertion for complex overload)
+      return (originalEnd as (...args: unknown[]) => Response).apply(this, args);
     };
 
     next();
@@ -99,7 +100,7 @@ export class CorrelationIdMiddleware implements NestMiddleware {
     ];
 
     sensitiveHeaders.forEach(header => {
-      if (sanitized[header]) {
+      if (sanitized[header] != null) {
         sanitized[header] = '[REDACTED]';
       }
     });

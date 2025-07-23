@@ -17,7 +17,7 @@ export class PluginCacheService {
   async get<T = unknown>(key: string): Promise<T | null> {
     const entry = this.cache.get(key);
 
-    if (!entry) {
+    if (entry == null) {
       return null;
     }
 
@@ -72,7 +72,7 @@ export class PluginCacheService {
   async has(key: string): Promise<boolean> {
     const entry = this.cache.get(key);
 
-    if (!entry) {
+    if (entry == null) {
       return false;
     }
 
@@ -197,22 +197,34 @@ export class PluginCacheService {
   }> {
     const entry = this.cache.get(key);
 
-    if (!entry || this.isExpired(entry)) {
+    if (entry == null || this.isExpired(entry)) {
       return { exists: false };
     }
 
-    return Promise.resolve({
+    const result: {
+      exists: boolean;
+      createdAt?: Date;
+      expiresAt?: Date;
+      accessCount?: number;
+      lastAccessed?: Date;
+      size?: number;
+    } = {
       exists: true,
       createdAt: entry.createdAt,
-      expiresAt: entry.expiresAt,
       accessCount: entry.accessCount,
       lastAccessed: entry.lastAccessed,
       size: this.estimateEntrySize(entry),
-    });
+    };
+
+    if (entry.expiresAt !== undefined) {
+      result['expiresAt'] = entry.expiresAt;
+    }
+
+    return Promise.resolve(result);
   }
 
   onApplicationShutdown(): void {
-    if (this.cleanupInterval) {
+    if (this.cleanupInterval != null) {
       clearInterval(this.cleanupInterval);
     }
     this.logger.log('Cache service shutdown complete');

@@ -1,7 +1,7 @@
+import { getErrorMessage, getErrorStack } from '@lib/shared/common';
+import { IPluginManifest } from '@lib/shared/plugin-types';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter } from 'events';
-import { IPluginManifest } from '@lib/shared/plugin-types';
-import { getErrorMessage, getErrorStack } from '@lib/shared/common';
 
 export interface PluginEventData {
   [key: string]: unknown;
@@ -170,9 +170,12 @@ export class PluginEventsService extends EventEmitter {
   ): Promise<void> {
     const eventData: PluginHealthCheckData = {
       healthy,
-      details,
       checkTime: new Date(),
     };
+
+    if (details !== undefined) {
+      eventData.details = details;
+    }
     await this.emitPluginEvent('plugin.healthcheck', pluginId, instanceId, eventData);
   }
 
@@ -237,11 +240,11 @@ export class PluginEventsService extends EventEmitter {
   ): PluginEvent[] {
     let filtered = [...this.eventHistory];
 
-    if (pluginId) {
+    if (pluginId != null && pluginId !== '') {
       filtered = filtered.filter((event) => event.pluginId === pluginId);
     }
 
-    if (instanceId) {
+    if (instanceId != null && instanceId !== '') {
       filtered = filtered.filter((event) => event.instanceId === instanceId);
     }
 
@@ -255,17 +258,17 @@ export class PluginEventsService extends EventEmitter {
   }
 
   clearEventHistory(pluginId?: string, instanceId?: string): void {
-    if (!pluginId && !instanceId) {
+    if ((pluginId == null || pluginId === '') && (instanceId == null || instanceId === '')) {
       this.eventHistory.length = 0;
       return;
     }
 
     for (let i = this.eventHistory.length - 1; i >= 0; i--) {
       const event = this.eventHistory[i];
-      if (
-        (!pluginId || event.pluginId === pluginId) &&
-        (!instanceId || event.instanceId === instanceId)
-      ) {
+      if (event && (
+        ((pluginId == null || pluginId === '') || event.pluginId === pluginId) &&
+        ((instanceId == null || instanceId === '') || event.instanceId === instanceId)
+      )) {
         this.eventHistory.splice(i, 1);
       }
     }

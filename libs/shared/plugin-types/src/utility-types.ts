@@ -3,9 +3,13 @@
  */
 
 // Branded types for domain-specific IDs
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type BrandedPluginId = string & { readonly __brand: unique symbol };
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type BrandedTenantId = string & { readonly __brand: unique symbol };
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type BrandedUserId = string & { readonly __brand: unique symbol };
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type BrandedSessionId = string & { readonly __brand: unique symbol };
 
 // Template literal types for API versioning and routes

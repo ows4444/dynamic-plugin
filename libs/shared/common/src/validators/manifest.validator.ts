@@ -9,6 +9,7 @@ export enum ValidationErrorCode {
   INVALID_TYPE = 'INVALID_TYPE',
   INVALID_FORMAT = 'INVALID_FORMAT',
   INVALID_VALUE = 'INVALID_VALUE',
+  INVALID_ENUM_VALUE = 'INVALID_ENUM_VALUE',
   CONSTRAINT_VIOLATION = 'CONSTRAINT_VIOLATION'
 }
 
@@ -25,7 +26,7 @@ export interface ValidationError {
 export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
-  warnings?: ValidationError[];
+  warnings: ValidationError[];
   metadata?: {
     validatedAt: Date;
     validatorVersion: string;
@@ -45,11 +46,11 @@ export interface ValidationContext {
 }
 
 export interface ValidationRule {
-  name: string;
-  field?: string;
-  validate: (data: unknown, context?: ValidationContext) => ValidationError[];
-  async?: boolean;
-  priority?: number;
+  readonly name: string;
+  readonly field?: string;
+  readonly validate: (manifest: UnknownManifest, context: ValidationContext) => ValidationError[];
+  readonly async?: boolean;
+  readonly priority?: number;
 }
  
 
@@ -166,34 +167,7 @@ export type UnknownManifest = Record<string, unknown>;
 export type PartialManifest = Partial<IManifest>;
 
 // Detailed error types for comprehensive error handling
-export enum ValidationErrorCode {
-  MISSING_REQUIRED_FIELD = 'MISSING_REQUIRED_FIELD',
-  INVALID_TYPE = 'INVALID_TYPE',
-  INVALID_FORMAT = 'INVALID_FORMAT',
-  INVALID_VALUE = 'INVALID_VALUE',
-  INVALID_RANGE = 'INVALID_RANGE',
-  INVALID_ENUM_VALUE = 'INVALID_ENUM_VALUE',
-  INVALID_DEPENDENCY = 'INVALID_DEPENDENCY',
-  INVALID_PERMISSION = 'INVALID_PERMISSION',
-  INVALID_SECURITY_LEVEL = 'INVALID_SECURITY_LEVEL',
-  INVALID_VERSION = 'INVALID_VERSION',
-  INVALID_ROUTE = 'INVALID_ROUTE',
-  INVALID_HOOK = 'INVALID_HOOK',
-  INVALID_CONFIGURATION = 'INVALID_CONFIGURATION',
-  INVALID_METADATA = 'INVALID_METADATA',
-  UNSUPPORTED_FEATURE = 'UNSUPPORTED_FEATURE',
-  SECURITY_VIOLATION = 'SECURITY_VIOLATION',
-}
 
-export interface ValidationError {
-  readonly code: ValidationErrorCode;
-  readonly field: string;
-  readonly message: string;
-  readonly value?: unknown;
-  readonly expected?: string | string[];
-  readonly severity: 'error' | 'warning' | 'info';
-  readonly suggestions?: string[];
-}
 
 export interface ValidationWarning {
   readonly code: string;
@@ -203,37 +177,8 @@ export interface ValidationWarning {
   readonly suggestions?: string[];
 }
 
-export interface ValidationResult {
-  readonly valid: boolean;
-  readonly manifest?: PluginManifest;
-  readonly errors: readonly ValidationError[];
-  readonly warnings: readonly ValidationWarning[];
-  readonly metadata: {
-    readonly validatedAt: Date;
-    readonly validatorVersion: string;
-    readonly performance: {
-      readonly duration: number;
-      readonly checksPerformed: number;
-    };
-  };
-}
 
-export interface ValidationContext {
-  readonly strict: boolean;
-  readonly allowDeprecated: boolean;
-  readonly maxFileSize?: number;
-  readonly customRules?: ValidationRule[];
-  readonly environment?: 'development' | 'staging' | 'production';
-}
 
-// Validation rule interface for extensibility
-export interface ValidationRule {
-  readonly name: string;
-  readonly field?: string;
-  readonly validate: (manifest: UnknownManifest, context: ValidationContext) => ValidationError[];
-  readonly async?: boolean;
-  readonly priority?: number;
-}
 
 // Type guards for runtime validation and type narrowing
 export const TypeGuards = {
@@ -374,15 +319,19 @@ export class ValidationErrorFactory {
       suggestions?: string[] | undefined;
     } = {}
   ): ValidationError {
-    return {
+    const error: ValidationError = {
       code,
       field,
       message,
-      value: options.value,
-      expected: options.expected,
       severity: options.severity ?? 'error',
-      suggestions: options.suggestions,
     };
+
+    // Add optional properties only if they are defined
+    if (options.value !== undefined) error.value = options.value;
+    if (options.expected !== undefined) error.expected = options.expected;
+    if (options.suggestions !== undefined) error.suggestions = options.suggestions;
+
+    return error;
   }
   
   static missingField(field: string, suggestions?: string[]): ValidationError {
@@ -542,7 +491,7 @@ export class ManifestValidator {
   // Utility method for creating failure results
   private static createFailureResult(
     errors: ValidationError[],
-    warnings: ValidationWarning[],
+    warnings: ValidationError[],
     startTime: number,
     checksPerformed: number
   ): ValidationResult {
@@ -606,7 +555,7 @@ export class ManifestValidator {
   private static validateOptionalFields(
     manifest: UnknownManifest,
     errors: ValidationError[],
-    warnings: ValidationWarning[],
+    warnings: ValidationError[],
     _context: ValidationContext
   ): void {
     if (manifest['dependencies'] !== undefined) {
@@ -638,7 +587,7 @@ export class ManifestValidator {
   private static validateAdvancedFeatures(
     manifest: UnknownManifest,
     errors: ValidationError[],
-    warnings: ValidationWarning[],
+    warnings: ValidationError[],
     _context: ValidationContext
   ): void {
     if (manifest['engines'] !== undefined) {
@@ -993,7 +942,7 @@ export class ManifestValidator {
     }
   }
 
-  private static validateMetadata(metadata: unknown, errors: ValidationError[], _warnings?: ValidationWarning[]): void {
+  private static validateMetadata(metadata: unknown, errors: ValidationError[], _warnings?: ValidationError[]): void {
     if (metadata !== undefined && typeof metadata !== 'object') {
       errors.push(ValidationErrorFactory.invalidType('metadata', 'object', metadata));
     }
@@ -1017,7 +966,7 @@ export class ManifestValidator {
     }
   }
 
-  private static validateRuntimeSettings(manifest: UnknownManifest, errors: ValidationError[], _warnings: ValidationWarning[]): void {
+  private static validateRuntimeSettings(manifest: UnknownManifest, errors: ValidationError[], _warnings: ValidationError[]): void {
     // Basic runtime validation
     if ((Boolean(manifest['runtime'])) && typeof manifest['runtime'] !== 'object') {
       errors.push(ValidationErrorFactory.invalidType('runtime', 'object', manifest['runtime']));

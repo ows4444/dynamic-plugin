@@ -68,14 +68,14 @@ export class ValidationService {
       ];
 
       for (const field of requiredFields) {
-        if (!(manifest[field])) {
+        if (manifest[field] == null || manifest[field] === '') {
           result.errors.push(`Missing required field: ${field}`);
           result.valid = false;
         }
       }
 
       // Validate name format
-      if (manifest.name && !/^[a-z0-9\-_]+$/.test(String(manifest.name))) {
+      if (manifest.name != null && !/^[a-z0-9\-_]+$/.test(String(manifest.name))) {
         result.errors.push(
           'Plugin name must contain only lowercase letters, numbers, hyphens, and underscores',
         );
@@ -84,7 +84,7 @@ export class ValidationService {
 
       // Validate version format (semver)
       if (
-        manifest.version &&
+        manifest.version != null &&
         !/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(String(manifest.version))
       ) {
         result.errors.push(
@@ -94,7 +94,7 @@ export class ValidationService {
       }
 
       // Validate API version compatibility
-      if (manifest.apiVersion) {
+      if (manifest.apiVersion != null) {
         const supportedVersions = ['1.0.0', '1.1.0'];
         if (!supportedVersions.includes(String(manifest.apiVersion))) {
           result.warnings.push(
@@ -104,7 +104,7 @@ export class ValidationService {
       }
 
       // Validate plugin type
-      if (manifest.pluginType) {
+      if (manifest.pluginType != null) {
         const validTypes = ['service', 'middleware', 'integration', 'utility'];
         if (!validTypes.includes(String(manifest.pluginType))) {
           result.warnings.push(`Unknown plugin type: ${manifest.pluginType}`);
@@ -483,7 +483,7 @@ export class ValidationService {
     const versions = new Map<string, string[]>();
 
     for (const [pkg, version] of Object.entries(dependencies)) {
-      const basePackage = pkg.split('@')[0];
+      const basePackage = pkg.split('@')[0] ?? pkg;
 
       if (!versions.has(basePackage)) {
         versions.set(basePackage, []);

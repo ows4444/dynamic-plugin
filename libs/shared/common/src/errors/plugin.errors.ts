@@ -33,7 +33,7 @@ export class PluginError extends Error {
     // V8 stack trace capture for better debugging
     const captureStackTrace = (Error as NodeErrorCapture).captureStackTrace;
     if (typeof captureStackTrace === 'function') {
-      captureStackTrace(this, PluginError);
+      captureStackTrace(this, this.constructor as new (...args: unknown[]) => unknown);
     }
   }
 
@@ -323,6 +323,6 @@ export function createPluginError(
     [ERROR_CODES.PLUGIN_ALREADY_EXISTS]: PluginAlreadyExistsError,
   };
 
-  const ErrorClass = errorMap[code] || PluginError;
-  return new ErrorClass(message, pluginId, details);
+  const ERROR_CLASS = errorMap[code] ?? PluginError;
+  return new ERROR_CLASS(message, pluginId, details);
 }

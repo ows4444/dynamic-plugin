@@ -38,7 +38,7 @@ export interface PluginRouteOptions {
   deprecated?: boolean;
 }
 
-export function PluginRoute(path?: string, options?: PluginRouteOptions) {
+export function PluginRoute(path?: string, options?: PluginRouteOptions): MethodDecorator & ClassDecorator {
   const routeOptions = {
     method: 'GET' as const,
     auth: true,
@@ -88,35 +88,35 @@ export function PluginRoute(path?: string, options?: PluginRouteOptions) {
 export function PluginGet(
   path?: string,
   options?: Omit<PluginRouteOptions, 'method'>,
-) {
+): MethodDecorator & ClassDecorator {
   return PluginRoute(path, { ...options, method: 'GET' });
 }
 
 export function PluginPost(
   path?: string,
   options?: Omit<PluginRouteOptions, 'method'>,
-) {
+): MethodDecorator & ClassDecorator {
   return PluginRoute(path, { ...options, method: 'POST' });
 }
 
 export function PluginPut(
   path?: string,
   options?: Omit<PluginRouteOptions, 'method'>,
-) {
+): MethodDecorator & ClassDecorator {
   return PluginRoute(path, { ...options, method: 'PUT' });
 }
 
 export function PluginDelete(
   path?: string,
   options?: Omit<PluginRouteOptions, 'method'>,
-) {
+): MethodDecorator & ClassDecorator {
   return PluginRoute(path, { ...options, method: 'DELETE' });
 }
 
 export function PluginPatch(
   path?: string,
   options?: Omit<PluginRouteOptions, 'method'>,
-) {
+): MethodDecorator & ClassDecorator {
   return PluginRoute(path, { ...options, method: 'PATCH' });
 }
 
@@ -129,7 +129,7 @@ export interface PluginEndpointOptions {
   security?: Record<string, string[]>[];
 }
 
-export function PluginEndpoint(options: PluginEndpointOptions) {
+export function PluginEndpoint(options: PluginEndpointOptions): MethodDecorator {
   return SetMetadata('plugin:endpoint', options);
 }
 
@@ -140,7 +140,7 @@ export interface PluginResponseOptions {
   schema?: unknown;
 }
 
-export function PluginResponse(options: PluginResponseOptions) {
+export function PluginResponse(options: PluginResponseOptions): MethodDecorator {
   return SetMetadata('plugin:response', options);
 }
 
@@ -152,18 +152,18 @@ export interface PluginParameterOptions {
   schema?: unknown;
 }
 
-export function PluginParameter(options: PluginParameterOptions) {
+export function PluginParameter(options: PluginParameterOptions): MethodDecorator {
   return SetMetadata('plugin:parameter', options);
 }
 
-export function PluginAuth(required = true) {
+export function PluginAuth(required = true): MethodDecorator {
   return SetMetadata('plugin:auth', required);
 }
 
-export function PluginRateLimit(max: number, windowMs = 60000) {
+export function PluginRateLimit(max: number, windowMs = 60000): MethodDecorator {
   return SetMetadata('plugin:rateLimit', { max, windowMs });
 }
 
-export function PluginCache(ttl: number, key?: string) {
+export function PluginCache(ttl: number, key?: string): MethodDecorator {
   return SetMetadata('plugin:cache', { ttl, key });
 }

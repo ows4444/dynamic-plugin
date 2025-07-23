@@ -161,18 +161,18 @@ export enum PluginCategory {
 @Index(['status', 'category', 'rating'])
 @Index(['status', 'downloadCount'])
 @Index(['status', 'publishedAt'])
-@Index(['tags'], { type: 'gin' })
-@Index(['status', 'name', 'description'], { type: 'gin', name: 'idx_plugins_search' })
+@Index('tags')
+@Index('idx_plugins_search')
 export class PluginEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ length: 100 })
   @Index()
-  name: string;
+  name!: string;
 
   @Column({ length: 20 })
-  version: string;
+  version!: string;
 
   @Column({ type: 'text', nullable: true })
   description?: string;
@@ -191,7 +191,7 @@ export class PluginEntity {
     enum: PluginCategory,
     default: PluginCategory.OTHER,
   })
-  category: PluginCategory;
+  category!: PluginCategory;
 
   @Column({
     type: 'enum',
@@ -199,7 +199,7 @@ export class PluginEntity {
     default: PluginStatus.UPLOADED,
   })
   @Index()
-  status: PluginStatus;
+  status!: PluginStatus;
 
   @Column({ nullable: true })
   homepage?: string;
@@ -217,13 +217,13 @@ export class PluginEntity {
   maxHostVersion?: string;
 
   @Column()
-  filePath: string;
+  filePath!: string;
 
   @Column({ type: 'bigint' })
-  fileSize: number;
+  fileSize!: number;
 
   @Column({ length: 64 })
-  checksum: string;
+  checksum!: string;
 
   @Column({ type: 'json', nullable: true })
   manifest?: PluginManifest;
@@ -232,13 +232,13 @@ export class PluginEntity {
   validationResults?: PluginValidationResults;
 
   @Column({ type: 'int', default: 0 })
-  downloadCount: number;
+  downloadCount!: number;
 
   @Column({ type: 'float', default: 0 })
-  rating: number;
+  rating!: number;
 
   @Column({ type: 'int', default: 0 })
-  ratingCount: number;
+  ratingCount!: number;
 
   @Column({ type: 'text', nullable: true })
   readme?: string;
@@ -250,10 +250,10 @@ export class PluginEntity {
   metadata?: PluginMetadata;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @Column({ type: 'timestamp', nullable: true })
   publishedAt?: Date;

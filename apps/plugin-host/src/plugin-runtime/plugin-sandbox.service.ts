@@ -41,6 +41,40 @@ export interface PluginExecutionResult {
   memoryUsed: number;
 }
 
+interface SandboxMessage {
+  type: 'stats' | 'log' | 'error' | 'result';
+  data: unknown;
+}
+
+interface StatsMessage extends SandboxMessage {
+  type: 'stats';
+  data: {
+    memoryUsage: number;
+    cpuUsage: number;
+  };
+}
+
+interface LogMessage extends SandboxMessage {
+  type: 'log';
+  data: {
+    message: string;
+  };
+}
+
+interface ErrorMessage extends SandboxMessage {
+  type: 'error';
+  data: {
+    error: string;
+  };
+}
+
+interface ResultMessage extends SandboxMessage {
+  type: 'result';
+  data: unknown;
+}
+
+type SandboxMessageTypes = StatsMessage | LogMessage | ErrorMessage | ResultMessage;
+
 @Injectable()
 export class PluginSandboxService {
   private readonly logger = new Logger(PluginSandboxService.name);
@@ -214,15 +248,18 @@ export class PluginSandboxService {
     const inactiveThreshold = 30 * 60 * 1000; // 30 minutes
     const now = Date.now();
 
-    for (const [sandboxId, sandbox] of this.sandboxes.entries()) {
-      const lastActivityTime = sandbox.lastActivity.getTime();
-      
-      if (now - lastActivityTime > inactiveThreshold) {
-        this.logger.log(
-          `Cleaning up inactive sandbox: ${sandboxId}`,
-        );
-        await this.destroySandbox(sandboxId);
-      }
+    const inactiveSandboxes = Array.from(this.sandboxes.entries())
+      .filter(([_, sandbox]) => {
+        const lastActivityTime = sandbox.lastActivity.getTime();
+        return now - lastActivityTime > inactiveThreshold;
+      })
+      .map(([sandboxId]) => sandboxId);
+
+    if (inactiveSandboxes.length > 0) {
+      this.logger.log(`Cleaning up ${inactiveSandboxes.length} inactive sandboxes`);
+      await Promise.allSettled(
+        inactiveSandboxes.map(sandboxId => this.destroySandbox(sandboxId))
+      );
     }
   }
 
@@ -256,29 +293,29 @@ export class PluginSandboxService {
   }
 
   private setupCommunicationChannel(sandbox: SandboxInstance): void {
-    sandbox.port.on('message', (message) => {
+    sandbox.port.on('message', (message: SandboxMessageTypes) => {
       switch (message.type) {
         case 'stats':
-          sandbox.memoryUsage = message.data.memoryUsage;
-          sandbox.cpuUsage = message.data.cpuUsage;
+          sandbox.memoryUsage = (message).data.memoryUsage;
+          sandbox.cpuUsage = (message).data.cpuUsage;
           break;
         case 'log':
           this.logger.debug(
-            `Sandbox ${sandbox.id}: ${message.data.message}`,
+            `Sandbox ${sandbox.id}: ${(message).data.message}`,
           );
           break;
         case 'error':
           this.logger.error(
-            `Sandbox ${sandbox.id} error: ${message.data.error}`,
+            `Sandbox ${sandbox.id} error: ${(message).data.error}`,
           );
-          sandbox.eventEmitter.emit('pluginError', message.data);
+          sandbox.eventEmitter.emit('pluginError', (message).data);
           break;
         case 'result':
-          sandbox.eventEmitter.emit('result', message.data);
+          sandbox.eventEmitter.emit('result', (message).data);
           break;
         default:
           this.logger.warn(
-            `Unknown message type from sandbox ${sandbox.id}: ${message.type}`,
+            `Unknown message type from sandbox ${sandbox.id}: ${String(message)}`,
           );
       }
     });
@@ -298,13 +335,13 @@ export class PluginSandboxService {
         reject(new Error('Plugin execution timeout'));
       }, this.defaultConfig.timeoutMs);
 
-      const resultHandler = (result: unknown) => {
+      const resultHandler = (result: unknown): void => {
         clearTimeout(timeout);
         sandbox.eventEmitter.removeListener('pluginError', errorHandler);
         resolve(result);
       };
 
-      const errorHandler = (error: unknown) => {
+      const errorHandler = (error: unknown): void => {
         clearTimeout(timeout);
         sandbox.eventEmitter.removeListener('result', resultHandler);
         reject(error instanceof Error ? error : new Error(String(error)));

@@ -21,11 +21,11 @@ export enum PluginCategory {
 export class CreatePluginUploadDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
-  version: string;
+  version!: string;
 
   @IsString()
   @IsOptional()
@@ -73,13 +73,13 @@ export class CreatePluginUploadDto {
 }
 
 export class PluginUploadResponseDto {
-  id: string;
-  name: string;
-  version: string;
-  status: 'uploaded' | 'validating' | 'validated' | 'published' | 'failed';
-  uploadedAt: Date;
+  id!: string;
+  name!: string;
+  version!: string;
+  status!: 'uploaded' | 'validating' | 'validated' | 'published' | 'failed';
+  uploadedAt!: Date;
   validationResults?: ValidationResults;
   downloadUrl?: string;
-  size: number;
-  checksum: string;
+  size!: number;
+  checksum!: string;
 }

@@ -137,7 +137,7 @@ export class HealthCheckService {
         status: response.status,
         timestamp: response.timestamp,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         name: 'system',
         status: 'unhealthy',

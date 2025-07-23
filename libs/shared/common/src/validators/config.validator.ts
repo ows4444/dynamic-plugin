@@ -62,7 +62,7 @@ export class ConfigValidator {
       return;
     }
 
-    if (!this.TYPE_VALIDATORS.object(value)) {
+    if (!((this.TYPE_VALIDATORS['object']?.(value)) ?? false)) {
       errors.push(`Expected object at ${path ?? 'root'}, got ${typeof value}`);
       return;
     }

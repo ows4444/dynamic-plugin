@@ -35,7 +35,7 @@ export class TreeShakingAnalyzer {
     try {
       const sourceFiles = await this.findSourceFiles(projectRoot);
       const exports = await this.extractExports(sourceFiles);
-      const usage = await this.analyzeUsage(sourceFiles, exports);
+      await this.analyzeUsage(sourceFiles, exports);
       const sideEffects = await this.detectSideEffects(sourceFiles);
       const circularDeps = await this.detectCircularDependencies(sourceFiles);
 
@@ -172,7 +172,7 @@ export class TreeShakingAnalyzer {
         // Function exports
         if (typescript.isFunctionDeclaration(node) && this.hasExportModifier(node)) {
           exports.push({
-            name: node.name?.text || 'anonymous',
+            name: node.name?.text ?? 'anonymous',
             type: 'function',
             isUsed: false,
             importedBy: [],
@@ -184,7 +184,7 @@ export class TreeShakingAnalyzer {
         // Class exports
         if (typescript.isClassDeclaration(node) && this.hasExportModifier(node)) {
           exports.push({
-            name: node.name?.text || 'anonymous',
+            name: node.name?.text ?? 'anonymous',
             type: 'class',
             isUsed: false,
             importedBy: [],
@@ -211,7 +211,7 @@ export class TreeShakingAnalyzer {
             if (typescript.isIdentifier(declaration.name)) {
               exports.push({
                 name: declaration.name.text,
-                type: typescript.isConstKeyword(node.declarationList.flags) ? 'const' : 'variable',
+                type: (node.declarationList.flags & typescript.NodeFlags.Const) ? 'const' : 'variable',
                 isUsed: false,
                 importedBy: [],
                 file: filePath,
@@ -322,7 +322,7 @@ export class TreeShakingAnalyzer {
         content.includes('process.') ||
         content.includes('require(') ||
         content.includes('import(') ||
-        /\w+\(\)/.test(content.split('\n')[0]); // Top-level function calls
+        /\w+\(\)/.test(content.split('\n')[0] ?? ''); // Top-level function calls
 
       if (hasSideEffects) {
         sideEffectModules.push(filePath);
@@ -356,7 +356,7 @@ export class TreeShakingAnalyzer {
       if (visited.has(file)) return;
 
       visiting.add(file);
-      const deps = dependencies.get(file) || [];
+      const deps = dependencies.get(file) ?? [];
       
       for (const dep of deps) {
         visit(dep, [...path, file]);
@@ -384,7 +384,7 @@ export class TreeShakingAnalyzer {
       const importPath = match[1];
       
       // Convert relative imports to absolute paths
-      if (importPath.startsWith('./') || importPath.startsWith('../')) {
+      if ((importPath != null) && (importPath.startsWith('./') || importPath.startsWith('../'))) {
         const absolutePath = path.resolve(path.dirname(currentFile), importPath);
         imports.push(absolutePath);
       }
@@ -394,7 +394,8 @@ export class TreeShakingAnalyzer {
   }
 
   private hasExportModifier(node: typescript.Node): boolean {
-    return node.modifiers?.some(mod => mod.kind === typescript.SyntaxKind.ExportKeyword) || false;
+    const nodeWithModifiers = node as typescript.Node & { modifiers?: typescript.ModifiersArray };
+    return nodeWithModifiers.modifiers?.some((mod: typescript.Modifier) => mod.kind === typescript.SyntaxKind.ExportKeyword) ?? false;
   }
 
   private optimizeImportStatement(importNode: typescript.ImportDeclaration): string {

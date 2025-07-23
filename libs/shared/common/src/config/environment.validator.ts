@@ -181,7 +181,7 @@ export class EnvironmentValidator {
       isValid: true,
       errors: [],
       warnings: [],
-      environment: process.env.NODE_ENV || 'development',
+      environment: process.env['NODE_ENV'] ?? 'development',
       config: {},
     };
 
@@ -217,7 +217,7 @@ export class EnvironmentValidator {
       result.isValid = false;
       result.errors = error.details.map(detail => {
         const requirement = this.requirements.find(req => req.key === detail.path[0]);
-        const description = requirement?.description || 'Unknown requirement';
+        const description = requirement?.description ?? 'Unknown requirement';
         return `${detail.message} (${description})`;
       });
     }
@@ -226,7 +226,7 @@ export class EnvironmentValidator {
       result.warnings = warning.details.map(detail => detail.message);
     }
 
-    result.config = value || {};
+    result.config = value ?? {};
 
     // Additional security checks for production
     if (result.environment === 'production') {
@@ -273,7 +273,7 @@ export class EnvironmentValidator {
         if (req.allowedValues) {
           doc += `  - Allowed values: ${req.allowedValues.join(', ')}\n`;
         }
-        if (req.minLength) {
+        if (req.minLength != null) {
           doc += `  - Minimum length: ${req.minLength}\n`;
         }
       });
@@ -284,7 +284,17 @@ export class EnvironmentValidator {
       .forEach(req => {
         doc += `- **${req.key}**: ${req.description}\n`;
         if (req.defaultValue !== undefined) {
-          doc += `  - Default: ${req.defaultValue}\n`;
+          let defaultValueStr: string;
+          if (typeof req.defaultValue === 'object' && req.defaultValue !== null) {
+            defaultValueStr = JSON.stringify(req.defaultValue);
+          } else if (req.defaultValue != null) {
+            defaultValueStr = typeof req.defaultValue === 'string' 
+              ? req.defaultValue 
+              : JSON.stringify(req.defaultValue);
+          } else {
+            defaultValueStr = 'undefined';
+          }
+          doc += `  - Default: ${defaultValueStr}\n`;
         }
         if (req.allowedValues) {
           doc += `  - Allowed values: ${req.allowedValues.join(', ')}\n`;
@@ -298,24 +308,28 @@ export class EnvironmentValidator {
     let schema: Joi.Schema;
 
     switch (requirement.type) {
-      case 'string':
-        schema = Joi.string();
-        if (requirement.minLength) {
-          schema = schema.min(requirement.minLength);
+      case 'string': {
+        let stringSchema = Joi.string();
+        if (requirement.minLength != null) {
+          stringSchema = stringSchema.min(requirement.minLength);
         }
-        if (requirement.maxLength) {
-          schema = schema.max(requirement.maxLength);
+        if (requirement.maxLength != null) {
+          stringSchema = stringSchema.max(requirement.maxLength);
         }
+        schema = stringSchema;
         break;
-      case 'number':
-        schema = Joi.number();
+      }
+      case 'number': {
+        let numberSchema = Joi.number();
         if (requirement.min !== undefined) {
-          schema = schema.min(requirement.min);
+          numberSchema = numberSchema.min(requirement.min);
         }
         if (requirement.max !== undefined) {
-          schema = schema.max(requirement.max);
+          numberSchema = numberSchema.max(requirement.max);
         }
+        schema = numberSchema;
         break;
+      }
       case 'boolean':
         schema = Joi.boolean();
         break;
@@ -361,7 +375,7 @@ export class EnvironmentValidator {
 
     for (const check of insecureChecks) {
       const value = result.config[check.key];
-      if (value && check.check(value)) {
+      if (value != null && typeof value === 'string' && check.check(value)) {
         result.warnings.push(check.message);
       }
     }

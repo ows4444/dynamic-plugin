@@ -1,5 +1,6 @@
 import type { CacheModuleOptions } from '@nestjs/cache-manager';
 import type { ConfigService } from '@nestjs/config';
+import { Logger } from '@nestjs/common';
 import { redisStore } from 'cache-manager-redis-store';
 import type { AppConfiguration } from './app.config';
 
@@ -30,7 +31,8 @@ export const createCacheConfig = async (
       max: 1000, // Maximum number of items in cache
     };
   } catch (error) {
-    console.warn('Redis connection failed, falling back to in-memory cache:', error);
+    const logger = new Logger('CacheConfig');
+    logger.warn('Redis connection failed, falling back to in-memory cache:', error);
     
     // Fallback to in-memory cache if Redis is not available
     return {

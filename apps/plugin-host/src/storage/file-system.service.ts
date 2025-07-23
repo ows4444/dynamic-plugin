@@ -11,7 +11,7 @@ export class FileSystemService implements StorageProvider {
   private readonly basePath: string;
 
   constructor() {
-    this.basePath = process.env.PLUGIN_STORAGE_PATH ?? './plugins';
+    this.basePath = process.env['PLUGIN_STORAGE_PATH'] ?? './plugins';
     void this.ensureBaseDirectory();
   }
 
@@ -122,8 +122,8 @@ export class FileSystemService implements StorageProvider {
       const checksum = crypto.createHash('sha256').update(data).digest('hex');
 
       const pathParts = filePath.split('/');
-      const pluginName = pathParts[0] || 'unknown';
-      const version = pathParts[1] || '1.0.0';
+      const pluginName = pathParts[0] ?? 'unknown';
+      const version = pathParts[1] ?? '1.0.0';
 
       return {
         pluginName,

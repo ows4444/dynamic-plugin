@@ -19,7 +19,8 @@ export * from './config/validation.schema';
 export * from './config/environment.validator';
 
 export * from './database/database.module';
-export * from './database/database.config';
+export type { DatabaseConfig as DbConfig } from './database/database.config';
+export { databaseConfig } from './database/database.config';
 export * from './database/query-optimizer.service';
 
 export * from './cache/cache-manager.service';

@@ -58,8 +58,8 @@ export class HealthController {
     description: 'System is unhealthy' 
   })
   async getHealth(@Query('detailed') detailed?: string): Promise<HealthCheckResponse> {
-    const includeDetails = detailed === 'true' || detailed === '1';
-    const healthStatus = await this.healthCheckService.performHealthCheck();
+    const _includeDetails = detailed === 'true' || detailed === '1';
+    const healthStatus: HealthCheckResponse = await this.healthCheckService.performHealthCheck();
     
     // Return appropriate HTTP status based on health
     if (healthStatus.status === 'unhealthy') {

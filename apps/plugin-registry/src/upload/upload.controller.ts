@@ -27,7 +27,7 @@ export class UploadController {
     @UploadedFile() file: Express.Multer.File,
     @Body() uploadDto: CreatePluginUploadDto,
   ) {
-    if (!file) {
+    if (file == null) {
       throw new BadRequestException('No file provided');
     }
 
@@ -55,7 +55,7 @@ export class UploadController {
   @Post('validate')
   @UseInterceptors(FileInterceptor('file'))
   async validatePlugin(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
+    if (file == null) {
       throw new BadRequestException('No file provided');
     }
 

@@ -6,7 +6,7 @@ import { CloudStorageService } from './cloud-storage.service';
 
 describe('CloudStorageService', () => {
   let service: CloudStorageService;
-  let configService: ConfigService;
+  let _config: ConfigService;
 
   const mockConfigService = {
     get: jest.fn((key: string, defaultValue?: any) => {
@@ -80,7 +80,7 @@ describe('CloudStorageService', () => {
     it('should upload a readable stream successfully', async () => {
       const key = 'test-stream.txt';
       const data = new Readable({
-        read() {
+        read(): void {
           this.push('stream content');
           this.push(null);
         },
@@ -228,13 +228,13 @@ describe('CloudStorageService', () => {
 
       // Mock download and upload
       const mockStream = new Readable({
-        read() {
+        read(): void {
           this.push('mock content');
           this.push(null);
         },
       });
       
-      jest.spyOn(service, 'download').mockResolvedValue({
+      const downloadSpy = jest.spyOn(service, 'download').mockResolvedValue({
         stream: mockStream,
         metadata: {
           key: sourceKey,
@@ -244,7 +244,7 @@ describe('CloudStorageService', () => {
         },
       });
       
-      jest.spyOn(service, 'upload').mockResolvedValue({
+      const uploadSpy = jest.spyOn(service, 'upload').mockResolvedValue({
         key: destinationKey,
         size: 100,
         lastModified: new Date(),
@@ -255,8 +255,8 @@ describe('CloudStorageService', () => {
 
       expect(result).toBeDefined();
       expect(result.key).toBe(destinationKey);
-      expect(service.download).toHaveBeenCalledWith(sourceKey, {}, undefined);
-      expect(service.upload).toHaveBeenCalledWith(destinationKey, mockStream, {}, undefined);
+      expect(downloadSpy).toHaveBeenCalledWith(sourceKey, {}, undefined);
+      expect(uploadSpy).toHaveBeenCalledWith(destinationKey, mockStream, {}, undefined);
     });
 
     it('should copy between different providers', async () => {
@@ -267,13 +267,13 @@ describe('CloudStorageService', () => {
       const options = { contentType: 'text/plain' };
 
       const mockStream = new Readable({
-        read() {
+        read(): void {
           this.push('mock content');
           this.push(null);
         },
       });
       
-      jest.spyOn(service, 'download').mockResolvedValue({
+      const downloadSpy2 = jest.spyOn(service, 'download').mockResolvedValue({
         stream: mockStream,
         metadata: {
           key: sourceKey,
@@ -283,7 +283,7 @@ describe('CloudStorageService', () => {
         },
       });
       
-      jest.spyOn(service, 'upload').mockResolvedValue({
+      const uploadSpy2 = jest.spyOn(service, 'upload').mockResolvedValue({
         key: destinationKey,
         size: 100,
         lastModified: new Date(),
@@ -292,8 +292,8 @@ describe('CloudStorageService', () => {
 
       await service.copy(sourceKey, destinationKey, sourceProvider, destinationProvider, options);
 
-      expect(service.download).toHaveBeenCalledWith(sourceKey, {}, sourceProvider);
-      expect(service.upload).toHaveBeenCalledWith(destinationKey, mockStream, options, destinationProvider);
+      expect(downloadSpy2).toHaveBeenCalledWith(sourceKey, {}, sourceProvider);
+      expect(uploadSpy2).toHaveBeenCalledWith(destinationKey, mockStream, options, destinationProvider);
     });
   });
 

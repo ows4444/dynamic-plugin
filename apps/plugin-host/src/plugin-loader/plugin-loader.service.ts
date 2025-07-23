@@ -9,7 +9,7 @@ interface PluginModuleClass {
 }
 interface PluginModule {
   default?: PluginModuleClass | Record<string, unknown>;
-  PluginModule?: PluginModuleClass;
+  pluginModule?: PluginModuleClass;
   [key: string]: unknown;
 }
 interface PluginMetadata {

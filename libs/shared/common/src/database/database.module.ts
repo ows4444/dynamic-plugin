@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Logger, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -69,6 +69,9 @@ import { DataSource } from 'typeorm';
       }),
       inject: [ConfigService],
       dataSourceFactory: async (options) => {
+        if (!options) {
+          throw new Error('Database options are required');
+        }
         const dataSource = new DataSource(options);
         await dataSource.initialize();
         return dataSource;
@@ -78,10 +81,12 @@ import { DataSource } from 'typeorm';
   exports: [TypeOrmModule],
 })
 export class DatabaseModule {
+  private readonly logger = new Logger(DatabaseModule.name);
+  
   constructor(private readonly dataSource: DataSource) {
     // Log connection status
     if (this.dataSource.isInitialized) {
-      console.log('✅ Database connection established successfully');
+      this.logger.log('✅ Database connection established successfully');
     }
   }
 }

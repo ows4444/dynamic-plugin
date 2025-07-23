@@ -148,7 +148,7 @@ export default registerAs(
       ), // 1 hour
       maxSearchResults: parseInt(process.env.SEARCH_MAX_RESULTS ?? '100', 10),
       enableFuzzySearch: process.env.SEARCH_FUZZY === 'true',
-      searchEngine: (process.env.SEARCH_ENGINE as 'elasticsearch' | 'postgresql' | 'sqlite') ?? 'postgresql',
+      searchEngine: (process.env.SEARCH_ENGINE as 'elasticsearch' | 'postgresql' | 'sqlite' | undefined) ?? 'postgresql',
     },
 
     cdn: {

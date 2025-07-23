@@ -134,7 +134,7 @@ export default registerAs(
       enabled: process.env['PLUGIN_CACHE_ENABLED'] !== 'false',
       ttlMs: parseInt(process.env['PLUGIN_CACHE_TTL_MS'] ?? '1800000', 10), // 30 minutes
       maxSize: parseInt(process.env['PLUGIN_CACHE_MAX_SIZE'] ?? '1000', 10),
-      strategy: (process.env['PLUGIN_CACHE_STRATEGY'] as 'lru' | 'lfu' | 'fifo') ?? 'lru',
+      strategy: (process.env['PLUGIN_CACHE_STRATEGY'] ?? 'lru') as 'lru' | 'lfu' | 'fifo',
       enablePersistence: process.env['PLUGIN_CACHE_PERSISTENCE'] === 'true',
       persistenceInterval: parseInt(
         process.env['PLUGIN_CACHE_PERSISTENCE_INTERVAL'] ?? '300000',

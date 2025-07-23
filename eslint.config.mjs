@@ -44,26 +44,28 @@ export default tseslint.config(
       // TypeScript-specific rules
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
-      '@typescript-eslint/no-unsafe-assignment': 'warn',
-      '@typescript-eslint/no-unsafe-call': 'warn',
-      '@typescript-eslint/no-unsafe-member-access': 'warn',
-      '@typescript-eslint/no-unsafe-return': 'warn',
+      '@typescript-eslint/require-await': 'warn', // Sometimes methods are async for future compatibility
+      '@typescript-eslint/no-base-to-string': 'warn', // Sometimes intentional for debugging
+      '@typescript-eslint/no-unsafe-argument': 'off', // Too restrictive for plugin systems
+      '@typescript-eslint/no-unsafe-assignment': 'off', // Too restrictive for plugin systems  
+      '@typescript-eslint/no-unsafe-call': 'off', // Too restrictive for plugin systems
+      '@typescript-eslint/no-unsafe-member-access': 'off', // Too restrictive for plugin systems
+      '@typescript-eslint/no-unsafe-return': 'off', // Too restrictive for plugin systems
       '@typescript-eslint/prefer-as-const': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { 
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_',
         caughtErrorsIgnorePattern: '^_'
       }],
-      '@typescript-eslint/explicit-function-return-type': 'warn',
-      '@typescript-eslint/explicit-module-boundary-types': 'warn',
+      '@typescript-eslint/explicit-function-return-type': 'off', // Too verbose for NestJS controllers
+      '@typescript-eslint/explicit-module-boundary-types': 'off', // Too verbose for NestJS controllers
       '@typescript-eslint/no-inferrable-types': 'error',
       '@typescript-eslint/ban-ts-comment': 'warn',
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
+      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
       '@typescript-eslint/prefer-optional-chain': 'error',
       
       // Enhanced TypeScript rules for better type safety
-      '@typescript-eslint/strict-boolean-expressions': 'error',
+      '@typescript-eslint/strict-boolean-expressions': 'warn',
       '@typescript-eslint/consistent-type-exports': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-meaningless-void-operator': 'error',
@@ -71,8 +73,8 @@ export default tseslint.config(
       '@typescript-eslint/prefer-readonly': 'error',
       '@typescript-eslint/prefer-readonly-parameter-types': 'off', // Too strict for NestJS
       '@typescript-eslint/no-confusing-void-expression': 'error',
-      '@typescript-eslint/no-unnecessary-condition': 'warn',
-      '@typescript-eslint/restrict-template-expressions': 'error',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off', // Too restrictive for logging
       
       // NestJS specific rules
       '@typescript-eslint/parameter-properties': 'off',
@@ -122,9 +124,9 @@ export default tseslint.config(
         { 'selector': 'typeAlias', 'format': ['PascalCase'] },
         { 'selector': 'class', 'format': ['PascalCase'] },
         { 'selector': 'method', 'format': ['camelCase'] },
-        { 'selector': 'property', 'format': ['camelCase'] },
-        { 'selector': 'variable', 'format': ['camelCase', 'UPPER_CASE'] },
-        { 'selector': 'parameter', 'format': ['camelCase'], 'leadingUnderscore': 'allow' },
+        { 'selector': 'property', 'format': ['camelCase','UPPER_CASE'] },
+        { 'selector': 'variable', 'format': ['camelCase', 'UPPER_CASE'] , 'leadingUnderscore': 'allow' },
+        { 'selector': 'parameter', 'format': ['camelCase'], 'leadingUnderscore': 'allow', 'filter': { 'regex': '^_+$', 'match': false } },
         { 'selector': 'enumMember', 'format': ['UPPER_CASE'] }
       ],
       

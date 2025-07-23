@@ -50,11 +50,11 @@ export interface AppConfiguration {
 
 export const appConfig: ConfigFactory<AppConfiguration> = () => ({
   port: parseInt(process.env['PORT'] ?? '3000', 10),
-  environment: (process.env['NODE_ENV'] as AppConfiguration['environment']) ?? 'development',
-  logLevel: (process.env['LOG_LEVEL'] as AppConfiguration['logLevel']) ?? 'info',
+  environment: (process.env['NODE_ENV'] as AppConfiguration['environment']) || 'development',
+  logLevel: (process.env['LOG_LEVEL'] as AppConfiguration['logLevel']) || 'info',
   
   database: {
-    type: (process.env['DB_TYPE'] as DatabaseConfig['type']) ?? 'postgres',
+    type: (process.env['DB_TYPE'] as DatabaseConfig['type']) || 'postgres',
     host: process.env['DB_HOST'] ?? 'localhost',
     port: parseInt(process.env['DB_PORT'] ?? '5432', 10),
     username: process.env['DB_USERNAME'] ?? 'postgres',
@@ -68,7 +68,7 @@ export const appConfig: ConfigFactory<AppConfiguration> = () => ({
   redis: {
     host: process.env['REDIS_HOST'] ?? 'localhost',
     port: parseInt(process.env['REDIS_PORT'] ?? '6379', 10),
-    password: process.env['REDIS_PASSWORD'],
+    ...((process.env['REDIS_PASSWORD'] != null) && { password: process.env['REDIS_PASSWORD'] }),
     database: parseInt(process.env['REDIS_DATABASE'] ?? '0', 10),
     keyPrefix: process.env['REDIS_KEY_PREFIX'] ?? 'plugin:',
   },
@@ -94,5 +94,5 @@ export const appConfig: ConfigFactory<AppConfiguration> = () => ({
 
 // Type-safe configuration getter
 export function getConfig(): AppConfiguration {
-  return appConfig();
+  return appConfig() as AppConfiguration;
 }

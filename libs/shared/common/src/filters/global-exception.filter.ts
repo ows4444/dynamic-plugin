@@ -29,7 +29,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       method: request.method,
       message,
       error,
-      ...(process.env.NODE_ENV !== 'production' && {
+      ...(process.env['NODE_ENV'] !== 'production' && {
         stack: exception instanceof Error ? exception.stack : undefined,
       }),
     };
@@ -74,7 +74,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       return {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
         message:
-          process.env.NODE_ENV === 'production'
+          process.env['NODE_ENV'] === 'production'
             ? 'Internal server error'
             : exception.message,
         error: exception.name,

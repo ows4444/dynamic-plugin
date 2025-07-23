@@ -9,8 +9,8 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { CreateTokenDto, JwtAuthService } from './jwt-auth.service';
 import { AuthGuard } from './auth.guard';
+import { CreateTokenDto, JwtAuthService } from './jwt-auth.service';
 
 @Controller('auth')
 export class AuthController {
@@ -18,7 +18,7 @@ export class AuthController {
 
   @Post('tokens')
   @UseGuards(AuthGuard)
-  async createToken(@Body() createTokenDto: CreateTokenDto) {
+  async createToken(@Body() createTokenDto: CreateTokenDto): Promise<{token: string; tokenInfo: {id: string; userId: string; name: string; permissions: string[]; createdAt: Date; expiresAt: Date; lastUsed: Date | null}}> {
     const result = await this.jwtAuthService.createToken(createTokenDto);
     
     return {
@@ -26,17 +26,18 @@ export class AuthController {
       tokenInfo: {
         id: result.tokenInfo.id,
         userId: result.tokenInfo.userId,
-        username: result.tokenInfo.username,
+        name: result.tokenInfo.username ?? result.tokenInfo.userId,
         permissions: result.tokenInfo.permissions,
         expiresAt: result.tokenInfo.expiresAt,
         createdAt: result.tokenInfo.createdAt,
+        lastUsed: result.tokenInfo.lastUsed ?? null,
       },
     };
   }
 
   @Post('tokens/refresh')
   @UseGuards(AuthGuard)
-  async refreshToken(@Body('token') token: string) {
+  async refreshToken(@Body('token') token: string): Promise<{token?: string; tokenInfo?: unknown; error?: string}> {
     const result = await this.jwtAuthService.refreshToken(token);
     
     if (!result) {
@@ -48,10 +49,11 @@ export class AuthController {
       tokenInfo: {
         id: result.tokenInfo.id,
         userId: result.tokenInfo.userId,
-        username: result.tokenInfo.username,
+        name: result.tokenInfo.username ?? result.tokenInfo.userId,
         permissions: result.tokenInfo.permissions,
         expiresAt: result.tokenInfo.expiresAt,
         createdAt: result.tokenInfo.createdAt,
+        lastUsed: result.tokenInfo.lastUsed ?? null,
       },
     };
   }
@@ -59,23 +61,23 @@ export class AuthController {
   @Delete('tokens/:token')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async revokeToken(@Param('token') token: string) {
+  async revokeToken(@Param('token') token: string): Promise<void> {
     await this.jwtAuthService.revokeToken(token);
   }
 
   @Get('tokens/stats')
   @UseGuards(AuthGuard)
-  async getTokenStats() {
+  async getTokenStats(): Promise<unknown> {
     return this.jwtAuthService.getTokenStats();
   }
 
   @Post('tokens/validate')
-  async validateToken(@Body('token') token: string) {
+  async validateToken(@Body('token') token: string): Promise<{isValid: boolean; tokenInfo: unknown}> {
     const isValid = await this.jwtAuthService.validateToken(token);
     const tokenInfo = isValid ? await this.jwtAuthService.getTokenInfo(token) : null;
 
     return {
-      valid: isValid,
+      isValid,
       tokenInfo: tokenInfo ? {
         id: tokenInfo.id,
         userId: tokenInfo.userId,

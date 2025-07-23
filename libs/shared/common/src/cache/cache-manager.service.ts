@@ -50,7 +50,7 @@ export class CacheManagerService {
       return value;
     } catch (error) {
       this.stats.errors++;
-      this.logger.error(`Cache GET error for key ${key}: ${error.message}`);
+      this.logger.error(`Cache GET error for key ${key}: ${error instanceof Error ? error.message : String(error)}`);
       return undefined;
     }
   }
@@ -71,7 +71,7 @@ export class CacheManagerService {
       this.logger.debug(`Cache SET for key: ${fullKey}, TTL: ${options.ttl ?? 'default'}`);
     } catch (error) {
       this.stats.errors++;
-      this.logger.error(`Cache SET error for key ${key}: ${error.message}`);
+      this.logger.error(`Cache SET error for key ${key}: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -88,7 +88,7 @@ export class CacheManagerService {
       this.logger.debug(`Cache DELETE for key: ${fullKey}`);
     } catch (error) {
       this.stats.errors++;
-      this.logger.error(`Cache DELETE error for key ${key}: ${error.message}`);
+      this.logger.error(`Cache DELETE error for key ${key}: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -103,7 +103,7 @@ export class CacheManagerService {
       return value !== undefined;
     } catch (error) {
       this.stats.errors++;
-      this.logger.error(`Cache HAS error for key ${key}: ${error.message}`);
+      this.logger.error(`Cache HAS error for key ${key}: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     }
   }
@@ -131,7 +131,7 @@ export class CacheManagerService {
   /**
    * Delete multiple keys by pattern
    */
-  async deleteByPattern(pattern: string, namespace?: string): Promise<void> {
+  deleteByPattern(pattern: string, namespace?: string): void {
     try {
       const fullPattern = this.buildKey(pattern, namespace);
       
@@ -143,7 +143,7 @@ export class CacheManagerService {
       // This is a placeholder for pattern-based deletion
     } catch (error) {
       this.stats.errors++;
-      this.logger.error(`Cache DELETE by pattern error: ${error.message}`);
+      this.logger.error(`Cache DELETE by pattern error: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -151,13 +151,13 @@ export class CacheManagerService {
   /**
    * Clear entire cache namespace
    */
-  async clearNamespace(namespace: string): Promise<void> {
+  clearNamespace(namespace: string): void {
     try {
-      await this.deleteByPattern('*', namespace);
+      this.deleteByPattern('*', namespace);
       this.logger.log(`Cleared cache namespace: ${namespace}`);
     } catch (error) {
       this.stats.errors++;
-      this.logger.error(`Cache CLEAR namespace error: ${error.message}`);
+      this.logger.error(`Cache CLEAR namespace error: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -171,7 +171,7 @@ export class CacheManagerService {
       this.logger.log('Cache completely reset');
     } catch (error) {
       this.stats.errors++;
-      this.logger.error(`Cache RESET error: ${error.message}`);
+      this.logger.error(`Cache RESET error: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }

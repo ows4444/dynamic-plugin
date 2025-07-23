@@ -230,7 +230,7 @@ export function withPerformanceMonitoring<T extends (...args: unknown[]) => unkn
   } = options;
 
   const registry = PerformanceMonitoringRegistry.getInstance();
-  const logger = new Logger('PerformanceMonitoring');
+  const _logger = new Logger('PerformanceMonitoring');
 
   return ((...args: Parameters<T>): ReturnType<T> => {
     const startTime = performance.now();

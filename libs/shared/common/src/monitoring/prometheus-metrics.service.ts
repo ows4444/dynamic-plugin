@@ -140,7 +140,7 @@ export class PrometheusMetricsService implements OnModuleInit, OnModuleDestroy {
     const labels = {
       method: method.toLowerCase(),
       route: this.sanitizeRoute(route),
-      status_code: statusCode.toString(),
+      statusCode: statusCode.toString(),
       service,
     };
 
@@ -159,14 +159,14 @@ export class PrometheusMetricsService implements OnModuleInit, OnModuleDestroy {
     service = 'plugin-host'
   ): void {
     const operationLabels = {
-      plugin_id: pluginId,
+      pluginId,
       operation,
       status,
       service,
     };
 
     const durationLabels = {
-      plugin_id: pluginId,
+      pluginId,
       operation,
       service,
     };

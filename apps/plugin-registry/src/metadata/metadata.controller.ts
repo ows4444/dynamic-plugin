@@ -1,6 +1,4 @@
 import {
-  CacheResponse10Minutes,
-  CacheResponse5Minutes,
   getErrorMessage
 } from '@lib/shared/common';
 import {
@@ -36,7 +34,7 @@ export class MetadataController {
     @Query('offset') offset?: number,
     @Query('sortBy') sortBy?: string,
     @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
-  ) {
+  ): Promise<unknown> {
     try {
       const query: PluginSearchQuery = {
         name,
@@ -73,8 +71,7 @@ export class MetadataController {
   }
 
   @Get('stats')
-  @CacheResponse5Minutes()
-  async getPluginStats() {
+    async getPluginStats(): Promise<unknown> {
     try {
       const stats = await this.metadataService.getPluginStats();
 
@@ -89,8 +86,7 @@ export class MetadataController {
   }
 
   @Get('popular')
-  @CacheResponse10Minutes()
-  async getPopularPlugins(@Query('limit') limit?: number) {
+    async getPopularPlugins(@Query('limit') limit?: number): Promise<unknown> {
     try {
       const plugins = await this.metadataService.getPopularPlugins(limit ?? 10);
 
@@ -105,8 +101,7 @@ export class MetadataController {
   }
 
   @Get('recent')
-  @CacheResponse10Minutes()
-  async getRecentPlugins(@Query('limit') limit?: number) {
+    async getRecentPlugins(@Query('limit') limit?: number): Promise<unknown> {
     try {
       const plugins = await this.metadataService.getRecentPlugins(limit ?? 10);
 
@@ -121,8 +116,7 @@ export class MetadataController {
   }
 
   @Get(':id')
-  @CacheResponse5Minutes()
-  async getPluginById(@Param('id') id: string) {
+    async getPluginById(@Param('id') id: string): Promise<unknown> {
     try {
       const plugin = await this.metadataService.findPluginById(id);
 
@@ -141,8 +135,7 @@ export class MetadataController {
   }
 
   @Get('name/:name')
-  @CacheResponse5Minutes()
-  async getPluginsByName(@Param('name') name: string) {
+    async getPluginsByName(@Param('name') name: string): Promise<unknown> {
     try {
       const plugins = await this.metadataService.findPluginsByName(name);
 
@@ -159,8 +152,7 @@ export class MetadataController {
   }
 
   @Get(':name/:version')
-  @CacheResponse5Minutes()
-  async getPluginByNameVersion(
+    async getPluginByNameVersion(
     @Param('name') name: string,
     @Param('version') version: string,
   ) {
@@ -232,7 +224,7 @@ export class MetadataController {
   }
 
   @Delete(':id')
-  async deletePlugin(@Param('id') id: string) {
+  async deletePlugin(@Param('id') id: string): Promise<{ success: boolean; message: string }> {
     try {
       await this.metadataService.deletePlugin(id);
 

@@ -1,7 +1,7 @@
+import { getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getErrorMessage } from '@lib/shared/common';
 
 export interface PluginMetadata {
   id: string;
@@ -100,30 +100,33 @@ export class MetadataService {
         
         // Extract author string if it's an object
         const authorString = typeof packageJson.author === 'object' 
-          ? packageJson.author?.name ?? 'Unknown'
+          ? packageJson.author.name ?? 'Unknown'
           : packageJson.author;
         
         // Extract repository URL if it's an object
         const repositoryUrl = typeof packageJson.repository === 'object'
-          ? packageJson.repository?.url
+          ? packageJson.repository.url
           : packageJson.repository;
         
+        // Build metadata object with only defined values
         metadata = {
-          id: packageJson.name,
-          name: packageJson.name,
-          version: packageJson.version,
-          description: packageJson.description,
-          author: authorString,
-          license: packageJson.license,
-          repository: repositoryUrl,
-          homepage: packageJson.homepage,
-          keywords: packageJson.keywords,
-          dependencies: packageJson.dependencies,
-          peerDependencies: packageJson.peerDependencies,
-          engines: packageJson.engines,
-          main: packageJson.main,
-          files: packageJson.files,
+          id: packageJson.name ?? '',
+          name: packageJson.name ?? '',
+          version: packageJson.version ?? '',
+          description: packageJson.description ?? '',
+          author: authorString ?? '',
         };
+
+        // Add optional properties only if they are defined
+        if (packageJson.license != null) metadata.license = packageJson.license;
+        if (repositoryUrl != null) metadata.repository = repositoryUrl;
+        if (packageJson.homepage != null) metadata.homepage = packageJson.homepage;
+        if (packageJson.keywords) metadata.keywords = packageJson.keywords;
+        if (packageJson.dependencies) metadata.dependencies = packageJson.dependencies;
+        if (packageJson.peerDependencies) metadata.peerDependencies = packageJson.peerDependencies;
+        if (packageJson.engines) metadata.engines = packageJson.engines;
+        if (packageJson.main != null) metadata.main = packageJson.main;
+        if (packageJson.files) metadata.files = packageJson.files;
       }
 
       // Read plugin manifest if it exists (override package.json values)
@@ -133,7 +136,7 @@ export class MetadataService {
       }
 
       // Ensure required fields
-      if (!metadata.id || !metadata.name || !metadata.version) {
+      if ((metadata.id == null) || metadata.id === '' || (metadata.name == null) || metadata.name === '' || (metadata.version == null) || metadata.version === '') {
         throw new Error('Missing required metadata fields (id, name, version)');
       }
 
@@ -156,9 +159,10 @@ export class MetadataService {
 
     try {
       // Check required fields
-      const requiredFields = ['id', 'name', 'version', 'description', 'author'];
+      const requiredFields: (keyof PluginMetadata)[] = ['id', 'name', 'version', 'description', 'author'];
       for (const field of requiredFields) {
-        if (!metadata[field]) {
+        const value = metadata[field];
+        if (value == null || value === '') {
           this.logger.error(`Missing required field: ${field}`);
           return Promise.resolve(false);
         }

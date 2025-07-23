@@ -17,6 +17,7 @@ export class MetricsController {
     status: 200,
     description: 'Metrics data in Prometheus format',
     content: {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       'text/plain': {
         example: `# HELP http_requests_total Total number of HTTP requests
 # TYPE http_requests_total counter

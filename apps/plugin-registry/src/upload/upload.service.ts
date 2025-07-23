@@ -2,7 +2,7 @@ import { getErrorMessage } from '@lib/shared/common';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as tar from 'tar';
-import { MetadataService } from '../metadata/metadata.service';
+import { MetadataService, ValidationResults } from '../metadata/metadata.service';
 import { StorageService } from '../storage/storage.service';
 import { ValidationService } from '../validation/validation.service';
 import { CreatePluginUploadDto, PluginUploadResponseDto } from './upload.dto';
@@ -148,7 +148,16 @@ export class UploadService {
         version: uploadDto.version,
         status: 'validated',
         uploadedAt: new Date(),
-        validationResults: validation,
+        validationResults: {
+          ...validation,
+          *[Symbol.iterator]() {
+            for (const key in this) {
+              if (Object.prototype.hasOwnProperty.call(this, key) && key !== Symbol.iterator as unknown) {
+                yield [key, this[key]];
+              }
+            }
+          },
+        } as ValidationResults,
         downloadUrl: `/plugins/${metadata.id}/download`,
         size: file.size,
         checksum,

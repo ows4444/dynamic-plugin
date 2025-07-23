@@ -291,17 +291,34 @@ export class CloudStorageService {
     const successful: string[] = [];
     const failed: Array<{ key: string; error: string }> = [];
 
-    for (const key of keys) {
+    const deletePromises = keys.map(async (key) => {
       try {
         await this.performDelete(provider, key);
-        successful.push(key);
+        return { success: true, key };
       } catch (error) {
+        return { success: false, key, error: getErrorMessage(error) };
+      }
+    });
+
+    const results = await Promise.allSettled(deletePromises);
+    
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        if (result.value.success) {
+          successful.push(result.value.key);
+        } else {
+          failed.push({
+            key: result.value.key ?? 'unknown',
+            error: result.value.error ?? 'Unknown error',
+          });
+        }
+      } else {
         failed.push({
-          key,
-          error: getErrorMessage(error),
+          key: keys[index] ?? `unknown-${index}`,
+          error: getErrorMessage(result.reason),
         });
       }
-    }
+    });
 
     this.logger.log(
       `Bulk delete completed: ${successful.length} successful, ${failed.length} failed`
@@ -332,11 +349,11 @@ export class CloudStorageService {
 
     // Initialize S3 provider if configured
     const s3Config = {
-      region: this.configService.get('AWS_REGION'),
-      bucket: this.configService.get('AWS_S3_BUCKET'),
-      accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-      secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
-      endpoint: this.configService.get('AWS_S3_ENDPOINT'),
+      region: this.configService.get<string>('AWS_REGION'),
+      bucket: this.configService.get<string>('AWS_S3_BUCKET'),
+      accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
+      secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
+      endpoint: this.configService.get<string>('AWS_S3_ENDPOINT'),
     };
 
     if ((Boolean(s3Config.bucket)) && (Boolean(s3Config.region))) {
@@ -348,9 +365,9 @@ export class CloudStorageService {
 
     // Initialize GCS provider if configured
     const gcsConfig = {
-      bucket: this.configService.get('GCP_STORAGE_BUCKET'),
-      keyFilename: this.configService.get('GCP_SERVICE_ACCOUNT_KEY_FILE'),
-      projectId: this.configService.get('GCP_PROJECT_ID'),
+      bucket: this.configService.get<string>('GCP_STORAGE_BUCKET'),
+      keyFilename: this.configService.get<string>('GCP_SERVICE_ACCOUNT_KEY_FILE'),
+      projectId: this.configService.get<string>('GCP_PROJECT_ID'),
     };
 
     if ((Boolean(gcsConfig.bucket)) && (Boolean(gcsConfig.keyFilename))) {
@@ -362,10 +379,10 @@ export class CloudStorageService {
 
     // Initialize Azure provider if configured
     const azureConfig = {
-      connectionString: this.configService.get('AZURE_STORAGE_CONNECTION_STRING'),
-      containerName: this.configService.get('AZURE_STORAGE_CONTAINER'),
-      accountName: this.configService.get('AZURE_STORAGE_ACCOUNT_NAME'),
-      accountKey: this.configService.get('AZURE_STORAGE_ACCOUNT_KEY'),
+      connectionString: this.configService.get<string>('AZURE_STORAGE_CONNECTION_STRING'),
+      containerName: this.configService.get<string>('AZURE_STORAGE_CONTAINER'),
+      accountName: this.configService.get<string>('AZURE_STORAGE_ACCOUNT_NAME'),
+      accountKey: this.configService.get<string>('AZURE_STORAGE_ACCOUNT_KEY'),
     };
 
     if ((Boolean(azureConfig.connectionString)) && (Boolean(azureConfig.containerName))) {
@@ -408,7 +425,7 @@ export class CloudStorageService {
   ): Promise<{ stream: Readable; metadata: StorageObject }> {
     // Mock implementation
     const stream = new Readable({
-      read() {
+      read(): void {
         this.push(Buffer.from('mock file content'));
         this.push(null);
       },

@@ -1,20 +1,13 @@
+import { getErrorMessage } from '@lib/shared/common';
+import { IPlugin } from '@lib/shared/plugin-types';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { IPlugin } from '@lib/shared/plugin-types';
-import { getErrorMessage } from '@lib/shared/common';
 import {
   PluginInstance,
   PluginInstanceService,
 } from './plugin-instance.service';
 import { PluginSecurityService } from './plugin-security.service';
 
-interface _WebSocketLike {
-  readyState: number;
-  send(data: string | Buffer): void;
-  close(code?: number, reason?: string): void;
-  on(event: string, listener: (...args: unknown[]) => void): void;
-  off(event: string, listener: (...args: unknown[]) => void): void;
-}
 
 export interface ProxyContext {
   request: Request;
@@ -56,7 +49,7 @@ export class PluginProxyService {
 
     try {
       const instance = this.instanceService.getInstance(instanceId);
-      if (!instance) {
+      if (instance == null) {
         throw new BadRequestException(
           `Plugin instance not found: ${instanceId}`,
         );
@@ -83,7 +76,7 @@ export class PluginProxyService {
     data: unknown,
   ): Promise<void> {
     const instance = this.instanceService.getInstance(instanceId);
-    if (!instance) {
+    if (instance == null) {
       throw new Error(`Plugin instance not found: ${instanceId}`);
     }
 
@@ -125,10 +118,16 @@ export class PluginProxyService {
       route,
       method: method.toUpperCase(),
       body,
-      query,
-      params,
       headers: this.filterHeaders(headers),
     };
+
+    if (query !== undefined) {
+      requestData.query = query;
+    }
+
+    if (params !== undefined) {
+      requestData.params = params;
+    }
 
     try {
       if (instance.instance.handleRequest) {
@@ -140,7 +139,7 @@ export class PluginProxyService {
         method,
         route,
       );
-      if (methodHandler) {
+      if (methodHandler != null) {
         return await methodHandler.call(instance.instance, requestData);
       }
 
@@ -158,13 +157,13 @@ export class PluginProxyService {
   ): PluginMethodHandler | null {
     const methodName = `handle${method.toUpperCase()}`;
 
-    if (typeof pluginInstance[methodName] === 'function') {
-      return pluginInstance[methodName] as PluginMethodHandler;
+    if (typeof (pluginInstance as unknown as Record<string, unknown>)[methodName] === 'function') {
+      return (pluginInstance as unknown as Record<string, unknown>)[methodName] as PluginMethodHandler;
     }
 
     const routeHandler = `handle${this.routeToMethodName(route)}`;
-    if (typeof pluginInstance[routeHandler] === 'function') {
-      return pluginInstance[routeHandler] as PluginMethodHandler;
+    if (typeof (pluginInstance as unknown as Record<string, unknown>)[routeHandler] === 'function') {
+      return (pluginInstance as unknown as Record<string, unknown>)[routeHandler] as PluginMethodHandler;
     }
 
     return null;

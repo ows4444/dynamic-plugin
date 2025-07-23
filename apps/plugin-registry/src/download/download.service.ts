@@ -123,10 +123,11 @@ export class DownloadService {
       throw new Error('Invalid range header');
     }
 
-    return this.storageService.createReadStream(metadata.filePath, {
-      start: range.start,
-      end: range.end,
-    });
+    const options: { start: number; end?: number } = { start: range.start };
+    if (range.end !== undefined) {
+      options.end = range.end;
+    }
+    return this.storageService.createReadStream(metadata.filePath, options);
   }
 
   async resolvePluginId(name: string, version: string): Promise<string | null> {
@@ -154,8 +155,8 @@ export class DownloadService {
         pluginName: metadata.name,
         version: metadata.version,
         timestamp: new Date(),
-        ipAddress,
-        userAgent,
+        ipAddress: ipAddress ?? 'unknown',
+        userAgent: userAgent ?? 'unknown',
       };
 
       this.downloadHistory.push(downloadRecord);
@@ -197,14 +198,21 @@ export class DownloadService {
       pluginDownloads.set(key, (pluginDownloads.get(key) ?? 0) + 1);
 
       const dateKey = record.timestamp.toISOString().split('T')[0];
-      downloadsByDate.set(dateKey, (downloadsByDate.get(dateKey) ?? 0) + 1);
+      if (dateKey != null) {
+        downloadsByDate.set(dateKey, (downloadsByDate.get(dateKey) ?? 0) + 1);
+      }
     }
 
     const topPlugins = Array.from(pluginDownloads.entries())
       .map(([key, downloads]) => {
         const [pluginId, nameVersion] = key.split(':');
-        const [name, version] = nameVersion!.split('@');
-        return { id: pluginId, name, version, downloads };
+        const [name, version] = (nameVersion ?? '').split('@');
+        return { 
+          id: pluginId ?? 'unknown', 
+          name: name ?? 'unknown', 
+          version: version ?? 'unknown', 
+          downloads 
+        };
       })
       .sort((a, b) => b.downloads - a.downloads)
       .slice(0, limit);
@@ -247,10 +255,14 @@ export class DownloadService {
       return null;
     }
 
-    const start = parseInt(match[1], 10);
-    const end = (match[2] != null) ? parseInt(match[2], 10) : undefined;
+    const start = parseInt(match[1] ?? '0', 10);
+    const end = (match[2] != null && match[2]) ? parseInt(match[2], 10) : undefined;
 
-    return { start, end };
+    const result: { start: number; end?: number } = { start };
+    if (end !== undefined) {
+      result.end = end;
+    }
+    return result;
   }
 
   private getPeriodMilliseconds(

@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
+    "build:all": "nest build tools/plugin-builder && nest build apps/plugin-host && nest build plugin-registry && nest build plugin-template",
     "format": "prettier --write \"src/**/*.ts\" \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "type-check": "tsc --noEmit",

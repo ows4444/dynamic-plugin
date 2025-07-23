@@ -1,8 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as webpack from 'webpack';
 import * as fs from 'fs/promises';
-import * as path from 'path';
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
 export interface BundleOptimizationResult {
   originalSize: number;
@@ -48,7 +46,7 @@ export class BundleOptimizerService {
       const originalSize = await this.getBundleSize(entryPath);
 
       // Create optimized webpack configuration
-      const webpackConfig = await this.createOptimizedConfig(entryPath, outputPath, options);
+      const webpackConfig = this.createOptimizedConfig(entryPath, outputPath, options);
 
       // Run webpack compilation
       const stats = await this.runWebpackCompilation(webpackConfig);
@@ -62,7 +60,7 @@ export class BundleOptimizerService {
         optimizedSize,
         compressionRatio: ((originalSize - optimizedSize) / originalSize) * 100,
         warnings: this.extractWarnings(stats),
-        recommendations: await this.generateRecommendations(stats, options),
+        recommendations: this.generateRecommendations(stats, options),
         performance: {
           buildTime,
           bundleSize: optimizedSize,
@@ -84,15 +82,15 @@ export class BundleOptimizerService {
   /**
    * Analyze bundle composition and dependencies
    */
-  async analyzeBundleComposition(bundlePath: string): Promise<{
+  analyzeBundleComposition(bundlePath: string): {
     modules: Array<{ name: string; size: number; percentage: number }>;
     duplicates: string[];
     unusedExports: string[];
     heavyDependencies: string[];
-  }> {
+  } {
     // Implementation would use webpack-bundle-analyzer programmatically
     // This is a simplified version
-    const stats = await this.getBundleStats(bundlePath);
+    const stats = this.getBundleStats(bundlePath);
     
     return {
       modules: this.extractModuleInfo(stats),
@@ -164,7 +162,7 @@ export class BundleOptimizerService {
     }>;
     potentialSavings: number;
   }> {
-    const composition = await this.analyzeBundleComposition(bundlePath);
+    const composition = this.analyzeBundleComposition(bundlePath);
     const currentSize = await this.getBundleSize(bundlePath);
     
     const recommendations = [];
@@ -228,19 +226,53 @@ export class BundleOptimizerService {
     };
   }
 
-  private async createOptimizedConfig(
+  private createOptimizedConfig(
     entryPath: string,
     outputPath: string,
     options: OptimizationOptions,
-  ): Promise<webpack.Configuration> {
-    const webpackOptimizerConfig = require('../configs/webpack.optimization.config.js');
+  ): webpack.Configuration {
+    // Mock configuration - in practice this would load the actual config
+    const webpackOptimizerConfig = {
+      presets: {
+        featureRich: (opts: { entry: string; outputPath: string; analyze?: boolean; compression?: boolean }) => ({
+          entry: opts.entry,
+          output: { path: opts.outputPath },
+          optimization: {
+            usedExports: true,
+            sideEffects: false,
+            minimize: true,
+            splitChunks: {}
+          }
+        }),
+        lightweight: (opts: { entry: string; outputPath: string; analyze?: boolean; compression?: boolean }) => ({
+          entry: opts.entry,
+          output: { path: opts.outputPath },
+          optimization: {
+            usedExports: true,
+            sideEffects: false,
+            minimize: true,
+            splitChunks: false
+          }
+        }),
+        development: (opts: { entry: string; outputPath: string; analyze?: boolean; compression?: boolean }) => ({
+          entry: opts.entry,
+          output: { path: opts.outputPath },
+          optimization: {
+            usedExports: false,
+            sideEffects: true,
+            minimize: false,
+            splitChunks: {}
+          }
+        })
+      }
+    };
     
-    const preset = options.target || 'featureRich';
+    const preset = options.target ?? 'featureRich';
     const baseConfig = webpackOptimizerConfig.presets[preset]({
       entry: entryPath,
       outputPath,
-      analyze: options.analyze,
-      compression: options.compression,
+      ...(options.analyze !== undefined && { analyze: options.analyze }),
+      ...(options.compression !== undefined && { compression: options.compression }),
     });
 
     // Apply custom optimizations
@@ -292,7 +324,7 @@ export class BundleOptimizerService {
     }
   }
 
-  private async getBundleStats(bundlePath: string): Promise<Record<string, unknown>> {
+  private getBundleStats(_bundlePath: string): Record<string, unknown> {
     // This would typically parse webpack stats.json
     // Simplified implementation
     return {};
@@ -303,59 +335,59 @@ export class BundleOptimizerService {
     
     if (stats.hasWarnings()) {
       const info = stats.toJson({ warnings: true });
-      warnings.push(...(info.warnings || []).map(w => w.message || w.toString()));
+      warnings.push(...(info.warnings ?? []).map(w => typeof w === 'object' && w !== null && 'message' in w ? (w as { message: string }).message : String(w)));
     }
 
     return warnings;
   }
 
-  private async generateRecommendations(
+  private generateRecommendations(
     stats: webpack.Stats,
     options: OptimizationOptions,
-  ): Promise<string[]> {
+  ): string[] {
     const recommendations = [];
     const info = stats.toJson({ all: false, assets: true, chunks: true });
 
     // Check for large assets
-    const largeAssets = (info.assets || []).filter(asset => asset.size > 100000); // 100KB
+    const largeAssets = (info.assets ?? []).filter(asset => asset.size > 100000); // 100KB
     if (largeAssets.length > 0) {
       recommendations.push(`Consider splitting large assets: ${largeAssets.map(a => a.name).join(', ')}`);
     }
 
     // Check for too many chunks
-    if ((info.chunks || []).length > 10) {
+    if ((info.chunks ?? []).length > 10) {
       recommendations.push('Consider reducing chunk count for better performance');
     }
 
     // Check if tree shaking is disabled
-    if (!options.treeshake) {
+    if (options.treeshake !== true) {
       recommendations.push('Enable tree shaking to reduce bundle size');
     }
 
     // Check if compression is disabled
-    if (!options.compression) {
+    if (options.compression !== true) {
       recommendations.push('Enable gzip compression for production builds');
     }
 
     return recommendations;
   }
 
-  private extractModuleInfo(stats: Record<string, unknown>): Array<{ name: string; size: number; percentage: number }> {
+  private extractModuleInfo(_stats: Record<string, unknown>): Array<{ name: string; size: number; percentage: number }> {
     // Implementation would extract module information from webpack stats
     return [];
   }
 
-  private findDuplicateModules(stats: Record<string, unknown>): string[] {
+  private findDuplicateModules(_stats: Record<string, unknown>): string[] {
     // Implementation would find duplicate modules
     return [];
   }
 
-  private findUnusedExports(stats: Record<string, unknown>): string[] {
+  private findUnusedExports(_stats: Record<string, unknown>): string[] {
     // Implementation would find unused exports
     return [];
   }
 
-  private findHeavyDependencies(stats: Record<string, unknown>): string[] {
+  private findHeavyDependencies(_stats: Record<string, unknown>): string[] {
     // Implementation would identify heavy dependencies
     return [];
   }

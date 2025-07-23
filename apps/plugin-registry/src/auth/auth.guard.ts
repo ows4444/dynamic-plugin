@@ -36,7 +36,17 @@ export class AuthGuard implements CanActivate {
       if (!isValid) {
         // Fallback to legacy authentication for backward compatibility
         isValid = await this.authService.validateToken(token);
-        tokenInfo = await this.authService.getTokenInfo(token);
+        const authTokenInfo = await this.authService.getTokenInfo(token);
+        tokenInfo = authTokenInfo ? {
+          id: authTokenInfo.id,
+          userId: authTokenInfo.userId ?? '',
+          username: authTokenInfo.userId,
+          permissions: authTokenInfo.permissions,
+          expiresAt: authTokenInfo.expiresAt ?? new Date(),
+          createdAt: authTokenInfo.createdAt,
+          lastUsed: authTokenInfo.lastUsed,
+          isActive: authTokenInfo.isActive,
+        } : null;
       }
 
       if (!isValid) {
@@ -44,7 +54,7 @@ export class AuthGuard implements CanActivate {
       }
 
       // Add token info to request for further processing
-      request['user'] = tokenInfo;
+      (request as unknown as Record<string, unknown>)['user'] = tokenInfo;
 
       return true;
     } catch (error) {
@@ -61,7 +71,7 @@ export class AuthGuard implements CanActivate {
       return undefined;
     }
 
-    const [type, token] = authHeader.split(' ') ?? [];
+    const [type, token] = authHeader.split(' ');
 
     if (type !== 'Bearer') {
       return undefined;

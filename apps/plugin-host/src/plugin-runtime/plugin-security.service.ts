@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
 import { getErrorMessage } from '@lib/shared/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 export interface PluginPermission {
   pluginName: string;
@@ -47,7 +47,7 @@ export class PluginSecurityService {
   ): Promise<boolean> {
     try {
       const policy = this.policies.get(pluginName);
-      if (!policy) {
+      if (policy == null) {
         this.logger.warn(`No security policy found for plugin: ${pluginName}`);
         return false;
       }
@@ -88,9 +88,15 @@ export class PluginSecurityService {
       permission,
       granted: true,
       grantedAt: new Date(),
-      grantedBy,
-      expiresAt,
     };
+
+    if (grantedBy !== undefined) {
+      newPermission.grantedBy = grantedBy;
+    }
+
+    if (expiresAt !== undefined) {
+      newPermission.expiresAt = expiresAt;
+    }
 
     if (existingIndex >= 0) {
       pluginPermissions[existingIndex] = newPermission;
@@ -106,7 +112,7 @@ export class PluginSecurityService {
 
   revokePermission(pluginName: string, permission: string): void {
     const pluginPermissions = this.permissions.get(pluginName);
-    if (!pluginPermissions) return;
+    if (pluginPermissions == null) return;
 
     const filtered = pluginPermissions.filter(
       (p) => p.permission !== permission,
@@ -132,12 +138,12 @@ export class PluginSecurityService {
 
   isRateLimited(pluginId: string): boolean {
     const policy = this.findPolicyByPluginId(pluginId);
-    if (!policy) return false;
+    if (policy == null) return false;
 
     const rateLimitInfo = this.rateLimits.get(pluginId);
     const now = new Date();
 
-    if (!rateLimitInfo) {
+    if (rateLimitInfo == null) {
       this.rateLimits.set(pluginId, {
         pluginId,
         requests: 1,
@@ -249,6 +255,9 @@ export class PluginSecurityService {
 
   private findPolicyByPluginId(pluginId: string): SecurityPolicy | undefined {
     const pluginName = pluginId.split('-')[0];
+    if (pluginName == null) {
+      return undefined;
+    }
     return this.policies.get(pluginName);
   }
 

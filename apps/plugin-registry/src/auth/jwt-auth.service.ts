@@ -109,13 +109,17 @@ export class JwtAuthService {
     // Decode to get expiration time for TokenInfo
     const decoded = this.jwtService.decode(token);
 
+    if (decoded === null) {
+      throw new Error('Failed to decode JWT token');
+    }
+
     const tokenInfo: TokenInfo = {
       id: jti,
       userId: createDto.userId,
       username: createDto.username,
       permissions: [...createDto.permissions],
-      expiresAt: new Date(decoded.exp! * 1000),
-      createdAt: new Date(decoded.iat! * 1000),
+      expiresAt: new Date(decoded.exp * 1000),
+      createdAt: new Date(decoded.iat * 1000),
       isActive: true,
     };
 

@@ -1,6 +1,6 @@
+import { getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
 import * as path from 'path';
-import { getErrorMessage } from '@lib/shared/common';
 
 interface PluginExports {
   [key: string]: unknown;
@@ -13,7 +13,7 @@ interface PluginModuleClass {
 
 interface PluginModule {
   default?: PluginModuleClass | PluginExports;
-  PluginModule?: PluginModuleClass;
+  pluginModule?: PluginModuleClass;
   cleanup?: () => Promise<void> | void;
   [key: string]: unknown;
 }
@@ -50,7 +50,7 @@ export class ModuleResolverService {
         }
       }
 
-      if (!modulePath) {
+      if (modulePath === null) {
         throw new Error(`Could not find module entry point in ${pluginPath}`);
       }
 
@@ -78,7 +78,7 @@ export class ModuleResolverService {
 
     try {
       // Call cleanup method if it exists
-      if (module && typeof module === 'object' && 'cleanup' in module) {
+      if (typeof module === 'object' && 'cleanup' in module) {
         const typedModule = module;
         if (typeof typedModule.cleanup === 'function') {
           await typedModule.cleanup();

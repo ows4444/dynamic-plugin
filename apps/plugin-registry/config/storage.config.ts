@@ -60,15 +60,24 @@ export interface StorageConfig {
 }
 
 export interface GcsCredentials {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   client_email?: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private_key?: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   project_id?: string;
   type?: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private_key_id?: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   client_id?: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   auth_uri?: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   token_uri?: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   auth_provider_x509_cert_url?: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   client_x509_cert_url?: string;
   [key: string]: unknown;
 }
@@ -76,7 +85,7 @@ export interface GcsCredentials {
 export default registerAs(
   'storage',
   (): StorageConfig => ({
-    provider: (process.env.STORAGE_PROVIDER as 'local' | 's3' | 'gcs' | 'azure') ?? 'local',
+    provider: (process.env.STORAGE_PROVIDER as 'local' | 's3' | 'gcs' | 'azure' | undefined) ?? 'local',
 
     local: {
       basePath:
@@ -116,7 +125,7 @@ export default registerAs(
       projectId: process.env.GCS_PROJECT_ID ?? '',
       bucket: process.env.GCS_BUCKET ?? '',
       keyFilename: process.env.GCS_KEY_FILENAME,
-      credentials: process.env.GCS_CREDENTIALS
+      credentials: process.env.GCS_CREDENTIALS != null
         ? (JSON.parse(process.env.GCS_CREDENTIALS) as GcsCredentials)
         : undefined,
       signedUrlExpiration: parseInt(

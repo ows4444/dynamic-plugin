@@ -17,7 +17,7 @@ export interface RegistryPlugin {
 export class RegistryClientService {
   private readonly logger = new Logger(RegistryClientService.name);
   private readonly registryUrl =
-    process.env.PLUGIN_REGISTRY_URL ?? 'http://localhost:3001';
+    process.env['PLUGIN_REGISTRY_URL'] ?? 'http://localhost:3001';
 
   constructor(
     private readonly downloadService: DownloadService,

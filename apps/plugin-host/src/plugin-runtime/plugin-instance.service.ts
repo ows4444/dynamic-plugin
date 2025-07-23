@@ -35,7 +35,7 @@ export class PluginInstanceService implements OnModuleDestroy {
   constructor(private readonly sandboxService: PluginSandboxService) {
     // Start cleanup interval
     this.cleanupInterval = setInterval(
-        () => this.performCleanup(),
+        () => { void this.performCleanup(); },
       5 * 60 * 1000, // Every 5 minutes
     );
   }
@@ -67,7 +67,7 @@ export class PluginInstanceService implements OnModuleDestroy {
         status: PluginStatus.STARTING,
         instance,
         sandboxId,
-        pluginPath,
+        pluginPath: pluginPath ?? '',
         createdAt: new Date(),
         health: 'unknown',
         cleanupHandlers: [],
@@ -89,7 +89,7 @@ export class PluginInstanceService implements OnModuleDestroy {
 
   async destroyInstance(instanceId: string): Promise<void> {
     const instance = this.instances.get(instanceId);
-    if (!instance) {
+    if (instance == null) {
       throw new Error(`Plugin instance not found: ${instanceId}`);
     }
 
@@ -135,7 +135,7 @@ export class PluginInstanceService implements OnModuleDestroy {
 
   async updateInstanceHealth(instanceId: string): Promise<void> {
     const instance = this.instances.get(instanceId);
-    if (!instance) return;
+    if (instance == null) return;
 
     try {
       if (instance.instance.healthCheck) {
@@ -208,7 +208,7 @@ export class PluginInstanceService implements OnModuleDestroy {
 
   addCleanupHandler(instanceId: string, handler: () => Promise<void>): void {
     const instance = this.instances.get(instanceId);
-    if (instance) {
+    if (instance != null) {
       instance.cleanupHandlers.push(handler);
     }
   }
@@ -224,7 +224,7 @@ export class PluginInstanceService implements OnModuleDestroy {
   }
 
   private async runCleanupHandlers(instance: PluginInstance): Promise<void> {
-    for (const handler of instance.cleanupHandlers) {
+    const handlerPromises = instance.cleanupHandlers.map(async (handler) => {
       try {
         await handler();
       } catch (error) {
@@ -232,7 +232,9 @@ export class PluginInstanceService implements OnModuleDestroy {
           `Cleanup handler failed for ${instance.id}: ${getErrorMessage(error)}`,
         );
       }
-    }
+    });
+    
+    await Promise.allSettled(handlerPromises);
     instance.cleanupHandlers.length = 0; // Clear array
   }
 
@@ -242,13 +244,18 @@ export class PluginInstanceService implements OnModuleDestroy {
       const staleThreshold = 60 * 60 * 1000; // 1 hour
       const now = Date.now();
 
-      for (const [instanceId, instance] of this.instances.entries()) {
-        const lastActivity = instance.lastActivity?.getTime() || instance.createdAt.getTime();
-        
-        if (now - lastActivity > staleThreshold) {
-          this.logger.log(`Cleaning up stale instance: ${instanceId}`);
-          await this.destroyInstance(instanceId);
-        }
+      const staleInstances = Array.from(this.instances.entries())
+        .filter(([_, instance]) => {
+          const lastActivity = instance.lastActivity?.getTime() ?? instance.createdAt.getTime();
+          return now - lastActivity > staleThreshold;
+        })
+        .map(([instanceId]) => instanceId);
+
+      if (staleInstances.length > 0) {
+        this.logger.log(`Cleaning up ${staleInstances.length} stale instances`);
+        await Promise.allSettled(
+          staleInstances.map(instanceId => this.destroyInstance(instanceId))
+        );
       }
 
       // Clean up sandbox service

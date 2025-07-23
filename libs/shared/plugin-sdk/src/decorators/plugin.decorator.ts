@@ -11,7 +11,7 @@ export interface PluginDecoratorOptions {
   permissions: string[];
 }
 
-export function Plugin(options: PluginDecoratorOptions) {
+export function Plugin(options: PluginDecoratorOptions): ClassDecorator {
   return applyDecorators(
     SetMetadata(PLUGIN_METADATA_KEY, options.metadata),
     SetMetadata(PLUGIN_CONFIG_KEY, options.config),
@@ -25,7 +25,7 @@ export interface PluginServiceOptions {
   dependencies?: string[];
 }
 
-export function PluginService(options: PluginServiceOptions) {
+export function PluginService(options: PluginServiceOptions): ClassDecorator {
   return SetMetadata('plugin:service', options);
 }
 
@@ -35,7 +35,7 @@ export interface PluginProviderOptions {
   singleton?: boolean;
 }
 
-export function PluginProvider(options: PluginProviderOptions) {
+export function PluginProvider(options: PluginProviderOptions): ClassDecorator {
   return SetMetadata('plugin:provider', {
     singleton: true,
     factory: false,
@@ -50,7 +50,7 @@ export interface PluginConfigOptions {
   transform?: (value: unknown) => unknown;
 }
 
-export function PluginConfig(key: string, options?: PluginConfigOptions) {
+export function PluginConfig(key: string, options?: PluginConfigOptions): PropertyDecorator {
   return SetMetadata('plugin:config:field', {
     key,
     required: false,
@@ -58,28 +58,28 @@ export function PluginConfig(key: string, options?: PluginConfigOptions) {
   });
 }
 
-export function PluginPermission(permission: string | string[]) {
+export function PluginPermission(permission: string | string[]): MethodDecorator & ClassDecorator {
   const permissions = Array.isArray(permission) ? permission : [permission];
   return SetMetadata('plugin:permission', permissions);
 }
 
-export function PluginVersion(version: string) {
+export function PluginVersion(version: string): ClassDecorator {
   return SetMetadata('plugin:version', version);
 }
 
-export function PluginAuthor(author: string) {
+export function PluginAuthor(author: string): ClassDecorator {
   return SetMetadata('plugin:author', author);
 }
 
-export function PluginDescription(description: string) {
+export function PluginDescription(description: string): ClassDecorator {
   return SetMetadata('plugin:description', description);
 }
 
-export function PluginTags(...tags: string[]) {
+export function PluginTags(...tags: string[]): ClassDecorator {
   return SetMetadata('plugin:tags', tags);
 }
 
-export function PluginDependency(dependency: string | string[]) {
+export function PluginDependency(dependency: string | string[]): ClassDecorator {
   const dependencies = Array.isArray(dependency) ? dependency : [dependency];
   return SetMetadata('plugin:dependency', dependencies);
 }

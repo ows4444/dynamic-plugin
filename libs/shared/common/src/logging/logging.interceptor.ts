@@ -57,7 +57,7 @@ export class LoggingInterceptor implements NestInterceptor {
           metadata: {
             controller: controllerName,
             handler: methodName,
-            responseSize: response ? JSON.stringify(response).length : 0,
+            responseSize: response != null ? JSON.stringify(response).length : 0,
             success: true,
           },
         });
@@ -67,7 +67,7 @@ export class LoggingInterceptor implements NestInterceptor {
           requestLogger.logPerformance(operationName, duration, {
             controller: controllerName,
             handler: methodName,
-            responseSize: (response) ? JSON.stringify(response).length : 0,
+            responseSize: response != null ? JSON.stringify(response).length : 0,
           });
         }
       }),

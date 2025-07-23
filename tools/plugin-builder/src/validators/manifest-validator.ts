@@ -87,7 +87,7 @@ export class ManifestValidator {
           return result;
         }
       } else {
-        manifest = manifestContent;
+        manifest = manifestContent as ManifestData;
       }
 
       result.manifest = manifest;
@@ -127,7 +127,7 @@ export class ManifestValidator {
     filePath: string,
   ): Promise<ManifestValidationResult> {
     try {
-      const fs = require('fs').promises;
+      const { promises: fs } = await import('fs');
       const content = await fs.readFile(filePath, 'utf-8');
       return this.validateManifest(content);
     } catch (error) {
@@ -211,8 +211,8 @@ export class ManifestValidator {
     // Validate entry point exists
     if (manifest.main != null) {
       try {
-        const path = require('path');
-        const fs = require('fs').promises;
+        const path = await import('path');
+        const { promises: fs } = await import('fs');
         const manifestDir = process.cwd(); // This would be the plugin directory in real usage
         const mainPath = path.resolve(manifestDir, manifest.main);
 
@@ -225,7 +225,7 @@ export class ManifestValidator {
             value: manifest.main,
           });
         }
-      } catch (_error) {
+      } catch {
         // Skip file existence check if we can't determine the path
       }
     }
@@ -294,7 +294,7 @@ export class ManifestValidator {
   }
 
   private validateRoute(
-    route: ManifestData['routes'][0],
+    route: NonNullable<ManifestData['routes']>[0],
     fieldPrefix: string,
     result: ManifestValidationResult,
   ): void {

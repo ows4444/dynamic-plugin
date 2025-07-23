@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DataSource, QueryRunner, SelectQueryBuilder } from 'typeorm';
+import { DataSource, SelectQueryBuilder } from 'typeorm';
 
 export interface QueryPerformanceMetrics {
   query: string;
@@ -30,7 +30,7 @@ export class QueryOptimizerService {
   /**
    * Execute a query with performance monitoring
    */
-  async executeWithMonitoring<T>(
+  async executeWithMonitoring<T extends Record<string, unknown>>(
     queryBuilder: SelectQueryBuilder<T>,
   ): Promise<{ result: T[]; metrics: QueryPerformanceMetrics }> {
     const startTime = Date.now();
@@ -45,7 +45,7 @@ export class QueryOptimizerService {
         query,
         executionTime,
         rowsAffected: result.length,
-        parameters,
+        parameters: Array.isArray(parameters) ? parameters : Object.values(parameters ?? {}),
         timestamp: new Date(),
         isSlowQuery: executionTime > this.slowQueryThreshold,
       };
@@ -56,14 +56,14 @@ export class QueryOptimizerService {
         this.logger.warn(
           `Slow query detected: ${executionTime}ms - ${query.substring(0, 100)}...`,
         );
-        this.analyzeSqlForOptimization(query, parameters);
+        this.analyzeSqlForOptimization(query, Array.isArray(parameters) ? parameters : Object.values(parameters ?? {}));
       }
 
       return { result, metrics };
     } catch (error) {
       const executionTime = Date.now() - startTime;
       this.logger.error(
-        `Query failed after ${executionTime}ms: ${error.message}`,
+        `Query failed after ${executionTime}ms: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }
@@ -74,7 +74,7 @@ export class QueryOptimizerService {
    */
   analyzeSqlForOptimization(
     query: string,
-    parameters?: unknown[],
+    _parameters?: unknown[],
   ): QueryOptimizationSuggestion[] {
     const suggestions: QueryOptimizationSuggestion[] = [];
     const normalizedQuery = query.toLowerCase();
@@ -194,7 +194,7 @@ export class QueryOptimizerService {
   /**
    * Optimize a TypeORM QueryBuilder
    */
-  optimizeQueryBuilder<T>(queryBuilder: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
+  optimizeQueryBuilder<T extends Record<string, unknown>>(queryBuilder: SelectQueryBuilder<T>): SelectQueryBuilder<T> {
     // Add default limit if none specified
     const query = queryBuilder.getQuery().toLowerCase();
     if (!query.includes('limit') && !query.includes('top')) {
@@ -208,7 +208,7 @@ export class QueryOptimizerService {
   /**
    * Create optimized indexes based on query patterns
    */
-  async suggestIndexes(): Promise<string[]> {
+  suggestIndexes(): string[] {
     const suggestions: string[] = [];
     const frequentQueries = this.getFrequentQueryPatterns();
 
@@ -284,7 +284,7 @@ export class QueryOptimizerService {
     this.performanceMetrics.forEach(metric => {
       // Normalize query by removing parameters
       const normalizedQuery = this.normalizeQuery(metric.query);
-      patterns.set(normalizedQuery, (patterns.get(normalizedQuery) || 0) + 1);
+      patterns.set(normalizedQuery, (patterns.get(normalizedQuery) ?? 0) + 1);
     });
 
     // Return patterns that appear more than once, sorted by frequency
@@ -305,7 +305,7 @@ export class QueryOptimizerService {
 
   private extractWhereColumns(query: string): string[] {
     const whereMatch = query.match(/where\s+(.+?)(?:\s+order\s+by|\s+group\s+by|\s+limit|$)/i);
-    if (!whereMatch) return [];
+    if ((whereMatch?.[1]) == null) return [];
 
     const whereClause = whereMatch[1];
     const columns: string[] = [];
@@ -315,7 +315,7 @@ export class QueryOptimizerService {
     if (matches) {
       matches.forEach(match => {
         const column = match.match(/(\w+)\s*=/);
-        if (column) columns.push(column[1]);
+        if ((column?.[1]) != null) columns.push(column[1]);
       });
     }
 
@@ -324,12 +324,16 @@ export class QueryOptimizerService {
 
   private extractOrderByColumns(query: string): string[] {
     const orderMatch = query.match(/order\s+by\s+(.+?)(?:\s+limit|$)/i);
-    if (!orderMatch) return [];
+    if ((orderMatch?.[1]) == null) return [];
 
     return orderMatch[1]
       .split(',')
-      .map(col => col.trim().split(' ')[0]) // Remove ASC/DESC
-      .filter(col => col && /^\w+$/.test(col));
+      .map(col => {
+        const trimmed = col.trim();
+        const parts = trimmed.split(' ');
+        return parts[0] ?? '';
+      }) // Remove ASC/DESC
+      .filter(col => col.length > 0 && /^\w+$/.test(col));
   }
 
   private getOptimizationSuggestions(): QueryOptimizationSuggestion[] {

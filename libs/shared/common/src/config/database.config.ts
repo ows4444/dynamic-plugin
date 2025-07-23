@@ -12,15 +12,15 @@ export const createDatabaseConfig = (
   }
 
   return {
-    type: dbConfig.type,
+    type: dbConfig.type === 'sqlite' ? 'postgres' : dbConfig.type as 'postgres' | 'mysql' | 'mariadb',
     host: dbConfig.host,
     port: dbConfig.port,
     username: dbConfig.username,
     password: dbConfig.password,
     database: dbConfig.database,
-    ssl: dbConfig.ssl,
-    synchronize: dbConfig.synchronize,
-    logging: dbConfig.logging,
+    ...(dbConfig.ssl !== undefined && { ssl: dbConfig.ssl }),
+    ...(dbConfig.synchronize !== undefined && { synchronize: dbConfig.synchronize }),
+    ...(dbConfig.logging !== undefined && { logging: dbConfig.logging }),
     entities: [
       // Auto-discover entities from all modules
       ...(process.env['NODE_ENV'] === 'production' 
@@ -47,5 +47,5 @@ export const createDatabaseConfig = (
       acquire: 30000, // Maximum time to get connection
       idle: 10000, // Maximum time connection can be idle
     },
-  };
+  } as TypeOrmModuleOptions;
 };

@@ -4,7 +4,7 @@ import { PrometheusMetricsService } from './prometheus-metrics.service';
 
 describe('PrometheusMetricsService', () => {
   let service: PrometheusMetricsService;
-  let configService: ConfigService;
+  let _configService: ConfigService;
 
   const mockConfigService = {
     get: jest.fn((key: string, defaultValue?: any) => {
@@ -29,7 +29,7 @@ describe('PrometheusMetricsService', () => {
     }).compile();
 
     service = module.get<PrometheusMetricsService>(PrometheusMetricsService);
-    configService = module.get<ConfigService>(ConfigService);
+    _configService = module.get<ConfigService>(ConfigService);
   });
 
   afterEach(() => {

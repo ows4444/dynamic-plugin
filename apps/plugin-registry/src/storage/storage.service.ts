@@ -23,7 +23,7 @@ export class StorageService {
   private readonly basePath: string;
 
   constructor() {
-    this.basePath = process.env.REGISTRY_STORAGE_PATH ?? './storage';
+    this.basePath = process.env['REGISTRY_STORAGE_PATH'] ?? './storage';
     void this.ensureBaseDirectory();
   }
 
@@ -268,7 +268,7 @@ export class StorageService {
         );
       } else {
         // Check if file matches pattern (if specified)
-        if (pattern && !entry.name.match(new RegExp(pattern))) {
+        if (pattern != null && !entry.name.match(new RegExp(pattern))) {
           continue;
         }
 

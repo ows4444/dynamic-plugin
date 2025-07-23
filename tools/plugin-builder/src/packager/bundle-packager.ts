@@ -276,13 +276,18 @@ export class BundlePackager {
         // Manifest extraction failed
       }
 
-      return {
+      const result: { size: number; checksum: string; files: string[]; manifest?: ManifestData; created?: Date } = {
         size: stats.size,
         checksum,
         files,
-        manifest,
         created: stats.ctime,
       };
+      
+      if (manifest) {
+        result.manifest = manifest;
+      }
+      
+      return result;
 
     } catch (error) {
       this.logger.error(`Failed to get package info: ${getErrorMessage(error)}`);
@@ -340,16 +345,11 @@ export class BundlePackager {
     const allPatterns = [...requiredFiles, ...optionalFiles];
 
     // Use glob to find matching files
-    const glob = require('glob');
+    const { glob } = await import('glob');
     
     for (const pattern of allPatterns) {
       try {
-        const matches = await new Promise<string[]>((resolve, reject) => {
-          glob(pattern, { cwd: pluginPath }, (error, matches) => {
-            if (error) reject(error);
-            else resolve(matches);
-          });
-        });
+        const matches = await glob(pattern, { cwd: pluginPath });
 
         for (const match of matches) {
           const absolutePath = path.join(pluginPath, match);

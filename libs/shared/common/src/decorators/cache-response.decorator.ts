@@ -26,11 +26,3 @@ export function CacheResponse(options: CacheResponseOptions = {}) {
 
   return applyDecorators(...decorators);
 }
-
-/**
- * Quick cache decorators for common use cases
- */
-export const CacheResponse5Minutes = () => CacheResponse({ ttl: 300 });
-export const CacheResponse1Minute = () => CacheResponse({ ttl: 60 });
-export const CacheResponse10Minutes = () => CacheResponse({ ttl: 600 });
-export const CacheResponse1Hour = () => CacheResponse({ ttl: 3600 });

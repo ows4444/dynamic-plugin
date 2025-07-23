@@ -75,9 +75,9 @@ export class AuthService {
 
     const tokenInfo: TokenInfo = {
       id: tokenId,
-      userId: createDto.userId,
+      userId: createDto.userId ?? 'anonymous',
       permissions: [...createDto.permissions],
-      expiresAt,
+      expiresAt: expiresAt ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // Default to 1 year
       createdAt: new Date(),
       isActive: true,
     };
@@ -121,7 +121,7 @@ export class AuthService {
   async hasPermission(token: string, permission: string): Promise<boolean> {
     const tokenInfo = this.tokens.get(token);
 
-    if (!tokenInfo?.isActive) {
+    if (tokenInfo?.isActive !== true) {
       return false;
     }
 
@@ -192,7 +192,7 @@ export class AuthService {
       }
 
       for (const permission of tokenInfo.permissions) {
-        byPermission[permission] = (byPermission[permission] || 0) + 1;
+        byPermission[permission] = (byPermission[permission] ?? 0) + 1;
       }
     }
 
@@ -215,8 +215,8 @@ export class AuthService {
 
   private createDefaultTokens(): void {
     // Create a default admin token for development
-    if (process.env.NODE_ENV === 'development') {
-      const adminToken = process.env.ADMIN_TOKEN ?? 'dev-admin-token';
+    if (process.env['NODE_ENV'] === 'development') {
+      const adminToken = process.env['ADMIN_TOKEN'] ?? 'dev-admin-token';
 
       const tokenInfo: TokenInfo = {
         id: 'admin-token',
@@ -231,7 +231,7 @@ export class AuthService {
     }
 
     // Create a default read-only token
-    const readToken = process.env.READ_TOKEN ?? 'read-only-token';
+    const readToken = process.env['READ_TOKEN'] ?? 'read-only-token';
 
     const readTokenInfo: TokenInfo = {
       id: 'read-token',

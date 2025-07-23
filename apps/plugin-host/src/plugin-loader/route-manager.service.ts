@@ -134,7 +134,7 @@ export class RouteManagerService {
         // Perform any necessary cleanup
         if (route.middleware) {
           route.middleware.forEach((middleware) => {
-            if (middleware != null && typeof middleware.cleanup === 'function') {
+            if (middleware.cleanup) {
               // Call cleanup method - could be async or sync
               const cleanupResult = middleware.cleanup();
               if (cleanupResult instanceof Promise) {
@@ -180,7 +180,7 @@ export class RouteManagerService {
       // In a real system, you would use reflection to extract
       // routes from NestJS controllers with decorators
 
-      const prototype = (controller.prototype ?? controller);
+      const prototype = controller.prototype;
       const methods = Object.getOwnPropertyNames(prototype);
 
       for (const methodName of methods) {

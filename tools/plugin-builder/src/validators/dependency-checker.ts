@@ -147,7 +147,7 @@ export class DependencyChecker {
     for (const [name, pluginVersion] of Object.entries(pluginDependencies)) {
       const hostVersion = hostDependencies[name];
 
-      if (hostVersion) {
+      if (hostVersion != null) {
         const isCompatible = this.areVersionsCompatible(pluginVersion, hostVersion);
 
         if (!isCompatible) {
@@ -223,19 +223,19 @@ export class DependencyChecker {
 
     if (packageJson.dependencies) {
       for (const [name, version] of Object.entries(packageJson.dependencies)) {
-        dependencies.push({ name, version: version as string, type: 'dependency' as const });
+        dependencies.push({ name, version, type: 'dependency' as const });
       }
     }
 
     if (packageJson.devDependencies) {
       for (const [name, version] of Object.entries(packageJson.devDependencies)) {
-        dependencies.push({ name, version: version as string, type: 'devDependency' as const });
+        dependencies.push({ name, version, type: 'devDependency' as const });
       }
     }
 
     if (packageJson.peerDependencies) {
       for (const [name, version] of Object.entries(packageJson.peerDependencies)) {
-        dependencies.push({ name, version: version as string, type: 'peerDependency' as const });
+        dependencies.push({ name, version, type: 'peerDependency' as const });
       }
     }
 
@@ -257,7 +257,7 @@ export class DependencyChecker {
 
     try {
       // Check if version is valid semver
-      if (!semver.validRange(dep.version)) {
+      if (semver.validRange(dep.version) == null) {
         analysis.status = 'invalid';
         analysis.issues.push('Invalid version range');
       }
@@ -290,15 +290,18 @@ export class DependencyChecker {
 
       // Get latest version
       try {
-        analysis.latest = await this.getLatestVersion(dep.name);
+        const latestVersion = await this.getLatestVersion(dep.name);
+        if (latestVersion != null) {
+          analysis.latest = latestVersion;
+        }
         
-        if (analysis.latest && semver.lt(dep.version.replace(/[^0-9.]/g, ''), analysis.latest)) {
+        if ((analysis.latest != null) && semver.lt(dep.version.replace(/[^0-9.]/g, ''), analysis.latest)) {
           analysis.issues.push(`Newer version available (${analysis.latest})`);
           if (analysis.status === 'valid') {
             analysis.status = 'outdated';
           }
         }
-      } catch (error) {
+      } catch {
         // Ignore errors when fetching latest version
       }
 
@@ -340,7 +343,7 @@ export class DependencyChecker {
               const version1 = uniqueVersions[i];
               const version2 = uniqueVersions[j];
 
-              if (!this.areVersionsCompatible(version1, version2)) {
+              if ((version1 != null) && (version2 != null) && !this.areVersionsCompatible(version1, version2)) {
                 conflictAnalysis.conflicts.push({
                   with: version2,
                   reason: `Version ${version1} conflicts with ${version2}`,
@@ -444,11 +447,11 @@ export class DependencyChecker {
   private findDuplicateFunctionality(dependencies: DependencyAnalysis[]): string[] {
     const duplicates: string[] = [];
     const functionalityGroups = {
-      'http-clients': ['axios', 'node-fetch', 'superagent', 'got', 'request'],
-      'lodash-alternatives': ['lodash', 'underscore', 'ramda'],
-      'date-libraries': ['moment', 'dayjs', 'date-fns'],
-      'testing': ['jest', 'mocha', 'jasmine', 'ava'],
-      'linting': ['eslint', 'tslint', 'jshint'],
+      httpClients: ['axios', 'node-fetch', 'superagent', 'got', 'request'],
+      lodashAlternatives: ['lodash', 'underscore', 'ramda'],
+      dateLibraries: ['moment', 'dayjs', 'date-fns'],
+      testing: ['jest', 'mocha', 'jasmine', 'ava'],
+      linting: ['eslint', 'tslint', 'jshint'],
     };
 
     for (const [groupName, packages] of Object.entries(functionalityGroups)) {
@@ -469,7 +472,7 @@ export class DependencyChecker {
       const range1 = semver.validRange(version1);
       const range2 = semver.validRange(version2);
 
-      if (!range1 || !range2) {
+      if ((range1 == null) || (range2 == null)) {
         return false;
       }
 
@@ -480,7 +483,7 @@ export class DependencyChecker {
     }
   }
 
-  private async getLatestVersion(packageName: string): Promise<string | undefined> {
+  private async getLatestVersion(_packageName: string): Promise<string | undefined> {
     // This is a mock implementation - in practice, you'd query npm registry
     // For now, return undefined to skip version checking
     return undefined;

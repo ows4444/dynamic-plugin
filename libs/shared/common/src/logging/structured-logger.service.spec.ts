@@ -19,8 +19,8 @@ jest.mock('winston', () => ({
     json: jest.fn(() => 'json-format'),
   },
   transports: {
-    Console: jest.fn(),
-    File: jest.fn(),
+    console: jest.fn(),
+    file: jest.fn(),
   },
 }));
 
@@ -296,7 +296,9 @@ describe('StructuredLoggerService', () => {
       
       await flushPromise;
       
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockLogger.on).toHaveBeenCalledWith('finish', expect.any(Function));
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockLogger.end).toHaveBeenCalled();
     });
   });

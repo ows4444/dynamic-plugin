@@ -28,7 +28,7 @@ export interface DatabaseConfig extends TypeOrmModuleOptions {
 }
 
 export default registerAs('database', (): DatabaseConfig => {
-  const type = (process.env['DB_TYPE'] as 'postgres' | 'mysql' | 'sqlite' | 'mongodb') ?? 'sqlite';
+  const type = (process.env['DB_TYPE'] as 'postgres' | 'mysql' | 'sqlite' | 'mongodb' | undefined) ?? 'sqlite';
 
   const baseConfig = {
     type,

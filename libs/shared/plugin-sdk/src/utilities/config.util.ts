@@ -6,7 +6,7 @@ export type PluginConfigOptions = PluginConfig;
 
 @Injectable()
 export class ConfigUtil {
-  static validateConfig(config: PluginConfigOptions, _schema: Record<string, unknown>): boolean {
+  static validateConfig(config: unknown, _schema: Record<string, unknown>): config is PluginConfigOptions {
     // Basic validation logic
     if (config == null || Array.isArray(config)) {
       return false;

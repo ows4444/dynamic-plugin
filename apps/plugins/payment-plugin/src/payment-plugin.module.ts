@@ -55,12 +55,12 @@ export class PaymentPluginModule {
 }
 
 // Plugin-specific exports for dynamic loading
-export const PluginModule = PaymentPluginModule as unknown;
-export const PluginController = PaymentController as unknown;
-export const PluginService = PaymentService as unknown;
+export const pluginModule = PaymentPluginModule as unknown;
+export const pluginController = PaymentController as unknown;
+export const pluginService = PaymentService as unknown;
 
 // Plugin metadata for the host system
-export const PluginMetadata = {
+export const pluginMetadata = {
   name: 'payment-plugin',
   version: '1.0.0',
   description: 'A comprehensive payment processing plugin',
@@ -68,6 +68,7 @@ export const PluginMetadata = {
   apiVersion: '1.0.0',
   dependencies: {
     stripe: '^13.0.0',
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     '@paypal/checkout-server-sdk': '^1.0.0',
   },
   routes: [

@@ -248,7 +248,7 @@ export class PerformanceMonitorService {
     score: number;
     checks: Array<{ name: string; status: 'pass' | 'warn' | 'fail'; message: string }>;
   } {
-    const checks = [];
+    const checks: Array<{ name: string; status: 'pass' | 'warn' | 'fail'; message: string }> = [];
     let score = 100;
 
     // CPU check
@@ -339,7 +339,8 @@ export class PerformanceMonitorService {
     
     cpus.forEach(cpu => {
       for (const type in cpu.times) {
-        totalTick += cpu.times[type];
+        const key = type as keyof typeof cpu.times;
+        totalTick += cpu.times[key];
       }
       totalIdle += cpu.times.idle;
     });

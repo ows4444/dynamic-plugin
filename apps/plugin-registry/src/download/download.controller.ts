@@ -23,7 +23,7 @@ export class DownloadController {
     @Param('id') pluginId: string,
     @Res() response: Response,
     @Headers('range') range?: string,
-  ) {
+  ): Promise<void> {
     try {
       const downloadInfo = await this.downloadService.getDownloadInfo(pluginId);
 
@@ -47,7 +47,7 @@ export class DownloadController {
       );
 
       // Handle range requests for partial downloads
-      if (range) {
+      if (range != null) {
         const stream = await this.downloadService.getPartialStream(
           pluginId,
           range,
@@ -81,14 +81,14 @@ export class DownloadController {
     @Param('version') version: string,
     @Res() response: Response,
     @Headers('range') range?: string,
-  ) {
+  ): Promise<void> {
     try {
       const pluginId = await this.downloadService.resolvePluginId(
         name,
         version,
       );
 
-      if (!pluginId) {
+      if (pluginId == null) {
         throw new NotFoundException(`Plugin not found: ${name}@${version}`);
       }
 
@@ -103,7 +103,7 @@ export class DownloadController {
   }
 
   @Get(':id/download/info')
-  async getDownloadInfo(@Param('id') pluginId: string) {
+  async getDownloadInfo(@Param('id') pluginId: string): Promise<unknown> {
     try {
       const info = await this.downloadService.getDownloadInfo(pluginId);
 
@@ -134,7 +134,7 @@ export class DownloadController {
   async getDownloadStats(
     @Query('period') period?: 'day' | 'week' | 'month' | 'year',
     @Query('limit') limit?: number,
-  ) {
+  ): Promise<unknown> {
     try {
       const stats = await this.downloadService.getDownloadStats(
         period ?? 'month',

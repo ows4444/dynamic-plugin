@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import * as Joi from 'joi';
+import Joi from 'joi';
 
 export interface DatabaseConfig {
   host: string;
@@ -26,27 +26,27 @@ export interface DatabaseConfig {
 }
 
 export const databaseConfig = registerAs('database', (): DatabaseConfig => ({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT, 10) || 5432,
-  username: process.env.DB_USERNAME || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_DATABASE || 'plugin_system',
-  poolSize: parseInt(process.env.DB_POOL_SIZE, 10) || 10,
-  acquireTimeout: parseInt(process.env.DB_ACQUIRE_TIMEOUT, 10) || 60000,
-  timeout: parseInt(process.env.DB_TIMEOUT, 10) || 30000,
-  poolMax: parseInt(process.env.DB_POOL_MAX, 10) || 20,
-  poolMin: parseInt(process.env.DB_POOL_MIN, 10) || 5,
-  poolIdle: parseInt(process.env.DB_POOL_IDLE, 10) || 10000,
-  poolAcquire: parseInt(process.env.DB_POOL_ACQUIRE, 10) || 30000,
-  poolEvict: parseInt(process.env.DB_POOL_EVICT, 10) || 1000,
-  synchronize: process.env.DB_SYNCHRONIZE === 'true',
-  logging: process.env.DB_LOGGING === 'true',
-  dropSchema: process.env.DB_DROP_SCHEMA === 'true',
-  migrationsRun: process.env.DB_MIGRATIONS_RUN !== 'false',
-  cacheDuration: parseInt(process.env.DB_CACHE_DURATION, 10) || 30000,
-  retryAttempts: parseInt(process.env.DB_RETRY_ATTEMPTS, 10) || 3,
-  retryDelay: parseInt(process.env.DB_RETRY_DELAY, 10) || 3000,
-  maxQueryExecutionTime: parseInt(process.env.DB_MAX_QUERY_TIME, 10) || 10000,
+  host: process.env['DB_HOST'] ?? 'localhost',
+  port: parseInt(process.env['DB_PORT'] ?? '5432', 10),
+  username: process.env['DB_USERNAME'] ?? 'postgres',
+  password: process.env['DB_PASSWORD'] ?? 'postgres',
+  database: process.env['DB_DATABASE'] ?? 'plugin_system',
+  poolSize: parseInt(process.env['DB_POOL_SIZE'] ?? '10', 10),
+  acquireTimeout: parseInt(process.env['DB_ACQUIRE_TIMEOUT'] ?? '60000', 10),
+  timeout: parseInt(process.env['DB_TIMEOUT'] ?? '30000', 10),
+  poolMax: parseInt(process.env['DB_POOL_MAX'] ?? '20', 10),
+  poolMin: parseInt(process.env['DB_POOL_MIN'] ?? '5', 10),
+  poolIdle: parseInt(process.env['DB_POOL_IDLE'] ?? '10000', 10),
+  poolAcquire: parseInt(process.env['DB_POOL_ACQUIRE'] ?? '30000', 10),
+  poolEvict: parseInt(process.env['DB_POOL_EVICT'] ?? '1000', 10),
+  synchronize: process.env['DB_SYNCHRONIZE'] === 'true',
+  logging: process.env['DB_LOGGING'] === 'true',
+  dropSchema: process.env['DB_DROP_SCHEMA'] === 'true',
+  migrationsRun: process.env['DB_MIGRATIONS_RUN'] !== 'false',
+  cacheDuration: parseInt(process.env['DB_CACHE_DURATION'] ?? '30000', 10),
+  retryAttempts: parseInt(process.env['DB_RETRY_ATTEMPTS'] ?? '3', 10),
+  retryDelay: parseInt(process.env['DB_RETRY_DELAY'] ?? '3000', 10),
+  maxQueryExecutionTime: parseInt(process.env['DB_MAX_QUERY_TIME'] ?? '10000', 10),
 }));
 
 export const databaseConfigSchema = Joi.object({
