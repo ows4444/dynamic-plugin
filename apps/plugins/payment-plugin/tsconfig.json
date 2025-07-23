@@ -11,9 +11,7 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"],
-      "@lib/shared/*": ["../../../libs/shared/*"],
-      "@plugins/*": ["../*/src"]
+      "@lib/shared/*": ["libs/shared/*"],
     },
     "incremental": true,
     "skipLibCheck": true,
