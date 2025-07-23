@@ -1,5 +1,5 @@
-import * as Joi from 'joi';
 import { Logger } from '@nestjs/common';
+import Joi from 'joi';
 
 export interface EnvironmentValidationResult {
   isValid: boolean;
