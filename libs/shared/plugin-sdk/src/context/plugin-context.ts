@@ -73,16 +73,16 @@ export interface PluginExecutionContext {
 
 @Injectable({ scope: Scope.REQUEST })
 export class PluginContext {
-  private _plugin!: PluginMetadata;
-  private _request!: PluginRequest;
-  private _response!: PluginResponse;
-  private _user: PluginUser | null = null;
-  private _host!: PluginHost;
-  private _executionContext: PluginExecutionContext;
-  private readonly _data: Map<string, string | number | boolean | Date | Record<string, unknown> | Array<unknown>> = new Map();
+  private plugin!: PluginMetadata;
+  private request!: PluginRequest;
+  private response!: PluginResponse;
+  private user: PluginUser | null = null;
+  private host!: PluginHost;
+  private executionContext: PluginExecutionContext;
+  private readonly data: Map<string, string | number | boolean | Date | Record<string, unknown> | Array<unknown>> = new Map();
 
   constructor() {
-    this._executionContext = {
+    this.executionContext = {
       pluginId: '',
       pluginName: '',
       version: '',
@@ -92,129 +92,129 @@ export class PluginContext {
   }
 
   setPlugin(plugin: PluginMetadata): void {
-    this._plugin = plugin;
-    this._executionContext.pluginId = plugin.id;
-    this._executionContext.pluginName = plugin.name;
-    this._executionContext.version = plugin.version;
+    this.plugin = plugin;
+    this.executionContext.pluginId = plugin.id;
+    this.executionContext.pluginName = plugin.name;
+    this.executionContext.version = plugin.version;
   }
 
   getPlugin(): PluginMetadata {
-    return this._plugin;
+    return this.plugin;
   }
 
   setRequest(request: PluginRequest): void {
-    this._request = request;
+    this.request = request;
   }
 
   getRequest(): PluginRequest {
-    return this._request;
+    return this.request;
   }
 
   setResponse(response: PluginResponse): void {
-    this._response = response;
+    this.response = response;
   }
 
   getResponse(): PluginResponse {
-    return this._response;
+    return this.response;
   }
 
   setUser(user: PluginUser | null): void {
-    this._user = user;
+    this.user = user;
   }
 
   getUser(): PluginUser | null {
-    return this._user;
+    return this.user;
   }
 
   isAuthenticated(): boolean {
-    return this._user !== null;
+    return this.user !== null;
   }
 
   hasPermission(permission: string): boolean {
-    return this._user?.permissions.includes(permission) ?? false;
+    return this.user?.permissions.includes(permission) ?? false;
   }
 
   hasRole(role: string): boolean {
-    return this._user?.roles.includes(role) ?? false;
+    return this.user?.roles.includes(role) ?? false;
   }
 
   setHost(host: PluginHost): void {
-    this._host = host;
+    this.host = host;
   }
 
   getHost(): PluginHost {
-    return this._host;
+    return this.host;
   }
 
   getExecutionContext(): PluginExecutionContext {
-    return { ...this._executionContext };
+    return { ...this.executionContext };
   }
 
   setExecutionContext(context: Partial<PluginExecutionContext>): void {
-    this._executionContext = {
-      ...this._executionContext,
+    this.executionContext = {
+      ...this.executionContext,
       ...context,
     };
   }
 
   getRequestId(): string {
-    return this._executionContext.requestId;
+    return this.executionContext.requestId;
   }
 
   getCorrelationId(): string | undefined {
-    return this._executionContext.correlationId;
+    return this.executionContext.correlationId;
   }
 
   setCorrelationId(correlationId: string): void {
-    this._executionContext.correlationId = correlationId;
+    this.executionContext.correlationId = correlationId;
   }
 
   getTraceId(): string | undefined {
-    return this._executionContext.traceId;
+    return this.executionContext.traceId;
   }
 
   setTraceId(traceId: string): void {
-    this._executionContext.traceId = traceId;
+    this.executionContext.traceId = traceId;
   }
 
   getElapsedTime(): number {
-    return Date.now() - this._executionContext.startTime.getTime();
+    return Date.now() - this.executionContext.startTime.getTime();
   }
 
   set<T extends string | number | boolean | Date | Record<string, unknown> | Array<unknown>>(key: string, value: T): void {
-    this._data.set(key, value);
+    this.data.set(key, value);
   }
 
   get<T extends string | number | boolean | Date | Record<string, unknown> | Array<unknown>>(key: string): T | undefined {
-    return this._data.get(key) as T | undefined;
+    return this.data.get(key) as T | undefined;
   }
 
   has(key: string): boolean {
-    return this._data.has(key);
+    return this.data.has(key);
   }
 
   delete(key: string): boolean {
-    return this._data.delete(key);
+    return this.data.delete(key);
   }
 
   clear(): void {
-    this._data.clear();
+    this.data.clear();
   }
 
   getAllData(): Record<string, string | number | boolean | Date | Record<string, unknown> | Array<unknown>> {
-    return Object.fromEntries(this._data);
+    return Object.fromEntries(this.data);
   }
 
   createChildContext(): PluginContext {
     const childContext = new PluginContext();
-    childContext._plugin = this._plugin;
-    childContext._host = this._host;
-    childContext._user = this._user;
-    childContext._executionContext = {
-      ...this._executionContext,
-      pluginId: this._plugin.id,
-      pluginName: this._plugin.name,
-      version: this._plugin.version,
+    childContext.plugin = this.plugin;
+    childContext.host = this.host;
+    childContext.user = this.user;
+    childContext.executionContext = {
+      ...this.executionContext,
+      pluginId: this.plugin.id,
+      pluginName: this.plugin.name,
+      version: this.plugin.version,
       requestId: this.generateId(),
       startTime: new Date(),
     };
@@ -223,24 +223,17 @@ export class PluginContext {
 
   toJSON(): Record<string, unknown> {
     return {
-      plugin: this._plugin,
-      request: this._request
+      plugin: this.plugin,
+      request: this.request,
+      user: this.user
         ? {
-            id: this._request.id,
-            method: this._request.method,
-            url: this._request.url,
-            timestamp: this._request.timestamp,
+            id: this.user.id,
+            username: this.user.username,
+            roles: this.user.roles,
           }
         : null,
-      user: this._user
-        ? {
-            id: this._user.id,
-            username: this._user.username,
-            roles: this._user.roles,
-          }
-        : null,
-      host: this._host,
-      executionContext: this._executionContext,
+      host: this.host,
+      executionContext: this.executionContext,
       data: this.getAllData(),
     };
   }

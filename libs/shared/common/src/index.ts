@@ -38,7 +38,7 @@ export * from './monitoring/metrics-collector.service';
 export * from './monitoring/monitoring.module';
 export * from './monitoring/prometheus-metrics.service';
 
-export * from './health/health-check.types';
+export type * from './health/health-check.types';
 export * from './health/health-check.service';
 
 export * from './storage/cloud-storage.service';

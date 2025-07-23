@@ -13,7 +13,7 @@ export interface MetricDefinition {
 export interface MetricValue {
   name: string;
   value: number;
-  labels?: Record<string, string>;
+  labels?: Record<string, string> | undefined;
   timestamp: Date;
 }
 
@@ -34,7 +34,7 @@ export class MetricsCollectorService {
   private readonly metrics = new Map<string, MetricDefinition>();
   private readonly values = new Map<string, MetricValue[]>();
   private readonly maxValuesPerMetric = 1000;
-  private collectionInterval?: NodeJS.Timeout;
+  private collectionInterval?: NodeJS.Timeout | undefined;
 
   constructor(
     private readonly configService: ConfigService,
@@ -70,7 +70,7 @@ export class MetricsCollectorService {
       timestamp: new Date(),
     };
 
-    const values = this.values.get(name) || [];
+    const values = this.values.get(name) ?? [];
     values.push(metricValue);
 
     // Keep only recent values
@@ -85,7 +85,7 @@ export class MetricsCollectorService {
    * Increment a counter metric
    */
   incrementCounter(name: string, increment = 1, labels?: Record<string, string>): void {
-    const currentValue = this.getLatestValue(name) || 0;
+    const currentValue = this.getLatestValue(name) ?? 0;
     this.recordMetric(name, currentValue + increment, labels);
   }
 
@@ -110,6 +110,7 @@ export class MetricsCollectorService {
     const allMetrics: MetricValue[] = [];
 
     for (const [metricName, values] of this.values) {
+      this.logger.debug(`Collecting metric: ${metricName}`);
       const latestValue = values[values.length - 1];
       if (latestValue) {
         allMetrics.push(latestValue);
@@ -135,7 +136,7 @@ export class MetricsCollectorService {
     let output = '';
 
     for (const [metricName, definition] of this.metrics) {
-      const values = this.values.get(metricName) || [];
+      const values = this.values.get(metricName) ?? [];
       const latestValue = values[values.length - 1];
 
       if (!latestValue) continue;
@@ -166,7 +167,7 @@ export class MetricsCollectorService {
     startTime: Date,
     endTime: Date,
   ): MetricValue[] {
-    const values = this.values.get(metricName) || [];
+    const values = this.values.get(metricName) ?? [];
     return values.filter(
       value => value.timestamp >= startTime && value.timestamp <= endTime,
     );
@@ -185,7 +186,7 @@ export class MetricsCollectorService {
     p95: number;
     p99: number;
   } {
-    let values = this.values.get(metricName) || [];
+    let values = this.values.get(metricName) ?? [];
 
     if (timeRange) {
       values = values.filter(
@@ -213,8 +214,8 @@ export class MetricsCollectorService {
       count: numbers.length,
       sum,
       average: sum / numbers.length,
-      min: numbers[0],
-      max: numbers[numbers.length - 1],
+      min: Number(numbers[0]?? 0),
+      max: Number(numbers[numbers.length - 1]?? 0),
       p50: this.percentile(numbers, 50),
       p95: this.percentile(numbers, 95),
       p99: this.percentile(numbers, 99),
@@ -227,13 +228,13 @@ export class MetricsCollectorService {
   async exportMetrics(format: 'json' | 'prometheus' | 'influxdb'): Promise<string> {
     switch (format) {
       case 'json':
-        return JSON.stringify(this.getMetricsSnapshot(), null, 2);
+        return Promise.resolve(JSON.stringify(this.getMetricsSnapshot(), null, 2));
       case 'prometheus':
-        return this.getPrometheusMetrics();
+        return Promise.resolve(this.getPrometheusMetrics());
       case 'influxdb':
-        return this.getInfluxDBFormat();
+        return Promise.resolve(this.getInfluxDBFormat());
       default:
-        throw new Error(`Unsupported export format: ${format}`);
+        throw new Error(`Unsupported export format: ${String(format)}`);
     }
   }
 
@@ -367,7 +368,7 @@ export class MetricsCollectorService {
   }
 
   private getLatestValue(metricName: string): number | undefined {
-    const values = this.values.get(metricName) || [];
+    const values = this.values.get(metricName) ?? [];
     const latest = values[values.length - 1];
     return latest?.value;
   }
@@ -378,8 +379,8 @@ export class MetricsCollectorService {
     const upper = Math.ceil(index);
     const weight = index % 1;
 
-    if (upper >= sortedArray.length) return sortedArray[sortedArray.length - 1];
-    return sortedArray[lower] * (1 - weight) + sortedArray[upper] * weight;
+    if (upper >= sortedArray.length) return sortedArray[sortedArray.length - 1] ?? 0;
+    return (sortedArray[lower] ?? 0) * (1 - weight) + (sortedArray[upper] ?? 0) * weight;
   }
 
   private getInfluxDBFormat(): string {

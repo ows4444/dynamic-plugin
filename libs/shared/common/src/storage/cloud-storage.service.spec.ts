@@ -1,7 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
+ 
 import { ConfigService } from '@nestjs/config';
-import { CloudStorageService } from './cloud-storage.service';
 import { Readable } from 'stream';
+import { CloudStorageService } from './cloud-storage.service';
 
 describe('CloudStorageService', () => {
   let service: CloudStorageService;

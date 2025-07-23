@@ -17,14 +17,12 @@ export interface PerformanceMonitoringOptions {
   includeResult?: boolean;
 }
 class PerformanceMonitoringRegistry {
-  private static instance: PerformanceMonitoringRegistry;
+  private static instance: PerformanceMonitoringRegistry | null = null;
   private readonly metrics = new Map<string, Array<{ timestamp: number; duration: number; tags?: Record<string, string> }>>();
   private readonly logger = new Logger('PerformanceMonitoring');
 
   static getInstance(): PerformanceMonitoringRegistry {
-    if (!PerformanceMonitoringRegistry.instance) {
-      PerformanceMonitoringRegistry.instance = new PerformanceMonitoringRegistry();
-    }
+    PerformanceMonitoringRegistry.instance ??= new PerformanceMonitoringRegistry();
     return PerformanceMonitoringRegistry.instance;
   }
 

@@ -1,9 +1,9 @@
 // Import types from centralized interfaces
-import type { 
+import type {
   ConfigArray,
   ConfigObject,
-  ConfigSchema, 
-  ConfigValue, 
+  ConfigSchema,
+  ConfigValue,
   PluginConfig
 } from '@lib/shared/plugin-types';
 
@@ -56,7 +56,7 @@ export class ConfigValidator {
     }
 
     if (value === null || value === undefined) {
-      if (schema.required) {
+      if (schema.required ?? false) {
         errors.push(`Missing required field at ${path ?? 'root'}`);
       }
       return;
@@ -72,7 +72,7 @@ export class ConfigValidator {
       const propertyValue = this.getPropertyValue(value as ConfigObject, key);
 
       if (propertyValue === undefined || propertyValue === null) {
-        if (propertySchema.required) {
+        if (propertySchema.required === true) {
           errors.push(`Missing required field: ${propertyPath}`);
         }
         continue;
@@ -89,7 +89,7 @@ export class ConfigValidator {
     errors: string[],
   ): void {
     if (value === null || value === undefined) {
-      if (schema.required) {
+      if (schema.required === true) {
         errors.push(`Missing required field: ${path}`);
       }
       return;
@@ -119,7 +119,7 @@ export class ConfigValidator {
     errors: string[],
   ): void {
     const validator = this.TYPE_VALIDATORS[schema.type];
-    if (!validator?.(value)) {
+    if (!((validator?.(value)) ?? false)) {
       errors.push(`Expected ${schema.type} at ${path}, got ${typeof value}`);
     }
   }
@@ -178,7 +178,7 @@ export class ConfigValidator {
       );
     }
 
-    if (schema.pattern) {
+    if (schema.pattern != null) {
       const regex = new RegExp(schema.pattern);
       if (!regex.test(value)) {
         errors.push(
@@ -252,7 +252,7 @@ export class ConfigValidator {
       if (
         propertySchema.type === 'object' &&
         propertySchema.properties &&
-        result[key]
+        result[key] != null
       ) {
         result[key] = this.applyDefaults(
           result[key] as PluginConfig,

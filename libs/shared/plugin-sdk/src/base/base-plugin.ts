@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { LoggerUtil, PluginLogContext } from '../utilities/logger.util';
 import { ConfigUtil, PluginConfigOptions } from '../utilities/config.util';
+import { LoggerUtil, PluginLogContext } from '../utilities/logger.util';
 
 export interface PluginMetadata {
   id: string;
@@ -49,7 +49,7 @@ export abstract class BasePlugin
         this.logContext,
       );
       if (this.onEnable) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+         
         const result = this.onEnable();
         if (result instanceof Promise) {
           await result;
@@ -80,7 +80,7 @@ export abstract class BasePlugin
         this.logContext,
       );
       if (this.onDisable) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+         
         const result = this.onDisable();
         if (result instanceof Promise) {
           await result;
@@ -155,4 +155,15 @@ export abstract class BasePlugin
   abstract getName(): string;
   abstract getDescription(): string;
   abstract getVersion(): string;
+
+  abstract getAuthor(): string;
+  abstract getHomepage(): string | undefined;
+  abstract getRepository(): string | undefined;
+  abstract getLicense(): string | undefined;
+  abstract getTags(): string[] | undefined;
+  abstract onInstall?(): Promise<void> | void;
+  abstract onUninstall?(): Promise<void> | void;
+  abstract onEnable?(): Promise<void> | void;
+  abstract onDisable?(): Promise<void> | void;
+  abstract onUpdate?(fromVersion: string, toVersion: string): Promise<void> 
 }
