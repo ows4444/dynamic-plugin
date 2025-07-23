@@ -134,7 +134,7 @@ export class RouteManagerService {
         // Perform any necessary cleanup
         if (route.middleware) {
           route.middleware.forEach((middleware) => {
-            if (middleware && typeof middleware.cleanup === 'function') {
+            if (middleware != null && typeof middleware.cleanup === 'function') {
               // Call cleanup method - could be async or sync
               const cleanupResult = middleware.cleanup();
               if (cleanupResult instanceof Promise) {
@@ -199,10 +199,10 @@ export class RouteManagerService {
               path: routeMetadata.path,
               method: routeMetadata.method,
               handler: routeHandler,
-              middleware: routeMetadata.middleware,
-              guards: routeMetadata.guards,
-              description: routeMetadata.description,
-              tags: routeMetadata.tags,
+              ...(routeMetadata.middleware && { middleware: routeMetadata.middleware }),
+              ...(routeMetadata.guards && { guards: routeMetadata.guards }),
+              ...((routeMetadata.description != null) && { description: routeMetadata.description }),
+              ...(routeMetadata.tags && { tags: routeMetadata.tags }),
             });
           }
         }
@@ -239,8 +239,8 @@ export class RouteManagerService {
     const boundMethod = method.bind(controller) as RouteHandler;
     
     // Wrap to ensure proper typing
-    return async (req: RouteRequest, res: RouteResponse) => {
-      return await boundMethod(req, res);
+    return async (req: RouteRequest, ...args: unknown[]) => {
+      return await boundMethod(req, ...args);
     };
   }
 }

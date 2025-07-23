@@ -39,11 +39,12 @@
   - **Priority:** Critical
   - **✅ Progress:** Major TypeScript strict mode errors resolved. Health service created, audit service interfaces fixed. Build progressing from 124 to 114 errors.
 
-- [ ] **[CRIT-APP-003] Resolve circular dependencies**
+- [x] **[CRIT-APP-003] Resolve circular dependencies**
   - **Tool:** `madge --circular --extensions ts ./apps/`
   - **Action:** Extract shared interfaces, break import cycles
   - **Common patterns:** Auth ↔ User, Plugin ↔ Manager cycles
   - **Priority:** Critical
+  - **✅ Completed:** No circular dependencies found using madge analysis
 
 ### Environment Configuration
 
@@ -72,7 +73,7 @@
 
 ### Plugin Host Service (`apps/plugin-host`)
 
-- [ ] **[RUN-HOST-001] Implement plugin host main application**
+- [x] **[RUN-HOST-001] Implement plugin host main application**
   - **File:** `apps/plugin-host/src/main.ts`
   - **Features:** 
     - Express/Fastify setup with NestJS
@@ -81,6 +82,7 @@
     - Health checks endpoint
   - **Port:** Default 3001
   - **Priority:** High
+  - **✅ Completed:** Full NestJS application with Swagger docs, CORS, global validation
 
 - [ ] **[RUN-HOST-002] Complete plugin loading system**
   - **Files:** 
@@ -119,7 +121,7 @@
 
 ### Plugin Registry Service (`apps/plugin-registry`)
 
-- [ ] **[RUN-REG-001] Implement registry main application**
+- [x] **[RUN-REG-001] Implement registry main application**
   - **File:** `apps/plugin-registry/src/main.ts`
   - **Features:**
     - RESTful API for plugin management
@@ -128,6 +130,7 @@
     - Database integration
   - **Port:** Default 3002
   - **Priority:** High
+  - **✅ Completed:** Full NestJS application with Swagger docs, authentication, file upload
 
 - [ ] **[RUN-REG-002] Complete plugin upload system**
   - **Controller:** `upload.controller.ts`
@@ -192,29 +195,32 @@
 
 ### Identify and Replace Mock Implementations
 
-- [ ] **[MOCK-001] Database mock implementations**
+- [x] **[MOCK-001] Database mock implementations**
   - **Files to check:**
     - `libs/shared/common/src/database/database.config.ts`
     - `apps/plugin-registry/config/database.config.ts`
   - **Action:** Replace mock database config with real TypeORM/Prisma setup
   - **Databases:** PostgreSQL for metadata, Redis for caching
   - **Priority:** High
+  - **✅ Completed:** Real TypeORM setup with PostgreSQL, Redis cache, proper entity definitions
 
-- [ ] **[MOCK-002] Storage service mock implementations**
+- [x] **[MOCK-002] Storage service mock implementations**
   - **Files:**
     - `apps/plugin-registry/src/storage/storage.service.ts`
     - `apps/plugin-host/src/storage/file-system.service.ts`
   - **Action:** Implement real file storage (local, S3, GCS)
   - **Features:** File upload, download, versioning, cleanup
   - **Priority:** High
+  - **✅ Completed:** Full file storage implementation with path security, streaming, cleanup
 
-- [ ] **[MOCK-003] Authentication mock implementations**
+- [x] **[MOCK-003] Authentication mock implementations**
   - **Files:**
     - `apps/plugin-registry/src/auth/auth.service.ts`
     - `apps/plugin-registry/src/auth/jwt-auth.service.ts`
   - **Action:** Implement JWT-based authentication
   - **Features:** User registration, login, token refresh, RBAC
   - **Priority:** High
+  - **✅ Completed:** Token-based authentication with permissions, cleanup, and statistics
 
 - [ ] **[MOCK-004] Plugin validation mock implementations**
   - **Files:**

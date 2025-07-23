@@ -1,7 +1,7 @@
+import { getErrorMessage } from '@lib/shared/common';
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getErrorMessage } from '@lib/shared/common';
 
 @Injectable()
 export class PluginValidatorService {
@@ -51,15 +51,15 @@ export class PluginValidatorService {
       // Check required fields
       const requiredFields = ['id', 'name', 'version'];
       for (const field of requiredFields) {
-        if (!manifest[field]) {
+        if (manifest[field] == null || manifest[field] === '') {
           this.logger.error(`Missing required field in manifest: ${field}`);
           return false;
         }
       }
 
       // Validate version format
-      if (!this.isValidVersion(String(manifest.version))) {
-        this.logger.error(`Invalid version format: ${String(manifest.version)}`);
+      if (!this.isValidVersion(String(manifest['version']))) {
+        this.logger.error(`Invalid version format: ${String(manifest['version'])}`);
         return false;
       }
 

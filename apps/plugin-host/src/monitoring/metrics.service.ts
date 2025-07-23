@@ -97,7 +97,7 @@ export class MetricsService {
   private readonly metrics = new Map<string, Metric[]>();
   private readonly pluginMetrics = new Map<string, PluginMetrics>();
   private readonly maxMetricsHistory = 10000;
-  private collectionInterval: NodeJS.Timeout;
+  private collectionInterval: NodeJS.Timeout | undefined;
 
   constructor() {
     this.startMetricsCollection();
@@ -112,7 +112,7 @@ export class MetricsService {
       name,
       value,
       timestamp: new Date(),
-      tags,
+      ...(tags && { tags }),
     };
 
     const metricHistory = this.metrics.get(name) ?? [];
@@ -184,10 +184,11 @@ export class MetricsService {
     }
 
     pluginMetric.errors.total++;
+    const errorStack = getErrorStack(error);
     pluginMetric.errors.lastError = {
       message: getErrorMessage(error),
       timestamp: new Date(),
-      stack: getErrorStack(error),
+      ...((errorStack != null) && { stack: errorStack }),
     };
 
     this.calculateErrorRate(pluginMetric);
@@ -199,13 +200,13 @@ export class MetricsService {
   }
 
   getPluginMetrics(pluginName?: string, instanceId?: string): PluginMetrics[] {
-    if (pluginName && instanceId) {
+    if ((pluginName != null) && (instanceId != null)) {
       const key = `${pluginName}:${instanceId}`;
       const metric = this.pluginMetrics.get(key);
       return metric ? [metric] : [];
     }
 
-    if (pluginName) {
+    if (pluginName != null) {
       return Array.from(this.pluginMetrics.values()).filter(
         (m) => m.pluginName === pluginName,
       );
@@ -216,7 +217,7 @@ export class MetricsService {
 
   getSystemMetrics(): SystemMetrics {
     const now = new Date();
-    const _memUsage = process.memoryUsage();
+    // const memUsage = process.memoryUsage(); // TODO: Use for CPU monitoring
     const totalMemory = os.totalmem();
     const freeMemory = os.freemem();
     const usedMemory = totalMemory - freeMemory;
@@ -258,7 +259,7 @@ export class MetricsService {
         total: pluginMetrics.length,
         active: pluginMetrics.filter(
           (m) =>
-            m.requests.lastRequest &&
+            m.requests.lastRequest !== undefined &&
             Date.now() - m.requests.lastRequest.getTime() < 60000,
         ).length,
         inactive: pluginMetrics.filter(
@@ -304,14 +305,14 @@ export class MetricsService {
   }
 
   clearMetrics(pluginName?: string, instanceId?: string): void {
-    if (pluginName && instanceId) {
+    if ((pluginName != null) && (instanceId != null)) {
       const key = `${pluginName}:${instanceId}`;
       this.pluginMetrics.delete(key);
       this.logger.log(`Cleared metrics for plugin: ${key}`);
       return;
     }
 
-    if (pluginName) {
+    if (pluginName != null) {
       const keysToDelete: string[] = [];
       for (const key of this.pluginMetrics.keys()) {
         if (key.startsWith(`${pluginName}:`)) {
@@ -370,7 +371,7 @@ export class MetricsService {
 
     // Calculate based on requests in the last minute
     // This is a simplified calculation
-    const _oneMinuteAgo = Date.now() - 60000;
+    // const oneMinuteAgo = Date.now() - 60000; // TODO: Use for accurate calculation
     const recentRequests = pluginMetric.requests.total; // Simplified
     pluginMetric.requests.requestsPerMinute = recentRequests;
   }
@@ -392,8 +393,8 @@ export class MetricsService {
 
     for (const [metricName, metrics] of Object.entries(data.metrics)) {
       for (const metric of metrics) {
-        const pluginTag = metric.tags?.plugin ?? '';
-        const instanceTag = metric.tags?.instance ?? '';
+        const pluginTag = metric.tags?.['plugin'] ?? '';
+        const instanceTag = metric.tags?.['instance'] ?? '';
         lines.push(
           `${metric.timestamp.toISOString()},${metricName},${metric.value},${pluginTag},${instanceTag}`,
         );
