@@ -54,34 +54,47 @@ export default registerAs('database', (): DatabaseConfig => {
 
   // PostgreSQL configuration
   if (type === 'postgres') {
+    // Require password in production
+    const password = process.env['DB_PASSWORD'];
+    if (process.env['NODE_ENV'] === 'production' && !password) {
+      throw new Error('DB_PASSWORD is required in production environment');
+    }
+    
     return {
       ...baseConfig,
       host: process.env['DB_HOST'] ?? 'localhost',
       port: parseInt(process.env['DB_PORT'] ?? '5432', 10),
       username: process.env['DB_USERNAME'] ?? 'plugin_registry',
-      password: process.env['DB_PASSWORD'] ?? '',
+      password: password ?? '',
       database: process.env['DB_DATABASE'] ?? 'plugin_registry',
       ssl:
         process.env['DB_SSL'] === 'true'
           ? {
-              rejectUnauthorized:
-                process.env['DB_SSL_REJECT_UNAUTHORIZED'] !== 'false',
+              rejectUnauthorized: true, // Always validate SSL certificates
               ca: process.env['DB_SSL_CA'],
               cert: process.env['DB_SSL_CERT'],
               key: process.env['DB_SSL_KEY'],
             }
-          : false,
+          : process.env['NODE_ENV'] === 'production' 
+            ? { rejectUnauthorized: true } // Require SSL in production
+            : false,
     };
   }
 
   // MySQL configuration
   if (type === 'mysql') {
+    // Require password in production
+    const password = process.env['DB_PASSWORD'];
+    if (process.env['NODE_ENV'] === 'production' && !password) {
+      throw new Error('DB_PASSWORD is required in production environment');
+    }
+    
     return {
       ...baseConfig,
       host: process.env['DB_HOST'] ?? 'localhost',
       port: parseInt(process.env['DB_PORT'] ?? '3306', 10),
       username: process.env['DB_USERNAME'] ?? 'plugin_registry',
-      password: process.env['DB_PASSWORD'] ?? '',
+      password: password ?? '',
       database: process.env['DB_DATABASE'] ?? 'plugin_registry',
       charset: 'utf8mb4',
       timezone: 'Z',

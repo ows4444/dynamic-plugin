@@ -2,6 +2,7 @@ import { getErrorMessage } from '@lib/shared/common';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as tar from 'tar';
+import * as path from 'path';
 import { MetadataService, ValidationResults } from '../metadata/metadata.service';
 import { StorageService } from '../storage/storage.service';
 import { ValidationService } from '../validation/validation.service';
@@ -100,8 +101,13 @@ export class UploadService {
       // Check for duplicate uploads
       await this.checkDuplicate(uploadDto.name, uploadDto.version, checksum);
 
-      // Store the uploaded file temporarily
-      const tempPath = `temp/${uploadId}/${file.originalname}`;
+      // Store the uploaded file temporarily with path validation
+      const sanitizedTempFilename = this.sanitizeFilename(file.originalname);
+      const tempPath = path.posix.join('temp', uploadId, sanitizedTempFilename);
+      
+      // Validate the path to prevent directory traversal
+      this.validatePath(tempPath, 'temp');
+      
       await this.storageService.write(tempPath, file.buffer);
 
       // Validate the plugin
@@ -115,8 +121,16 @@ export class UploadService {
         );
       }
 
-      // Store the plugin in permanent storage
-      const pluginPath = `plugins/${uploadDto.name}/${uploadDto.version}/${file.originalname}`;
+      // Store the plugin in permanent storage with path validation
+      const sanitizedName = this.sanitizePathComponent(uploadDto.name);
+      const sanitizedVersion = this.sanitizePathComponent(uploadDto.version);
+      const sanitizedPluginFilename = this.sanitizeFilename(file.originalname);
+      
+      const pluginPath = path.posix.join('plugins', sanitizedName, sanitizedVersion, sanitizedPluginFilename);
+      
+      // Validate the path to prevent directory traversal
+      this.validatePath(pluginPath, 'plugins');
+      
       await this.storageService.write(pluginPath, file.buffer);
 
       // Create metadata record
@@ -346,15 +360,38 @@ export class UploadService {
     );
   }
 
+  /**
+   * SECURITY: Safely extract tar.gz with path validation to prevent zip-slip attacks
+   */
   private async extractTarGz(
     buffer: Buffer,
   ): Promise<Array<{ path: string; content: Buffer }>> {
     return new Promise((resolve, reject) => {
       const files: Array<{ path: string; content: Buffer }> = [];
       const chunks = new Map<string, Buffer[]>();
+      const maxFiles = 1000; // Prevent DoS with too many files
+      const maxFileSize = 10 * 1024 * 1024; // 10MB per file
+      let fileCount = 0;
 
       const stream = tar.t({
         onentry: (entry) => {
+          // Security checks
+          if (++fileCount > maxFiles) {
+            reject(new Error('Archive contains too many files'));
+            return;
+          }
+          
+          if (entry.size > maxFileSize) {
+            reject(new Error(`File too large: ${entry.path}`));
+            return;
+          }
+          
+          // SECURITY: Validate entry path to prevent zip-slip attacks
+          if (!this.isValidArchivePath(entry.path)) {
+            reject(new Error(`Invalid file path in archive: ${entry.path}`));
+            return;
+          }
+          
           if (entry.type === 'File') {
             const pathChunks: Buffer[] = [];
             chunks.set(entry.path, pathChunks);
@@ -365,6 +402,11 @@ export class UploadService {
 
             entry.on('end', () => {
               const content = Buffer.concat(pathChunks);
+              // Final validation of extracted content size
+              if (content.length > maxFileSize) {
+                reject(new Error(`Extracted file too large: ${entry.path}`));
+                return;
+              }
               files.push({ path: entry.path, content });
             });
           }
@@ -379,6 +421,97 @@ export class UploadService {
   }
 
   private generateUploadId(): string {
-    return `upload-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    // Use crypto.randomUUID() for better security
+    return `upload-${Date.now()}-${crypto.randomUUID().substring(0, 8)}`;
+  }
+
+  /**
+   * SECURITY: Sanitize filename to prevent path traversal
+   */
+  private sanitizeFilename(filename: string): string {
+    if (!filename || typeof filename !== 'string') {
+      throw new BadRequestException('Invalid filename');
+    }
+    
+    // Remove any path components and dangerous characters
+    const sanitized = path.basename(filename)
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .substring(0, 255); // Limit length
+    
+    if (!sanitized || sanitized === '.' || sanitized === '..') {
+      throw new BadRequestException('Invalid filename after sanitization');
+    }
+    
+    return sanitized;
+  }
+
+  /**
+   * SECURITY: Sanitize path components (names, versions)
+   */
+  private sanitizePathComponent(component: string): string {
+    if (!component || typeof component !== 'string') {
+      throw new BadRequestException('Invalid path component');
+    }
+    
+    // Allow only alphanumeric, hyphens, underscores, dots
+    const sanitized = component
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .substring(0, 100); // Limit length
+    
+    if (!sanitized || sanitized === '.' || sanitized === '..' || sanitized.startsWith('.')) {
+      throw new BadRequestException('Invalid path component after sanitization');
+    }
+    
+    return sanitized;
+  }
+
+  /**
+   * SECURITY: Validate that a path stays within expected boundaries
+   */
+  private validatePath(filePath: string, expectedPrefix: string): void {
+    const normalizedPath = path.posix.normalize(filePath);
+    const normalizedPrefix = path.posix.normalize(expectedPrefix);
+    
+    // Check for path traversal attempts
+    if (normalizedPath.includes('..') || 
+        !normalizedPath.startsWith(normalizedPrefix) ||
+        normalizedPath.includes('//') ||
+        normalizedPath.match(/[/\\]\.\.[/\\]/)) {
+      throw new BadRequestException(`Path traversal detected: ${filePath}`);
+    }
+    
+    // Additional check for absolute paths
+    if (path.isAbsolute(normalizedPath)) {
+      throw new BadRequestException(`Absolute path not allowed: ${filePath}`);
+    }
+  }
+
+  /**
+   * SECURITY: Validate paths within archive files
+   */
+  private isValidArchivePath(archivePath: string): boolean {
+    if (!archivePath || typeof archivePath !== 'string') {
+      return false;
+    }
+    
+    const normalizedPath = path.posix.normalize(archivePath);
+    
+    // Reject paths that:
+    // - Contain .. (parent directory references)
+    // - Are absolute paths
+    // - Contain null bytes or other dangerous characters
+    // - Are too long
+    if (normalizedPath.includes('..') ||
+        path.isAbsolute(normalizedPath) ||
+        normalizedPath.includes('\0') ||
+        normalizedPath.length > 500 ||
+        normalizedPath.match(/[/\\]\.\.[/\\]/) ||
+        normalizedPath.startsWith('./') ||
+        normalizedPath === '.' ||
+        normalizedPath === '..') {
+      return false;
+    }
+    
+    return true;
   }
 }

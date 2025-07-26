@@ -5,7 +5,9 @@
       "Bash(npm run build:*)",
       "Bash(npm run lint)",
       "Bash(npx eslint:*)",
-      "Bash(npx lint-staged:*)"
+      "Bash(npx lint-staged:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run type-check:*)"
     ],
     "deny": []
   }

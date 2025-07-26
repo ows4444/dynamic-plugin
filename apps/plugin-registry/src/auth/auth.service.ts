@@ -31,9 +31,21 @@ export class AuthService {
 
   async validateToken(token: string): Promise<boolean> {
     try {
-      const tokenInfo = this.tokens.get(token);
+      // Use constant-time comparison to prevent timing attacks
+      let tokenInfo: TokenInfo | undefined;
+      let isValidToken = false;
+      
+      for (const [storedToken, info] of this.tokens.entries()) {
+        if (this.constantTimeCompare(token, storedToken)) {
+          tokenInfo = info;
+          isValidToken = true;
+          break;
+        }
+      }
 
-      if (!tokenInfo) {
+      if (!isValidToken || !tokenInfo) {
+        // Add artificial delay to prevent timing attacks
+        await this.artificialDelay();
         return false;
       }
 
@@ -210,13 +222,38 @@ export class AuthService {
   }
 
   private generateTokenId(): string {
-    return `token-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    // Use cryptographically secure random ID
+    return `token-${crypto.randomUUID()}`;
+  }
+
+  private constantTimeCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) {
+      return false;
+    }
+    
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+      result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    
+    return result === 0;
+  }
+
+  private async artificialDelay(): Promise<void> {
+    // Random delay between 1-5ms to prevent timing attacks
+    const delay = Math.floor(Math.random() * 4) + 1;
+    return new Promise(resolve => setTimeout(resolve, delay));
   }
 
   private createDefaultTokens(): void {
-    // Create a default admin token for development
+    // Only create default tokens in development with secure values required
     if (process.env['NODE_ENV'] === 'development') {
-      const adminToken = process.env['ADMIN_TOKEN'] ?? 'dev-admin-token';
+      const adminToken = process.env['ADMIN_TOKEN'];
+      
+      if (!adminToken || adminToken === 'dev-admin-token') {
+        this.logger.error('ADMIN_TOKEN environment variable must be set to a secure value');
+        throw new Error('Secure ADMIN_TOKEN required even in development');
+      }
 
       const tokenInfo: TokenInfo = {
         id: 'admin-token',
@@ -227,20 +264,24 @@ export class AuthService {
       };
 
       this.tokens.set(adminToken, tokenInfo);
-      this.logger.log('Created default admin token for development');
+      this.logger.log('Created admin token from environment variable');
     }
 
-    // Create a default read-only token
-    const readToken = process.env['READ_TOKEN'] ?? 'read-only-token';
+    // Read-only token also requires secure value
+    const readToken = process.env['READ_TOKEN'];
+    
+    if (readToken && readToken !== 'read-only-token') {
+      const readTokenInfo: TokenInfo = {
+        id: 'read-token',
+        permissions: ['plugins.read', 'stats.read', 'download'],
+        createdAt: new Date(),
+        isActive: true,
+      };
 
-    const readTokenInfo: TokenInfo = {
-      id: 'read-token',
-      permissions: ['plugins.read', 'stats.read', 'download'],
-      createdAt: new Date(),
-      isActive: true,
-    };
-
-    this.tokens.set(readToken, readTokenInfo);
-    this.logger.log('Created default read-only token');
+      this.tokens.set(readToken, readTokenInfo);
+      this.logger.log('Created read-only token from environment variable');
+    } else if (process.env['NODE_ENV'] !== 'test') {
+      this.logger.warn('READ_TOKEN not provided or using default value - read-only access disabled');
+    }
   }
 }

@@ -149,12 +149,13 @@ export class QueryOptimizerService {
       });
     }
 
-    // Log suggestions
+    // Log suggestions (limit logging to prevent log spam)
     if (suggestions.length > 0) {
       this.logger.debug(
-        `Query optimization suggestions: ${suggestions.length} found`,
+        `Query optimization suggestions: ${Math.min(suggestions.length, 5)} found`,
       );
-      suggestions.forEach(suggestion => {
+      suggestions.slice(0, 5).forEach(suggestion => {
+        // SECURITY: Don't log the actual query to prevent sensitive data in logs
         this.logger.debug(`[${suggestion.severity.toUpperCase()}] ${suggestion.message}: ${suggestion.suggestion}`);
       });
     }
@@ -207,6 +208,7 @@ export class QueryOptimizerService {
 
   /**
    * Create optimized indexes based on query patterns
+   * SECURITY: Validates column names against whitelist to prevent SQL injection
    */
   suggestIndexes(): string[] {
     const suggestions: string[] = [];
@@ -214,21 +216,31 @@ export class QueryOptimizerService {
 
     for (const pattern of frequentQueries) {
       if (pattern.includes('where') && pattern.includes('=')) {
-        // Extract column names from WHERE clauses
-        const whereColumns = this.extractWhereColumns(pattern);
+        // Extract and validate column names from WHERE clauses
+        const whereColumns = this.extractWhereColumns(pattern)
+          .filter(col => this.isValidColumnName(col))
+          .slice(0, 3); // Limit to prevent excessively long index names
+        
         if (whereColumns.length > 0) {
+          const sanitizedColumns = whereColumns.map(col => this.sanitizeIdentifier(col));
+          const indexName = this.sanitizeIdentifier(`idx_optimized_${sanitizedColumns.join('_')}`);
           suggestions.push(
-            `CREATE INDEX IF NOT EXISTS idx_optimized_${whereColumns.join('_')} ON table_name(${whereColumns.join(', ')});`
+            `-- Suggested index for WHERE clause optimization\nCREATE INDEX IF NOT EXISTS ${indexName} ON [TABLE_NAME](${sanitizedColumns.join(', ')});`
           );
         }
       }
 
       if (pattern.includes('order by')) {
-        // Extract ORDER BY columns
-        const orderColumns = this.extractOrderByColumns(pattern);
+        // Extract and validate ORDER BY columns
+        const orderColumns = this.extractOrderByColumns(pattern)
+          .filter(col => this.isValidColumnName(col))
+          .slice(0, 3); // Limit to prevent excessively long index names
+        
         if (orderColumns.length > 0) {
+          const sanitizedColumns = orderColumns.map(col => this.sanitizeIdentifier(col));
+          const indexName = this.sanitizeIdentifier(`idx_order_${sanitizedColumns.join('_')}`);
           suggestions.push(
-            `CREATE INDEX IF NOT EXISTS idx_order_${orderColumns.join('_')} ON table_name(${orderColumns.join(', ')});`
+            `-- Suggested index for ORDER BY optimization\nCREATE INDEX IF NOT EXISTS ${indexName} ON [TABLE_NAME](${sanitizedColumns.join(', ')});`
           );
         }
       }
@@ -310,16 +322,19 @@ export class QueryOptimizerService {
     const whereClause = whereMatch[1];
     const columns: string[] = [];
     
-    // Simple extraction of column = value patterns
-    const matches = whereClause.match(/(\w+)\s*=\s*\?/g);
+    // SECURITY: Strict pattern matching for column = value patterns only
+    // Only match simple alphanumeric column names to prevent injection
+    const matches = whereClause.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*\?/g);
     if (matches) {
       matches.forEach(match => {
-        const column = match.match(/(\w+)\s*=/);
-        if ((column?.[1]) != null) columns.push(column[1]);
+        const column = match.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*=/);
+        if ((column?.[1]) != null && this.isValidColumnName(column[1])) {
+          columns.push(column[1]);
+        }
       });
     }
 
-    return columns;
+    return [...new Set(columns)]; // Remove duplicates
   }
 
   private extractOrderByColumns(query: string): string[] {
@@ -333,7 +348,8 @@ export class QueryOptimizerService {
         const parts = trimmed.split(' ');
         return parts[0] ?? '';
       }) // Remove ASC/DESC
-      .filter(col => col.length > 0 && /^\w+$/.test(col));
+      .filter(col => col.length > 0 && this.isValidColumnName(col))
+      .slice(0, 5); // Limit number of columns
   }
 
   private getOptimizationSuggestions(): QueryOptimizationSuggestion[] {
@@ -341,6 +357,7 @@ export class QueryOptimizerService {
     
     this.performanceMetrics
       .filter(m => m.isSlowQuery)
+      .slice(0, 50) // Limit processing to prevent performance issues
       .forEach(metric => {
         const suggestions = this.analyzeSqlForOptimization(metric.query, metric.parameters);
         allSuggestions.push(...suggestions);
@@ -351,6 +368,39 @@ export class QueryOptimizerService {
       index === self.findIndex(s => s.message === suggestion.message && s.type === suggestion.type)
     );
 
-    return uniqueSuggestions;
+    return uniqueSuggestions.slice(0, 20); // Limit number of suggestions
+  }
+
+  /**
+   * SECURITY: Validates that a string is a safe column name
+   */
+  private isValidColumnName(name: string): boolean {
+    if (!name || typeof name !== 'string') return false;
+    
+    // Allow only alphanumeric characters, underscores, max 64 chars
+    // Must start with letter or underscore
+    const isValid = /^[a-zA-Z_][a-zA-Z0-9_]{0,63}$/.test(name);
+    
+    // Blacklist SQL keywords and dangerous patterns
+    const sqlKeywords = [
+      'select', 'insert', 'update', 'delete', 'drop', 'create', 'alter',
+      'union', 'script', 'exec', 'execute', 'declare', 'cast', 'convert'
+    ];
+    
+    const isKeyword = sqlKeywords.includes(name.toLowerCase());
+    
+    return isValid && !isKeyword;
+  }
+
+  /**
+   * SECURITY: Sanitizes SQL identifiers
+   */
+  private sanitizeIdentifier(identifier: string): string {
+    if (!this.isValidColumnName(identifier)) {
+      throw new Error(`Invalid SQL identifier: ${identifier}`);
+    }
+    
+    // Return the identifier wrapped in quotes for safety
+    return `"${identifier}"`;
   }
 }

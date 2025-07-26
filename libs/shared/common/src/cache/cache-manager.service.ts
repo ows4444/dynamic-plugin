@@ -51,7 +51,7 @@ export class CacheManagerService {
     } catch (error) {
       this.stats.errors++;
       this.logger.error(`Cache GET error for key ${key}: ${error instanceof Error ? error.message : String(error)}`);
-      return undefined;
+      throw new Error(`Failed to get value from cache for key: ${key}`);
     }
   }
 
@@ -110,37 +110,69 @@ export class CacheManagerService {
 
   /**
    * Get or set pattern - if key exists return it, otherwise compute and cache
+   * Uses mutex-like behavior to prevent race conditions
    */
   async getOrSet<T>(
     key: string,
     factory: () => Promise<T>,
     options: CacheOptions = {},
   ): Promise<T> {
-    const cachedValue = await this.get<T>(key, options.namespace);
+    const fullKey = this.buildKey(key, options.namespace);
+    const lockKey = `${fullKey}:lock`;
     
-    if (cachedValue !== undefined) {
-      return cachedValue;
-    }
+    try {
+      // Check if value exists first
+      const cachedValue = await this.get<T>(key, options.namespace);
+      if (cachedValue !== undefined) {
+        return cachedValue;
+      }
 
-    const freshValue = await factory();
-    await this.set(key, freshValue, options);
-    
-    return freshValue;
+      // Simple lock mechanism to prevent concurrent factory calls
+      const isLocked = await this.cacheManager.get(lockKey);
+      if (isLocked) {
+        // Wait a bit and try again to get the cached value
+        await new Promise(resolve => setTimeout(resolve, 50));
+        const retryValue = await this.get<T>(key, options.namespace);
+        if (retryValue !== undefined) {
+          return retryValue;
+        }
+      }
+
+      // Set lock
+      await this.cacheManager.set(lockKey, true, 30); // 30 second lock
+      
+      try {
+        const freshValue = await factory();
+        await this.set(key, freshValue, options);
+        return freshValue;
+      } finally {
+        // Release lock
+        await this.cacheManager.del(lockKey);
+      }
+    } catch (error) {
+      this.stats.errors++;
+      this.logger.error(`Cache getOrSet error for key ${key}: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
   }
 
   /**
    * Delete multiple keys by pattern
+   * Note: This is a basic implementation. For Redis, use SCAN command for better performance
    */
-  deleteByPattern(pattern: string, namespace?: string): void {
+  async deleteByPattern(pattern: string, namespace?: string): Promise<void> {
     try {
       const fullPattern = this.buildKey(pattern, namespace);
       
-      // For Redis cache manager, we would use SCAN command
-      // For in-memory cache, we need to implement pattern matching
-      this.logger.debug(`Cache DELETE by pattern: ${fullPattern}`);
+      // This is a simplified implementation
+      // In production, you'd want to use Redis SCAN command for Redis cache
+      // or implement proper pattern matching for in-memory cache
       
-      // Note: Implementation depends on the cache store being used
-      // This is a placeholder for pattern-based deletion
+      this.logger.warn('deleteByPattern is not fully implemented. Use with caution in production.');
+      this.logger.debug(`Cache DELETE by pattern requested: ${fullPattern}`);
+      
+      // For now, we'll just log the attempt
+      // TODO: Implement proper pattern-based deletion based on cache store type
     } catch (error) {
       this.stats.errors++;
       this.logger.error(`Cache DELETE by pattern error: ${error instanceof Error ? error.message : String(error)}`);
@@ -151,9 +183,9 @@ export class CacheManagerService {
   /**
    * Clear entire cache namespace
    */
-  clearNamespace(namespace: string): void {
+  async clearNamespace(namespace: string): Promise<void> {
     try {
-      this.deleteByPattern('*', namespace);
+      await this.deleteByPattern('*', namespace);
       this.logger.log(`Cleared cache namespace: ${namespace}`);
     } catch (error) {
       this.stats.errors++;
